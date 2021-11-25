@@ -1,0 +1,274 @@
+import sys
+import json
+from pathlib import Path
+
+# Use sqlite for history
+$XONSH_HISTORY_BACKEND = 'sqlite'
+# Use 'prompt-toolkit' for $SHELL_TYPE
+#
+# That is the most advanced (and hackable) shell type
+$SHELL_TYPE = "prompt-toolkit"
+# print_color("{YELLOW}WARNING:{DEFAULT} Using $SHELL_TYPE='{BOLD_DEFAULT}readline{DEFAULT}'")
+
+# Workaround for issues 4243 and 3263
+import builtins
+import xonsh
+# NOTE: kitty is marked unthreadable because of 'kitty diff'
+# TODO: Is this fixed with the recent changes?
+for cmd in ('git', 'gh', 'nvim', 'neovim', 'kitty', 'rua', 'cargo'):
+    builtins.__xonsh__.commands_cache.threadable_predictors[cmd] = xonsh.commands_cache.predict_false
+
+# I like neovim
+$EDITOR = 'nvim'
+
+# Extend python path
+USR_PYTHON_PATH = Path("~/python").expanduser()
+if not USR_PYTHON_PATH.exists():
+    print_color("{RED}Unable to find python usr path:{RESET} ~/python")
+elif USR_PYTHON_PATH in frozenset(map(Path, sys.path)):
+    pass  # Path already added
+else:
+    sys.path.append(str(USR_PYTHON_PATH))
+
+from xonsh.ansi_colors import ansi_partial_color_format
+# NOTE: We use our own emulation of 'gitfast' instead of builtin '{gitstatus}'
+# TODO: Move this to a 'xontrib'
+
+def last_command_success():
+    """Return green if the last command was a success, red otherwise"""
+    history = __xonsh__.history
+    history_len = len(history)
+    ok_status = "{GREEN}"
+    fail_status = "{RED}"
+    if history_len == 0:
+        # Starting with a clean slate
+        return ok_status
+    # TODO: Why can't we use negative indexes?
+    # NOTE: Using an arbitrary expression inside the index  seems to choke
+    # the parser. Even worse, there is no error message.
+    #
+    # They are using 'ply' for parsing and man are the error messages bad -_-
+    history_index = history_len - 1
+    last_entry = history[history_index]
+    if last_entry.rtn == 0:
+        # Success
+        return ok_status
+    else:
+        return fail_status
+
+$PROMPT_FIELDS['last_command_success'] = last_command_success
+$PROMPT_FIELDS['hacky_gitfast_status'] = lambda: f" {x}" if (x := hacky_emulate_gitfast_status()) is not None else ""
+
+# NOTE: We also prefix with 'py' to indicate we are in xonsh
+# We really should be prefixing with 'xonsh', but 'py' is shorter
+# It's not really ambiguous, since this is really the python-prompt (for all intents and purposes)
+# I'm not going to confuse with the regular python interpreter (python3) cause i'll know its a shell
+$PROMPT = '{YELLOW}py{last_command_success}➜ {BOLD_CYAN}{cwd_base}{hacky_gitfast_status}{RESET} '
+
+
+# List of modules:
+# 1. kitty - Better support for kitty terminal
+# 2. jedi - Python autocomplete
+# 3. back2dir - Automatically restart at the last directory
+# 4. readable-traceback - Better tracebacks
+xontrib load kitty jedi back2dir readable-traceback
+
+# Use terminal-default theme
+$XONSH_COLOR_STYLE='default'
+
+if $TERM == "xterm-kitty":
+    # TODO: Should we drop the external plugin 'kitty'?
+    # I don't really trust out-of-tree plugins messing with my prompt!
+    aliases['diff'] = ["kitty", "+kitten", "diff"]
+
+    # Fix ssh, which is otherwise broken
+    aliases['ssh'] = ["kitty", "+kitten", "ssh"]
+
+# This is surreal, I'm programing a shell file in Python
+
+try:
+    import pygit2
+except ImportError:
+    pygit2 = None
+
+# Attempt to emulate the status prompt from 'ohmyzsh' plugin 'gitfast'
+# See https://github.com/ohmyzsh/ohmyzsh/blob/c52e646bb7b109e15/plugins/gitfast/git-prompt.sh#L341
+#
+# TODO: If this ever gets better, make it a custom 'xonsh' extension
+def hacky_emulate_gitfast_status():
+    if pygit2 is None:
+        # Dependency missing :(
+        return None
+    todo_marker = "{CYAN}(TODO: Implement details){BOLD_RED}"
+    repo_path = pygit2.discover_repository(".")
+    if repo_path is None:
+        return None
+    repo = pygit2.Repository(repo_path)
+    result = ["{BOLD_BLUE}git:({BOLD_RED}"]
+    if repo.is_bare:
+        result.append("BARE:")
+    if repo.head_is_detached or repo.head_is_unborn:
+        try:
+            # git describe --tags --exact-match HEAD
+            tag_name = repo.describe('HEAD', describe_strategy=pygit2.GIT_DESCRIBE_TAGS, max_candidates_tags=0)
+        except (KeyError, pygit2.GitError):
+            try:
+                if repo.head is not None:
+                    resolved_head_target = repo.get(repo.head.target)
+                else:
+                    resolved_head_target = None
+            except pygit2.GitError: # Unable to resolve head
+                resolved_head_target = None
+            if resolved_head_target is not None:
+                result.append("(")
+                result.append(resolved_head_target.short_id)
+                result.append("...)")
+            elif repo.head_is_unborn:
+                try:
+                    head = repo.lookup_reference('HEAD')
+                    expected_prefix = "refs/heads/"
+                    if head.target.startswith(expected_prefix):
+                        head_name = head.target[len(expected_prefix):]
+                    else:
+                        head_name = head.target
+                except GitError as e: # Blegh
+                    result.append("ERROR")
+                else:
+                    result.append(head_name)
+            else:
+                result.append("DETATCHED")
+                result.append(todo_marker)
+        else:
+            # Succssfully described tag
+            result.append(f"({tag_name})")
+    else:
+        result.append(repo.head.shorthand)
+    result.append("{BOLD_BLUE})")
+    return ''.join(result)
+
+$PROMPT_FIELDS['hacky_gifast_status'] = hacky_emulate_gitfast_status
+
+# TODO: Somehow the PATH automatically gets my extensions from ~/.zshrc???
+# This is creepy...
+#
+# EDIT: I think it's just inheriting the enviornment from the parent (because I spawn 'xonsh' inside of 'zsh')
+
+# NOTE: Ported from ~/.zshrc
+
+# Fix GPG error "Inappropriate ioctl for device"
+# See stackoverflow: https://stackoverflow.com/a/41054093
+$GPG_TTY=$(tty)
+
+# Execute paper in bash-compatibility mode
+def paper_util(args):
+    temp_file=Path($(mktemp).strip())
+    assert temp_file.exists()
+    paper_path = p"~/git/Paper/paper"
+    if not paper_path.exists():
+        print(f"{{BOLD_RED}}Missing `paper` script:{{RESET}} {paper_path}")
+        return 2
+    proc = ![bash -c -- @(f"source {paper_path} {' '.join(args)}; echo \"$(pwd)\" > {temp_file}")]
+    with open(temp_file, 'rt') as f:
+        result_cwd = Path(f.read().strip())
+        if not result_cwd.is_dir():
+            print_color(f"{{BOLD_RED}}Invalid result cwd:{{RESET}} {result_cwd}")
+            return 2
+        else:
+            ![cd @(result_cwd)]
+    return proc.returncode
+
+aliases['paper'] = paper_util
+
+# Better time command
+# See stackoverflow: https://superuser.com/a/767491
+$TIMEFMT = r"""%J   %U  user %S system %P cpu %*E total
+avg shared (code):         %X KB
+avg unshared (data/stack): %D KB
+total (sum):               %K KB
+max memory:                %M MB
+page faults from disk:     %F
+other page faults:         %R"""
+
+# Prefer exa to ls
+aliases['ls'] = ['exa']
+aliases['lsa'] = ['ls', '-la']
+
+def should_skip_startup_message(msg_id: str) -> bool:
+    if 'SKIP_XONSH_STARTUP_MESSAGES' not in ${...}:
+        return False
+    skip_list = $SKIP_XONSH_STARTUP_MESSAGES
+    return msg_id in skip_list.split(',') or skip_list == "*"
+
+# Alias cp to use --reflink=auto by default
+# This is zero-cost since we use btrfs
+#
+# NOTE: This is now unnecessary due to cp version >=.
+# 
+# NOTE: See also analogue in ~/.zshrc
+#
+# cp_version=tuple(map(int, $(cp --version | rg r'cp .* (\d+\.\d+)' -r '$1').strip().split('.')))
+# assert len(cp_version) == 2, f"Unexpected cp version: {cp_version!r}"
+# filesystem_type=$(df --output=fstype ~ | grep -v 'Type').strip()
+# if filesystem_type != "btrfs":
+#    print(ansi_partial_color_format(f"{{RED}}Using unexpected filesystem type: {filesystem_type!r}"), file=sys.stderr);
+#    print(ansi_partial_color_format("{RED}Expected 'btrfs' for fast COW"), file=sys.stderr);
+# elif cp_version > (8, 32):
+#    cp_version_str = '.'.join(map(str, cp_version))
+#    print(ansi_partial_color_format(f"{{YELLOW}}Detected CP version: {cp_version_str} > 8.32"), file=sys.stderr)
+#    print(ansi_partial_color_format(f"{{YELLOW}}GNU cp {cp_version_str} likely has --reflink=auto as default"), file=sys.stderr)
+#    print(ansi_partial_color_format("{YELLOW}  - See coreutils commit: https://github.com/coreutils/coreutils/commit/25725f9d417"), file=sys.stderr)
+#elif should_skip_startup_message('cp'):
+#    pass # Skip message about override
+#else:
+#    print(ansi_partial_color_format("Overding cp to use {BOLD_DEFAULT}COW{DEFAULT} by default (btrfs)"))
+#    aliases['cp'] = ['cp', '--reflink=auto']
+
+
+# Forcibly set browser to Firefox
+$BROWSER="/usr/bin/firefox"
+
+
+SECRET_FILES = [
+    Path(Path.home(), "keys/secrets.json"),
+    Path(Path.home(), ".secrets.json")
+]
+def get_key(data: dict, key: str) -> object:
+    res = data
+    for part in key.split("."):
+        if res is not None and isinstance(res, dict):
+            return
+    return res
+
+def extract_secret(key):
+    data = None
+    for pth in SECRET_FILES:
+        try:
+            with open(pth) as f:
+                data = json.load(f)
+                break
+        except FileNotFoundError as e:
+            continue
+    parts = key.split(".")
+    res = data
+    for part in parts:
+        if data is None or not isinstance(res, dict):
+            return None
+        res = data[part]
+    return res
+
+# Bitwarden API Key
+# NOTE: Master password is still needed for decryption
+$BW_CLIENTID=extract_secret("bitwarden.client_id")
+$BW_CLIENTSECRET=extract_secret("bitwarden.client_secret")
+
+# NOTE: I'm afraid this will hirt startup (and memory) so it is off by default
+if False:
+    # TODO: How much does this hurt startup?
+    import matplotlib
+    import matplotlib.pyplot
+    # https://github.com/jktr/matplotlib-backend-kitty
+    # Downloaded to ~/python
+    matplotlib.use('module://matplotlib_backend_kitty')
+    # Mark as 'interactive mode'
+    matplotlib.pyplot.ion()
+
