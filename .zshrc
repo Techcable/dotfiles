@@ -1,3 +1,12 @@
+# ================= WARNING  =================== #
+# This file is version controled (and public)    #
+# Do not store secret information here. Instead, #
+# Use ~/.secrets.json or ~/keys/secrets.json     #
+# ============================================== #
+#
+# See also ~/.xonshrc and the warning there
+# See also ~/.config.toml for settings
+
 # If you come from bash you might have to change your $PATH.
 # export PATH=$HOME/bin:/usr/local/bin:$PATH
 
