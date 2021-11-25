@@ -226,6 +226,7 @@ alias paper='. /home/nicholas/git/Paper/paper'
 
 # Prefer exa to ls
 alias ls='exa'
+alias lsa='exa -a'
 
 # Alias cp to prefer reflinks
 # We are using Btrfs :D
