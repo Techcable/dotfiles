@@ -81,21 +81,40 @@ source $ZSH/oh-my-zsh.sh
 
 # User configuration
 
-# Extend path
+# We load our configuration from a ~/.config.toml file.
+# If that's not found, we just print a warning and exit
+#
+# This requires 'tomli' to work,
+# and converts from toml -> json for further manipulation with jq
+#
+# Yes this is horrible (but what am I supposed to do?)
 
-export PATH="$PATH:$HOME/.yarn/bin"
-export PATH="$PATH:$HOME/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin"
-export PATH="$PATH:$HOME/.cargo/bin"
-export PATH="$PATH:$HOME/.gem/ruby/2.5.0/bin"
-export PATH="$PATH:$HOME/go/bin"
-# My custom bin (why isn't this already on the path")
-export PATH="$PATH:$HOME/bin"
-# Where pip puts its bin files
-export PATH="$PATH:$HOME/.local/bin"
+function warning() {
+    
+    echo "${fg_bold[yellow]}WARNING:${reset_color} $1" >&2;
+}
 
-# My custom bin *prepends* to path, overriding
+ACTUAL_LOCATION="$(dirname "$(readlink -f ~/.zshrc)")"
+CONFIG_AS_JSON="$(python "${ACTUAL_LOCATION}/scripts/config_to_json.py")";
+if [ $? -eq 7 ]; then
+    warning "Missing 'tomli' (to load shell configuration)";
+elif [ $? -eq 3 ]; then
+    warning "Missing ~/.config.toml file. Assuming defaults";
+    warning "This means that $PATH will not be customized"
+fi
+
+
+if [ -f $CONFIG_AS_JSON ]; then
+    custom_path=$(jq -r '.path[]? | sub("~"; $ENV.HOME)' $CONFIG_AS_JSON);
+    for pth in "$custom_path"; do
+        export PATH="$PATH:$pth";
+    done
+fi
+
 
 # NOTE: SECURITY
+#
+# TODO: This is stupid and not really secure....
 function test_trusted_path() {
     local name=$1
     local level=$2
@@ -291,5 +310,6 @@ echo -e "Remember the power of ${fg_bold[yellow]}xonsh${reset_color}: https://xo
 echo "It uses Python \u2764\uFE0F"
 print_stars
 fi;
+
 
 # WARNING: Remember to put path extensions **before** the test for trusted commands

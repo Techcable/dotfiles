@@ -18,6 +18,40 @@ $XONSH_HISTORY_BACKEND = 'sqlite'
 $SHELL_TYPE = "prompt-toolkit"
 # print_color("{YELLOW}WARNING:{DEFAULT} Using $SHELL_TYPE='{BOLD_DEFAULT}readline{DEFAULT}'")
 
+try:
+    import tomli
+except:
+    try:
+        # Works for our purposes ^_^
+        import tomlkit as tomli
+    except ImportError:
+        print_color("{RED}ERROR:{DEFAULT} No 'toml' module found. Recomend 'pip install tomli' or 'sudo pacman -S tomli'")
+        tomli = None
+
+CONFIG = {}
+if tomli is not None:
+    try:
+        with open(Path(Path.home(), ".config.toml"), 'rb') as f:
+            CONFIG = tomli.load(f)
+    except FileNotFoundError:
+        CONFIG = {}
+        print_color("{YELLOW}WARNING{DEFAULT}: No ~/.config.toml file found")
+        print("Assuming default settings")
+
+def get_by_key(data: dict, key: str, default=None):
+    assert isinstance(key, str)
+    res = data
+    for part in key.split("."):
+        try:
+            res = res[part]
+        except (KeyError, TypeError):
+            return None
+    return res if res is not None else default
+
+def load_config(key: str = None, default: object = None) -> object:
+    return get_by_key(CONFIG, key=key, default=default)
+
+
 # Workaround for issues 4243 and 3263
 import builtins
 import xonsh
@@ -240,13 +274,6 @@ SECRET_FILES = [
     Path(Path.home(), "keys/secrets.json"),
     Path(Path.home(), ".secrets.json")
 ]
-def get_key(data: dict, key: str) -> object:
-    res = data
-    for part in key.split("."):
-        if res is not None and isinstance(res, dict):
-            return
-    return res
-
 def extract_secret(key):
     data = None
     for pth in SECRET_FILES:
@@ -256,13 +283,7 @@ def extract_secret(key):
                 break
         except FileNotFoundError as e:
             continue
-    parts = key.split(".")
-    res = data
-    for part in parts:
-        if data is None or not isinstance(res, dict):
-            return None
-        res = data[part]
-    return res
+    return get_by_key(data, key)
 
 # Bitwarden API Key
 # NOTE: Master password is still needed for decryption
