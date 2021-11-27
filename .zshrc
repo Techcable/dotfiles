@@ -105,8 +105,7 @@ fi
 
 
 if [ -f $CONFIG_AS_JSON ]; then
-    custom_path=$(jq -r '.path[]? | sub("~"; $ENV.HOME)' $CONFIG_AS_JSON);
-    for pth in "$custom_path"; do
+    for pth in $(jq -r '.path[]? | sub("~"; $ENV.HOME)' $CONFIG_AS_JSON); do
         export PATH="$PATH:$pth";
     done
 fi
