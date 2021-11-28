@@ -95,17 +95,18 @@ function warning() {
 }
 
 ACTUAL_LOCATION="$(dirname "$(readlink -f ~/.zshrc)")"
-CONFIG_AS_JSON="$(python "${ACTUAL_LOCATION}/scripts/config_to_json.py")";
-if [ $? -eq 7 ]; then
-    warning "Missing 'tomli' (to load shell configuration)";
-elif [ $? -eq 3 ]; then
-    warning "Missing ~/.config.toml file. Assuming defaults";
-    warning "This means that $PATH will not be customized"
+if which tomlq >/dev/null; then
+    TOMLQ=$(which tomlq)
+elif [ -x ~/bin/tomlq ]; then
+    TOMLQ=~/bin/tomlq
+else
+    warning "Cannot find `tomlq` command, cannot parse ~/.config.toml"
+    warning "Consider installing it https://github.com/Techcable/tomlq"
+    TOMLQ="";
 fi
 
-
-if [ -f $CONFIG_AS_JSON ]; then
-    for pth in $(jq -r '.path[]? | sub("~"; $ENV.HOME)' $CONFIG_AS_JSON); do
+if [ -x "$TOMLQ" ]; then
+    for pth in $($TOMLQ -r '.path[]? | sub("~"; $ENV.HOME)' ~/.config.toml); do
         export PATH="$PATH:$pth";
     done
 fi
