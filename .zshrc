@@ -94,7 +94,6 @@ function warning() {
     echo "${fg_bold[yellow]}WARNING:${reset_color} $1" >&2;
 }
 
-ACTUAL_LOCATION="$(dirname "$(readlink -f ~/.zshrc)")"
 if which tomlq >/dev/null; then
     TOMLQ=$(which tomlq)
 elif [ -x ~/bin/tomlq ]; then
