@@ -64,6 +64,7 @@ for cmd in ('git', 'gh', 'nvim', 'neovim', 'kitty', 'rua', 'cargo'):
 $EDITOR = 'nvim'
 
 # Extend python path
+# TODO: Deprecate?
 USR_PYTHON_PATH = Path("~/python").expanduser()
 if not USR_PYTHON_PATH.exists():
     print_color("{RED}Unable to find python usr path:{RESET} ~/python")
