@@ -116,61 +116,6 @@ if [ -x "$TOMLQ" ]; then
 fi
 
 
-# NOTE: SECURITY
-#
-# TODO: This is stupid and not really secure....
-function test_trusted_path() {
-    local name=$1
-    local level=$2
-    local default_path
-    if [[ -z "$level" ]]; then level="warning"; fi
-    if [[ -z $3 ]]; then default_path="$3"; fi
-    local actual_path
-    if actual_path="$(which $name)"; then
-        true
-    else
-        echo "ERROR: Missing essential command: $name"
-        return 1
-    fi
-    if [[ "$actual_path" == /bin/* || "$actual_path" == /usr/bin/* ]]; then
-        # Test passed: trusted path
-        return 0
-    fi
-    # args
-    local error_msg_prefix
-    # Fallthrough to error
-    case "$level" in
-        "WARNING" | "warning")
-            error_msg_prefix="WARNING: Untrusted $name path";
-            ;;
-        *)
-            error_msg_prefix="ERROR: Untrusted $name path"
-            level="error"  # Reassign
-            export PATH="$PATH:/usr/bin:/bin";
-            ;;
-    esac
-    echo "${error_msg_prefix}: ${actual_path}"
-    if [[ "$level" == 'error' ]]; then
-        if [[ ! -z "$default_path" && -f "$default_path" ]]; then
-            echo "  Aliasing to '${default_path}' for security....";
-            alias "$name=$default_path";
-        fi
-        echo "  Appending '/bin' and '/usr/bin' to start of path for security";
-        export PATH="/usr/bin:/bin:$PATH";
-    fi
-    return 1
-}
-
-# These are slightly less important
-test_trusted_path sudo error "/usr/bin/sudo"
-for cmd in bash zsh python python3; do
-    test_trusted_path "$cmd"
-done
-# Not everyone might have xonsh
-if which xonsh > /dev/null; then
-    test_trusted_path xonsh
-fi
-
 # export MANPATH="/usr/local/man:$MANPATH"
 
 # You may need to manually set your language environment
