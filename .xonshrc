@@ -113,7 +113,7 @@ $PROMPT = '{YELLOW}py{last_command_success}➜ {BOLD_CYAN}{cwd_base}{hacky_gitfa
 # 2. jedi - Python autocomplete
 # 3. back2dir - Automatically restart at the last directory
 # 4. readable-traceback - Better tracebacks
-xontrib load kitty jedi back2dir readable-traceback
+xontrib load jedi back2dir readable-traceback
 
 # Use terminal-default theme
 $XONSH_COLOR_STYLE='default'
