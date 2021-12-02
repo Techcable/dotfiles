@@ -1,0 +1,20 @@
+" Use regular IDEA copy/paste for vim copy commands
+" I believe this is the default
+set cp ideaput
+" When to enable select mode
+" Available options:
+" mouse - When using the mouse
+" key - When using shifted special keys (cursor keys, End,
+"                                        Home. Page Up,
+"                                        and PPage down)
+" cmd - When using "v", "V", or <C-V>
+" ideaselection - When IDE magic picks a selection
+"
+" NOTE: Throwing myself into the pool, without knowing
+" how to swim. 24 hour flat test YOLO (6/19/2021)
+:set "mouse,key,cmd,ideaselection"
+set showmode "MODE:"
+" Smart join command, perfomed using IntelliJ magic
+:set ideajoin
+" Usse "easymotion"
+set easymotion
