@@ -267,8 +267,10 @@ def should_skip_startup_message(msg_id: str) -> bool:
 #    aliases['cp'] = ['cp', '--reflink=auto']
 
 
-# Forcibly set browser to Firefox
-$BROWSER="/usr/bin/firefox"
+# Forcibly set the browser...
+if (browser := load_config("browser")):
+    $BROWSER=browser
+
 
 
 SECRET_FILES = [

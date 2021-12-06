@@ -208,8 +208,11 @@ if [ $TERM = "xterm-kitty" ]; then
     alias ssh="kitty +kitten ssh"
 fi;
 
-# Forcibly set browser to Firefox
-export BROWSER=/usr/bin/firefox
+
+# Override browser
+if [ -x "$TOMLQ" ]; then
+    export BROWSER=$($TOMLQ -r '.browser' ~/.config.toml);
+fi
 
 function extract_secret() {
     local key="$1";

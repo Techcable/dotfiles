@@ -1,5 +1,7 @@
 # Configuration for my 2017 Arch Linux Lenovo Laptop
 
+browser = "/usr/bin/firefox"
+
 # My custom path
 # ~/.zshrc handles '~' expansion
 # 
