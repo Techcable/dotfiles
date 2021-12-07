@@ -294,8 +294,8 @@ $BW_CLIENTID=extract_secret("bitwarden.client_id")
 $BW_CLIENTSECRET=extract_secret("bitwarden.client_secret")
 
 if $(uname).strip() == "Darwin":
-    aliases['python'] = 'python3'
-    aliases['pip'] = 'pip3'
+    aliases['python'] = ['python3']
+    aliases['pip'] = ['pip3']
 
 # NOTE: I'm afraid this will hirt startup (and memory) so it is off by default
 if False:
