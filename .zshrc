@@ -115,6 +115,18 @@ if [ -x "$TOMLQ" ]; then
     done
 fi
 
+if [ $(uname) = "Darwin" ]; then
+    if [ -x /opt/homebrew/bin/brew ]; then
+        # TODO: Security?
+        # TODO: This should be done via config, not auto-detection.
+        echo "Setting up homebrew...";
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    fi;
+    alias python=python3
+    alias pip=pip3
+fi
+
+
 
 # export MANPATH="/usr/local/man:$MANPATH"
 
