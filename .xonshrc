@@ -18,26 +18,6 @@ $XONSH_HISTORY_BACKEND = 'sqlite'
 $SHELL_TYPE = "prompt-toolkit"
 # print_color("{YELLOW}WARNING:{DEFAULT} Using $SHELL_TYPE='{BOLD_DEFAULT}readline{DEFAULT}'")
 
-try:
-    import tomli
-except:
-    try:
-        # Works for our purposes ^_^
-        import tomlkit as tomli
-    except ImportError:
-        print_color("{RED}ERROR:{DEFAULT} No 'toml' module found. Recomend 'pip install tomli' or 'sudo pacman -S tomli'")
-        tomli = None
-
-CONFIG = {}
-if tomli is not None:
-    try:
-        with open(Path(Path.home(), ".config.toml"), 'rb') as f:
-            CONFIG = tomli.load(f)
-    except FileNotFoundError:
-        CONFIG = {}
-        print_color("{YELLOW}WARNING{DEFAULT}: No ~/.config.toml file found")
-        print("Assuming default settings")
-
 def get_by_key(data: dict, key: str, default=None):
     assert isinstance(key, str)
     res = data
@@ -47,10 +27,6 @@ def get_by_key(data: dict, key: str, default=None):
         except (KeyError, TypeError):
             return None
     return res if res is not None else default
-
-def load_config(key: str = None, default: object = None) -> object:
-    return get_by_key(CONFIG, key=key, default=default)
-
 
 # Workaround for issues 4243 and 3263
 import builtins
@@ -265,11 +241,6 @@ def should_skip_startup_message(msg_id: str) -> bool:
 #else:
 #    print(ansi_partial_color_format("Overding cp to use {BOLD_DEFAULT}COW{DEFAULT} by default (btrfs)"))
 #    aliases['cp'] = ['cp', '--reflink=auto']
-
-
-# Forcibly set the browser...
-if (browser := load_config("browser")):
-    $BROWSER=browser
 
 
 

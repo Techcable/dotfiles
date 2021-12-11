@@ -86,33 +86,26 @@ source $ZSH/oh-my-zsh.sh
 
 # User configuration
 
-# We load our configuration from a ~/.config.toml file.
+# We load our configuration from a ~/.config.zsh file.
 # If that's not found, we just print a warning and exit
-#
-# This requires 'tomli' to work,
-# and converts from toml -> json for further manipulation with jq
-#
-# Yes this is horrible (but what am I supposed to do?)
 
 function warning() {
     
     echo "${fg_bold[yellow]}WARNING:${reset_color} $1" >&2;
 }
 
-if which tomlq >/dev/null; then
-    TOMLQ=$(which tomlq)
-elif [ -x $HOME/bin/tomlq ]; then
-    TOMLQ="$HOME/bin/tomlq"
-else
-    warning "Cannot find `tomlq` command, cannot parse ~/.config.toml"
-    warning "Consider installing it https://github.com/Techcable/tomlq"
-    TOMLQ="";
-fi
+function extend_path() {
+    if [ -d $1 ]; then
+        export PATH="$PATH:$1";
+    else
+        warning "Specified path doesn't exist: $1";
+    fi
+}
 
-if [ -x "$TOMLQ" ]; then
-    for pth in $TOMLQ -r '.path[]? | sub("~"; $ENV.HOME)' ~/.config.toml; do
-        export PATH="$PATH:$pth";
-    done
+if [ -f ~/.config.zsh ]; then
+    source ~/.config.zsh
+else
+    warning "Missing configuration file"
 fi
 
 if [ $(uname) = "Darwin" ]; then

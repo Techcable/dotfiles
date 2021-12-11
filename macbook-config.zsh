@@ -1,26 +1,19 @@
 # Configuration for my 2021 Macbook Pro
 
 # Automatically uses the default browser
-browser = "/usr/bin/open"
+export BROWSER="/usr/bin/open"
 
-# My custom path
-# ~/.zshrc handles '~' expansion
-# 
-# NOTE: These are prepended *AFTER* the system bin (for security reasons)
-path = [
-    "~/.cargo/bin",
-    # My private bin ($HOME/bin) 
-    "~/bin",
-    # TODO: I really don't like hardcoding these
-    "~/.rustup/toolchains/nightly-aarch64-apple-darwin/bin"
-]
+extend_path ~/.cargo/bin
+# My private bin ($HOME/bin) 
+extend_path ~/bin
+# TODO: I really don't like hardcoding these
+extend_path ~/.rustup/toolchains/nightly-aarch64-apple-darwin/bin
 
-[prompt.xonsh]
 # NOTE: Prefix with 'py' to indicate we are in xonsh
 # We really should be prefixing with 'xonsh', but 'py' is shorter
 # It's not really ambiguous, since this is really the python-prompt (for all
 # intents and purposes)
 # I'm not going to confuse with the regular python interpreter (python3) cause i'll
 # know its a shell
-prefix = "py"
-prefix_color = "yellow"
+export XONSH_PREFIX="py"
+export XONSH_PREFIX_COLOR="yellow"
