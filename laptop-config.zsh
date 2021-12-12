@@ -12,7 +12,7 @@ extend_path ~/bin
 extend_path ~/.local/bin
 # TODO: I really don't like hardcoding these
 extend_path ~/.gem/ruby/2.5.0/bin
-extend_path ~/.rustup/nightly-x86_64-unknown-linux-gnu/bin/
+extend_path ~/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/
 
 # NOTE: Prefix with 'py' to indicate we are in xonsh
 # We really should be prefixing with 'xonsh', but 'py' is shorter
