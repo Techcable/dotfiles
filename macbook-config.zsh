@@ -3,6 +3,12 @@
 # Automatically uses the default browser
 export BROWSER="/usr/bin/open"
 
+local preferred_java_version=17
+local preferred_java_home=$(fd "jdk-${prefered_java_version}.*\.jdk" /Library/Java/JavaVirtualMachines --maxdepth 1)
+if [[ -d "$preferred_java_home/Contents/Home" ]]; then
+    export JAVA_HOME="${preferred_java_home}/Contents/Home";
+fi
+
 extend_path ~/.cargo/bin
 # My private bin ($HOME/bin) 
 extend_path ~/bin
