@@ -102,12 +102,6 @@ function extend_path() {
     fi
 }
 
-if [ -f ~/.config.zsh ]; then
-    source ~/.config.zsh
-else
-    warning "Missing configuration file"
-fi
-
 if [ $(uname) = "Darwin" ]; then
     if [ -x /opt/homebrew/bin/brew ]; then
         # TODO: Security?
@@ -119,6 +113,11 @@ if [ $(uname) = "Darwin" ]; then
     alias pip=pip3
 fi
 
+if [ -f ~/.config.zsh ]; then
+    source ~/.config.zsh
+else
+    warning "Missing configuration file"
+fi
 
 
 # export MANPATH="/usr/local/man:$MANPATH"
