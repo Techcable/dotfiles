@@ -84,9 +84,15 @@ $PROMPT_FIELDS['hacky_gitfast_status'] = lambda: f" {x}" if (x := hacky_emulate_
 # I'm not going to confuse with the regular python interpreter (python3) cause i'll know its a shell
 $PROMPT = '{YELLOW}py{last_command_success}➜ {BOLD_CYAN}{cwd_base}{hacky_gitfast_status}{RESET} '
 
+# See xonsh/xonsh#4623
+def better_kitty_integration():
+    OSC=b"\0x1b\0x5d"
+    ST=b"\0x1b\0x5c"
+    # Try $PS1?
+    $PROMPT.insert(0, f"{OSC};A{ST}")
+
 
 # List of modules:
-# 1. kitty - Better support for kitty terminal
 # 2. jedi - Python autocomplete
 # 3. back2dir - Automatically restart at the last directory
 # 4. readable-traceback - Better tracebacks

@@ -253,6 +253,7 @@ export PROMPT="%{$fg[magenta]%}zsh$OLD_PROMPT"
 if [ -n $XONSH_RANDOM_CHANCE ]; then
     export XONSH_RANDOM_CHANCE=0.90;
 fi
+export SUPRESS_XONSH="1";
 if [[ -v INTELLIJ_ENVIRONMENT_READER ]]; then
     echo "Detected intellij environment reader";
     export SUPRESS_XONSH="1"
