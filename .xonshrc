@@ -18,6 +18,12 @@ $XONSH_HISTORY_BACKEND = 'sqlite'
 $SHELL_TYPE = "prompt-toolkit"
 # print_color("{YELLOW}WARNING:{DEFAULT} Using $SHELL_TYPE='{BOLD_DEFAULT}readline{DEFAULT}'")
 
+import zsh2xonsh
+
+if sys.platform == "darwin":
+    # NOTE: This needs to come early because everything else depends on homebrew....
+    zsh2xonsh.translate_to_xonsh_and_eval($(/opt/homebrew/bin/brew shellenv))
+
 def get_by_key(data: dict, key: str, default=None):
     assert isinstance(key, str)
     res = data
@@ -35,6 +41,7 @@ import xonsh
 # TODO: Is this fixed with the recent changes?
 for cmd in ('git', 'gh', 'nvim', 'neovim', 'kitty', 'rua', 'cargo'):
     builtins.__xonsh__.commands_cache.threadable_predictors[cmd] = xonsh.commands_cache.predict_false
+
 
 # I like neovim
 $EDITOR = 'nvim'
