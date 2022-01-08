@@ -9,6 +9,7 @@
 import sys
 import json
 from pathlib import Path
+$XONSH_SHOW_TRACEBACK=True
 
 # Use sqlite for history
 $XONSH_HISTORY_BACKEND = 'sqlite'
