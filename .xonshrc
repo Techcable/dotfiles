@@ -21,6 +21,8 @@ $SHELL_TYPE = "prompt-toolkit"
 
 import zsh2xonsh
 
+# Necessary to workaround Techcable/zsh2xonsh#2
+$UPDATE_OS_ENVIRON=True
 if sys.platform == "darwin":
     # NOTE: This needs to come early because everything else depends on homebrew....
     zsh2xonsh.translate_to_xonsh_and_eval($(/opt/homebrew/bin/brew shellenv))
