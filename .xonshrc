@@ -25,6 +25,15 @@ if sys.platform == "darwin":
     # NOTE: This needs to come early because everything else depends on homebrew....
     zsh2xonsh.translate_to_xonsh_and_eval($(/opt/homebrew/bin/brew shellenv))
 
+# Load extra path information from ~/.config.zsh
+if (config := p"~/.config.zsh").exists():
+    extra_builtins={
+        'extend_path': lambda p: $PATH.append(p)
+    }
+    zsh2xonsh.translate_to_xonsh_and_eval($(cat ~/.config.zsh), extra_builtins=extra_builtins)
+else:
+    print_color("{YELLOW}WARNING:{DEFAULT} Missing ~/.config.zsh")
+
 def get_by_key(data: dict, key: str, default=None):
     assert isinstance(key, str)
     res = data
@@ -36,6 +45,7 @@ def get_by_key(data: dict, key: str, default=None):
     return res if res is not None else default
 
 # Workaround for issues 4243 and 3263
+# TODO: Is this nessicary anymore?
 import builtins
 import xonsh
 # NOTE: kitty is marked unthreadable because of 'kitty diff'
