@@ -77,9 +77,7 @@ ZSH_THEME="robbyrussell" # Light
 plugins=(
   gitfast
   # Programming Languages
-  cargo
   rust
-  rustup
 )
 
 source $ZSH/oh-my-zsh.sh
