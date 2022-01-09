@@ -233,8 +233,8 @@ function extract_secret() {
 
 # Bitwarden API Key
 # NOTE: Master password is still needed for decryption
-BW_CLIENTID=$(extract_secret "bitwarden.client_id");
-BW_CLIENTSECRET=$(extract_secret "bitwarden.client_secret");
+export BW_CLIENTID=$(extract_secret "bitwarden.client_id");
+export BW_CLIENTSECRET=$(extract_secret "bitwarden.client_secret");
 
 function print_stars() {
     # TODO: Should we subtract one from the colomn?
