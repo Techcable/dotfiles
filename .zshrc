@@ -249,33 +249,11 @@ OLD_PROMPT="$PROMPT"
 # cursor position: https://code-examples.net/en/q/796bbb
 export PROMPT="%{$fg[magenta]%}zsh$OLD_PROMPT"
 
-# By default, give a random chance of switching to xonsh
-if [ -n $XONSH_RANDOM_CHANCE ]; then
-    export XONSH_RANDOM_CHANCE=0.90;
-fi
-export SUPRESS_XONSH="1";
-if [[ -v INTELLIJ_ENVIRONMENT_READER ]]; then
-    echo "Detected intellij environment reader";
-    export SUPRESS_XONSH="1"
-fi
-if [[ -v SUPRESS_XONSH ]]; then
-    echo -e "NOTE: Suppressing ${fg_bold[yellow]}xonsh${reset_color} auto-switch"
-
-    echo -e "This has been explicitly requested by using \$SUPRESS_XONSH"
-elif [[ $(python -c 'import random; print(random.random())') -lt $XONSH_RANDOM_CHANCE ]]; then
-    print_stars
-    echo -e "Automatically switching from ${fg_bold[magenta]}zsh${reset_color} -> ${fg_bold[yellow]}xonsh${reset_color}: https://xon.sh/";
-    python -c "print(f'As determined by random chance of {($XONSH_RANDOM_CHANCE * 100):.1f}%')";
-    echo -e "Press ${fg_bold[grey]}ctrl-d${reset_color} at any time to exit back to zsh" 
-    export SKIP_XONSH_STARTUP_MESSAGES="cp";
-    xonsh; # Switching
-else
 # NOTE: Prompt about switching to xonsh
 print_stars
 echo -e "Remember the power of ${fg_bold[yellow]}xonsh${reset_color}: https://xonsh.sh"
 echo "It uses Python \u2764\uFE0F"
 print_stars
-fi;
 
 
 # WARNING: Remember to put path extensions **before** the test for trusted commands
