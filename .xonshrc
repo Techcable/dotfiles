@@ -303,7 +303,7 @@ if False:
     # Mark as 'interactive mode'
     matplotlib.pyplot.ion()
 
-# Update sys.path to include ~/git/dotfiles
+# Update sys.path to include ~/git/dotfiles/python-libs
 import sys
 if pf"{$HOME}/git/dotfiles".exists():
-    sys.path.append($HOME + "/git/dotfiles/xonshlibs")
+    sys.path.append($HOME + "/git/dotfiles/python-libs")
