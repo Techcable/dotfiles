@@ -122,8 +122,10 @@ def better_kitty_integration():
 # 2. jedi - Python autocomplete
 # 3. back2dir - Automatically restart at the last directory
 # 4. readable-traceback - Better tracebacks
+# 5. term-integration - kitty integration
 xontrib load fish_completer
 xontrib load jedi back2dir readable-traceback
+xontrib load term_integration
 
 # Use terminal-default theme
 $XONSH_COLOR_STYLE='default'
