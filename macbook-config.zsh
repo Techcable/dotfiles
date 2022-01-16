@@ -14,6 +14,8 @@ extend_path ~/.cargo/bin
 extend_path ~/bin
 # TODO: I really don't like hardcoding these
 extend_path ~/.rustup/toolchains/nightly-aarch64-apple-darwin/bin
+# Keybase path
+extend_path /Applications/Keybase.app/Contents/SharedSupport/bin
 
 # Some homebrew things are "keg-only" meaning they are not on the path by default
 #
