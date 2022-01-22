@@ -235,9 +235,14 @@ export BW_CLIENTID=$(extract_secret "bitwarden.client_id");
 export BW_CLIENTSECRET=$(extract_secret "bitwarden.client_secret");
 
 function print_stars() {
+    if which tput 2>&1 > /dev/null; then
+        local cols="$(tput cols)"
+    else
+        local cols=70 # Fallback
+    fi
     # TODO: Should we subtract one from the colomn?
     # I am just doing this because I don't trust `tput`
-    python -c "print('*' * ( $(tput cols) - 1 ))";
+    python -c "print('*' * ( $cols - 1 ))";
 }
 
 
