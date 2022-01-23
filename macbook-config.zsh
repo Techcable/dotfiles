@@ -17,6 +17,16 @@ extend_path ~/.rustup/toolchains/nightly-aarch64-apple-darwin/bin
 # Keybase path
 extend_path /Applications/Keybase.app/Contents/SharedSupport/bin
 
+# Custom $PKG_CONFIG_PATH (to find libraries)
+
+# Homebrew pkg-config path must be explicitly put first, in order to override any future kegs
+#
+# This way we get homebrew python version instead of keg python version
+#
+# The default behavior is to have $PKG_CONFIG_PATH override the automatically
+# detected libraires (including homebrew libraries).
+extend_path "/opt/homebrew/lib/pkgconfig" PKG_CONFIG_PATH
+
 # Some homebrew things are "keg-only" meaning they are not on the path by default
 #
 # Usually these are alternative versions of the main package.
@@ -31,6 +41,9 @@ function detect_keg() {
     if [[ -d "${keg_prefix}/$1/bin" ]]; then
         # echo "Detected keg $1";
         extend_path "${keg_prefix}/$1/bin"
+    fi
+    if [[ -d "${keg_prefix}/$1/lib/pkgconfig" ]]; then
+        extend_path "${keg_prefix}/$1/lib/pkgconfig" PKG_CONFIG_PATH
     fi
 }
 detect_keg "python@3.10"
