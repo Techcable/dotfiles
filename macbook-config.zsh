@@ -27,6 +27,9 @@ extend_path /Applications/Keybase.app/Contents/SharedSupport/bin
 # detected libraires (including homebrew libraries).
 extend_path "/opt/homebrew/lib/pkgconfig" PKG_CONFIG_PATH
 
+# Criterion: a unit testing framework for C - https://github.com/Snaipe/Criterion
+extend_path "/opt/criterion/lib/pkgconfig" PKG_CONFIG_PATH
+
 # Some homebrew things are "keg-only" meaning they are not on the path by default
 #
 # Usually these are alternative versions of the main package.
