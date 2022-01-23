@@ -1,4 +1,4 @@
-# ================= WARNING  =================== #
+# ================== WARNING =================== #
 # This file is version controled (and public)    #
 # Do not store secret information here. Instead, #
 # Use ~/.secrets.json or ~/keys/secrets.json     #
@@ -88,15 +88,35 @@ source $ZSH/oh-my-zsh.sh
 # If that's not found, we just print a warning and exit
 
 function warning() {
-    
     echo "${fg_bold[yellow]}WARNING:${reset_color} $1" >&2;
 }
 
 function extend_path() {
-    if [ -d $1 ]; then
-        export PATH="$PATH:$1";
+    local value="$1";
+    local target="$2";
+    if [[ "$target" = "" ]]; then
+        target="PATH";
+    fi
+    if [[ -d "$value" ]]; then
+        if [[ "$target" == "PATH" ]]; then
+            # Simple
+            export PATH="$PATH:$1";
+        else
+            if ! echo "$target" | rg '^[\w-]+$' >/dev/null; then
+                warning "Malformed path variable: ${target} (ignoring $1)";
+                return
+            elif ! echo "$target" | rg 'PATH$' >/dev/null; then
+                warning "Variable name should end with 'PATH': ${target}"
+            fi
+            local old_value="$(env | rg "^${target}=(.*)" -r '$1')";
+            if [[ "$old_value" == "" ]]; then
+                export "$target"="$value";
+            else
+                export "$target"="${old_value}:$1";
+            fi
+        fi
     else
-        warning "Specified path doesn't exist: $1";
+        warning "Specified path doesn't exist: $value";
     fi
 }
 

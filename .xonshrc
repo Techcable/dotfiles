@@ -1,4 +1,4 @@
-# ================= WARNING  =================== #
+# ================== WARNING =================== #
 # This file is version controled (and public)    #
 # Do not store secret information here. Instead, #
 # Use ~/.secrets.json or ~/keys/secrets.json     #
@@ -27,8 +27,19 @@ if sys.platform == "darwin":
 
 # Load extra path information from ~/.config.zsh
 if (config := p"~/.config.zsh").exists():
+    def extend_path(value, var="PATH", /):
+        assert not var.startswith('$') and var.endswith('PATH'), f"Not a path variable: {var!r}"
+        assert isinstance(value, str), f"Unexpected path value: {value!r}"
+        if not Path(value).exists():
+            print(f"WARNING: Path doesn't exist {value!r} (ignoring)", file=sys.stderr)
+            return
+        try:
+            __xonsh__.env[var].append(value)
+        except KeyError:
+            __xonsh__.env[var] = type($PATH)([value])
+
     extra_builtins={
-        'extend_path': lambda p: $PATH.append(p)
+        'extend_path': (extend_path),
     }
     zsh2xonsh.translate_to_xonsh_and_eval($(cat ~/.config.zsh), extra_builtins=extra_builtins)
 else:
