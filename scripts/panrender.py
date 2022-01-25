@@ -25,12 +25,13 @@ DEFAULT_FILE_FORMATS = {
 
 @click.command()
 @click.option('--verbose', '-v', help="Be verbose internally", count=True)
+@click.option('--standalone/--no-standalone', is_flag=True, help="Pass the --standalone flag to pandoc (ie. include CSS styling)", default=True)
 @click.option('--quiet', '-q', is_flag=True, help="Suppress pandoc outputs (mainly warnings)")
 @click.option('--format', '-f', 'input_format', help="The format to pass to pandoc, by default inferred from the filename")
 @click.argument('input_file', type=click.Path(path_type=Path))
-def panrender(input_file, input_format=None, verbose=False, quiet=False):
-    """A simple wrapper around `pandoc` that renders the input HTML,
-    then opens it in the browser.
+def panrender(input_file, input_format=None, verbose=False, quiet=False, standalone=True):
+    """A simple wrapper around `pandoc` that renders the input as HTML,
+    then opens it in the default browser.
 
     Supports every feature pandoc does, since it's just a thin wrapper around it"""
     handle, temp_file = tempfile.mkstemp(suffix=".html", text=True)
@@ -52,6 +53,9 @@ def panrender(input_file, input_format=None, verbose=False, quiet=False):
         pandoc_args.extend(('--from', str(input_format)))
     assert temp_file is not None
     pandoc_args.extend(('-o', str(temp_file)))
+    if standalone:
+        pandoc_args.append('--standalone')
+        pandoc_args.extend(('--metadata', f'pagetitle={input_file.name}'))
     if verbose >= 1:
         pandoc_args.append('--verbose')
     if quiet:
