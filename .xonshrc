@@ -315,9 +315,7 @@ if $(uname).strip() == "Darwin":
     aliases['pip'] = ['pip3']
 
 # cd should be pushd like it is in zsh
-#
-# TODO: Should this be part of the main xonsh repo?
-aliases['cd'] = 'pushd'
+$AUTO_PUSHD=True
 
 # NOTE: I'm afraid this will hirt startup (and memory) so it is off by default
 if False:
