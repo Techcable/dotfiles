@@ -9,11 +9,12 @@ if [[ -d "$preferred_java_home/Contents/Home" ]]; then
     export JAVA_HOME="${preferred_java_home}/Contents/Home";
 fi
 
+# Rust binaries
+#
+# NOTE: This contains almost all the binaries in ~/.rustup/toolchain/<default toolchain>/bin
 extend_path ~/.cargo/bin
 # My private bin ($HOME/bin) 
 extend_path ~/bin
-# TODO: I really don't like hardcoding these
-extend_path ~/.rustup/toolchains/nightly-aarch64-apple-darwin/bin
 # Keybase path
 extend_path /Applications/Keybase.app/Contents/SharedSupport/bin
 
