@@ -51,6 +51,19 @@ function detect_keg() {
 }
 detect_keg "python@3.10"
 detect_keg "lua@5.3"
+# Detect LLVM keg. This is nessicary because homebrew llvm
+# has some utilities that system LLVM does not have (like clang-format and )
+#
+# This is lower priority than system LLVM,
+# so system clang will be prefered over homebrew clang.
+# This only makes a difference for those
+# specific tools that are missing in the system installation.
+#
+# This seems likely to cause issues with mismatches between homebrew LLVM/clang
+# and system LLVM/clang. However, I need clang-format (which is only in Homebrew)
+# and right now I still want to keep using the system clang,
+# so we are stuck with this
+detect_keg "llvm"
 
 # Mac has no LDD command
 #
