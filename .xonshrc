@@ -27,6 +27,8 @@ if sys.platform == "darwin":
 
 # Load extra path information from ~/.config.zsh
 if (config := p"~/.config.zsh").exists():
+    import zsh2xonsh.runtime
+    import zsh2xonsh.parser
     def extend_path(value, var="PATH", /):
         assert not var.startswith('$') and var.endswith('PATH'), f"Not a path variable: {var!r}"
         assert isinstance(value, str), f"Unexpected path value: {value!r}"
@@ -41,7 +43,13 @@ if (config := p"~/.config.zsh").exists():
     extra_builtins={
         'extend_path': (extend_path),
     }
-    zsh2xonsh.translate_to_xonsh_and_eval($(cat ~/.config.zsh), extra_builtins=extra_builtins)
+    try:
+        zsh2xonsh.translate_to_xonsh_and_eval($(cat ~/.config.zsh), extra_builtins=extra_builtins)
+    except (zsh2xonsh.runtime.ZshError, zsh2xonsh.parser.TranslationError) as e:
+        print_color("{YELLOW}WARNING:{DEFAULT} Unable to run zsh2xonsh on ~/.config.zsh: " + str(e))
+    except:
+        print_color("{YELLOW}WARNING:{DEFAULT} Unable to run zsh2xonsh on ~/.config.zsh: " + str(sys.exc_info()[1]))
+    
 else:
     print_color("{YELLOW}WARNING:{DEFAULT} Missing ~/.config.zsh")
 
