@@ -324,14 +324,3 @@ if $(uname).strip() == "Darwin":
 
 # cd should be pushd like it is in zsh
 $AUTO_PUSHD=True
-
-# NOTE: I'm afraid this will hirt startup (and memory) so it is off by default
-if False:
-    # TODO: How much does this hurt startup?
-    import matplotlib
-    import matplotlib.pyplot
-    # https://github.com/jktr/matplotlib-backend-kitty
-    # Downloaded to ~/python
-    matplotlib.use('module://matplotlib_backend_kitty')
-    # Mark as 'interactive mode'
-    matplotlib.pyplot.ion()
