@@ -132,11 +132,19 @@ def better_kitty_integration():
 # 1. fish_completer Better completion than bash-completions (BETA)
 # 2. jedi - Python autocomplete
 # 3. back2dir - Automatically restart at the last directory
-# 4. readable-traceback - Better tracebacks
-# 5. term-integration - kitty integration
+# 4. term-integration - kitty integration
 xontrib load fish_completer
-xontrib load jedi back2dir readable-traceback
+xontrib load jedi back2dir
 xontrib load term_integration
+
+# NOTE: Disabled because of crash. See xonsh/xonsh#4665
+#
+# I have not reported this bug because it only happens on the latest main
+# commit not on the latest stable version (0.11.0).
+#
+# TODO: Report this to the xontrib authors once a new xonsh version is released.
+#
+# xontrib load readable-traceback
 
 # Use terminal-default theme
 $XONSH_COLOR_STYLE='default'
