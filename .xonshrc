@@ -274,6 +274,13 @@ other page faults:         %R"""
 aliases['ls'] = ['exa']
 aliases['lsa'] = ['exa', '-a']
 
+# Let rshell be an alias for evcxr
+def rshell_alias(args):
+    print_color("Using {BOLD_DEFAULT}evcxr{RESET} as Rust REPL (alias)")
+    print()
+    ![evcxr @(args)]
+aliases['rshell'] = rshell_alias
+
 def should_skip_startup_message(msg_id: str) -> bool:
     if 'SKIP_XONSH_STARTUP_MESSAGES' not in ${...}:
         return False
