@@ -1,0 +1,7 @@
+/*
+ * Enable sccache
+ *
+ * This cuts time to load dependencies *significantly*
+ */
+:sccache 1
+:timing
