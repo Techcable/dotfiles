@@ -18,6 +18,9 @@ extend_path ~/bin
 # Keybase path
 extend_path /Applications/Keybase.app/Contents/SharedSupport/bin
 
+# Where pip install puts console_script executables
+extend_path "/opt/homebrew/Frameworks/Python.framework/Versions/Current/bin"
+
 # Custom $PKG_CONFIG_PATH (to find libraries)
 
 # Homebrew pkg-config path must be explicitly put first, in order to override any future kegs
