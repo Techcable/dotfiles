@@ -1,0 +1,25 @@
+# This is Git's per-user configuration file.
+[user]
+	email = Techcable@techcable.net
+	name = Techcable
+	signingkey = D7B98ADFF827CD17
+
+[commit]
+	gpgsign = true
+
+[core]
+	editor = nvim
+
+[tag]
+	forcesignannoated = true
+
+[pull]
+	ff = only
+
+[init]
+	defaultBranch = master
+[filter "lfs"]
+	process = git-lfs filter-process
+	required = true
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
