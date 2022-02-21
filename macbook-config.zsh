@@ -34,6 +34,9 @@ extend_path "/opt/homebrew/lib/pkgconfig" PKG_CONFIG_PATH
 # Criterion: a unit testing framework for C - https://github.com/Snaipe/Criterion
 extend_path "/opt/criterion/lib/pkgconfig" PKG_CONFIG_PATH
 
+# Zig: Installed to /opt/zig so I can experiment with latest development versions :)
+extend_path "/opt/zig/bin"
+
 # Some homebrew things are "keg-only" meaning they are not on the path by default
 #
 # Usually these are alternative versions of the main package.
