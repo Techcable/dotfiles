@@ -11,13 +11,15 @@
 	editor = nvim
 
 [tag]
-	forcesignannoated = true
+    forceSignAnnotated = true
+    gpgSign = true
 
 [pull]
 	ff = only
 
 [init]
-	defaultBranch = master
+    defaultBranch = master
+
 [filter "lfs"]
 	process = git-lfs filter-process
 	required = true
