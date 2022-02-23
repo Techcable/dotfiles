@@ -80,6 +80,21 @@ plugins=(
   rust
 )
 
+
+function warning() {
+    echo "${fg_bold[yellow]}WARNING:${reset_color} $1" >&2;
+}
+
+# Add our own completions 
+#
+# NOTE: This must come BEFORE oh-my-zsh (which handles most completions)
+TECHCABLE_COMPLETIONS="$(dirname $(readlink ~/.zshrc))/completion/zsh"
+if [[ -d "$TECHCABLE_COMPLETIONS" ]]; then
+    export fpath=("$(dirname $(readlink ~/.zshrc))/completion/zsh" "$fpath[@]")
+else
+    warning "Unable to find ditfiles 'completion/zsh' directory"
+fi
+
 source $ZSH/oh-my-zsh.sh
 
 # User configuration
@@ -87,9 +102,6 @@ source $ZSH/oh-my-zsh.sh
 # We load our configuration from a ~/.config.zsh file.
 # If that's not found, we just print a warning and exit
 
-function warning() {
-    echo "${fg_bold[yellow]}WARNING:${reset_color} $1" >&2;
-}
 
 function extend_path() {
     local value="$1";
