@@ -9,6 +9,7 @@
 import sys
 import json
 from pathlib import Path
+from xonsh.completers.tools import *
 $XONSH_SHOW_TRACEBACK=True
 
 # Use sqlite for history
@@ -311,7 +312,35 @@ def should_skip_startup_message(msg_id: str) -> bool:
 #    print(ansi_partial_color_format("Overding cp to use {BOLD_DEFAULT}COW{DEFAULT} by default (btrfs)"))
 #    aliases['cp'] = ['cp', '--reflink=auto']
 
+def cheat_sh_list():
+    # NOTE: We use the same cache file as the zsh completions
+    cache_file = p"~/.cache/cheat.sh/list.txt".expanduser()
+    from datetime import datetime, timedelta
+    def _load_cached():
+        with open(cache_file) as f:
+            return [l.rstrip() for l in f.readlines()]
+    try:
+        modtime =  datetime.fromtimestamp(p"~/.cache/cheat.sh/list.txt".stat().st_mtime)
+        if (datetime.now() - modtime) < timedelta(days=1):
+            # Load directly from cache
+            return _load_cached()
+    except FileNotFoundError:
+       pass
+    ![curl -s cheat.sh/:list -o @(cache_file)]
+    # TODO: Cache beyond just a file? If the user doesn't have a SSD they are screwed....
+    return _load_cached()
 
+@contextual_command_completer_for("cht.sh")
+def complete_cheat_sh(command):
+    # See curl cheat.sh/:zsh
+    if command.arg_index >= 0:
+        possible_completions = ['--help', '--shell']
+        possible_completions.extend(cheat_sh_list())
+        return set(word for word in possible_completions if word.startswith(command.prefix))
+    else:
+        return set()
+
+completer add 'cht.sh' complete_cheat_sh
 
 SECRET_FILES = [
     Path(Path.home(), "keys/secrets.json"),
