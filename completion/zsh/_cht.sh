@@ -1,6 +1,11 @@
 #compdef cht.sh
 
-__CHTSH_LANGS=($(curl -s cheat.sh/:list))
+if ! find ~/.cache/cheat.sh -mtime -1d | grep -q list.txt; then 
+    mkdir -p ~/.cache/cheat.sh
+    curl -s https://cheat.sh/:list -o ~/.cache/cheat.sh/list.txt
+fi
+
+__CHTSH_LANGS=($(cat ~/.cache/cheat.sh/list.txt))
 _arguments -C \
   '--help[show this help message and exit]: :->noargs' \
   '--shell[enter shell repl]: :->noargs' \
