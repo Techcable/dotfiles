@@ -21,6 +21,11 @@ extend_path /Applications/Keybase.app/Contents/SharedSupport/bin
 # Where pip install puts console_script executables
 extend_path "/opt/homebrew/Frameworks/Python.framework/Versions/Current/bin"
 
+# TODO: This is contorted to fit the zsh2xonsh parser :(
+local preferred_python_version=$(python3 -c "import sys; print('.'.join(map(str, sys.version_info[:2])))")
+# Where pip install puts (user) console_script executables
+extend_path "$HOME/Library/Python/${preferred_python_version}/bin"
+
 # Custom $PKG_CONFIG_PATH (to find libraries)
 
 # Homebrew pkg-config path must be explicitly put first, in order to override any future kegs
