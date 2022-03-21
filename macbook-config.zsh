@@ -1,5 +1,7 @@
 # Configuration for my 2021 Macbook Pro
 
+export MACHINE_NAME="macbook-2021"
+
 # Automatically uses the default browser
 export BROWSER="/usr/bin/open"
 

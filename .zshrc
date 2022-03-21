@@ -18,6 +18,11 @@ else
     export ZSH=$HOME/.oh-my-zsh
 fi
 
+export MACHINE_NAME="$(cat ~/.config.zsh | grep 'export MACHINE_NAME' | sed -E 's/export MACHINE_NAME="(.*)"/\1/')"
+if [[ -z "$MACHINE_NAME" ]]; then
+    echo "WARNING: Missing machine_name";
+fi
+
 # Set name of the theme to load. Optionally, if you set this to "random"
 # it'll load a random theme each time that oh-my-zsh is loaded.
 # See https://github.com/robbyrussell/oh-my-zsh/wiki/Themes

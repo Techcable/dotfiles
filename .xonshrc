@@ -12,6 +12,10 @@ from pathlib import Path
 from xonsh.completers.tools import *
 $XONSH_SHOW_TRACEBACK=True
 
+$MACHINE_NAME=$(cat @(p"~/.config.zsh".expanduser()) | grep 'export MACHINE_NAME' | sed -E 's/export MACHINE_NAME="(.*)"/\1/').rstrip()
+if not $MACHINE_NAME:
+    print_color("{YELLOW}WARNING:{DEFAULT} Missing MACHINE_NAME in ~/.config.zsh")
+
 # Use sqlite for history
 $XONSH_HISTORY_BACKEND = 'sqlite'
 # Use 'prompt-toolkit' for $SHELL_TYPE

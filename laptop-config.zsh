@@ -1,5 +1,6 @@
 # Configuration for my 2017 Arch Linux Lenovo Laptop
 
+export MACHINE_NAME="archlinux-lenovo-2017"
 export BROWSER="/usr/bin/firefox"
 
 extend_path ~/.yarn/bin
