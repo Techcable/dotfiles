@@ -1,0 +1,3 @@
+Dummy file to make sure git creates this directory
+
+**NOTE**: Delete if/when we get other fish completions here

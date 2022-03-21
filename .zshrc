@@ -93,11 +93,17 @@ function warning() {
 # Add our own completions 
 #
 # NOTE: This must come BEFORE oh-my-zsh (which handles most completions)
-TECHCABLE_COMPLETIONS="$(dirname $(readlink ~/.zshrc))/completion/zsh"
-if [[ -d "$TECHCABLE_COMPLETIONS" ]]; then
-    export fpath=("$(dirname $(readlink ~/.zshrc))/completion/zsh" "$fpath[@]")
+export completion_root="$(dirname $(readlink ~/.zshrc))/completion"
+export techcable_completions="$completion_root/zsh"
+export techcable_machine_completions="$completion_root/$machine_name/zsh"
+if [[ -d "$techcable_completions" ]]; then
+    export fpath=("$techcable_completions" "$fpath[@]")
 else
-    warning "Unable to find ditfiles 'completion/zsh' directory"
+    warning "Unable to find dotfiles 'completion/zsh' directory"
+fi
+
+if [[ -d "$techcable_machine_completions" ]]; then
+    export fpath=("$fpath[@]" "$techcable_machine_completions")
 fi
 
 source $ZSH/oh-my-zsh.sh
