@@ -44,6 +44,10 @@ extend_path "/opt/criterion/lib/pkgconfig" PKG_CONFIG_PATH
 # Zig: Installed to /opt/zig so I can experiment with latest development versions :)
 extend_path "/opt/zig/bin"
 
+# srht CLI: https://git.sr.ht/~emersion/hut
+extend_path "/opt/srhut/bin"
+extend_path "/opt/srhut/share/man" MANPATH
+
 # Some homebrew things are "keg-only" meaning they are not on the path by default
 #
 # Usually these are alternative versions of the main package.
