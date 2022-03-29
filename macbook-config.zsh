@@ -28,6 +28,9 @@ local preferred_python_version=$(python3 -c "import sys; print('.'.join(map(str,
 # Where pip install puts (user) console_script executables
 extend_path "$HOME/Library/Python/${preferred_python_version}/bin"
 
+# Scala installation managed by "coursier". See here: https://get-coursier.io/docs/cli-overview
+extend_path "$HOME/Library/Application Support/Coursier/bin"
+
 # Custom $PKG_CONFIG_PATH (to find libraries)
 
 # Homebrew pkg-config path must be explicitly put first, in order to override any future kegs
