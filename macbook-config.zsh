@@ -95,6 +95,12 @@ detect_keg "llvm"
 # Also "Rosetta stone for Unixes"
 alias ldd="echo 'Using otool -L' && otool -L"
 
+if which pacaptr >/dev/null 2>&1; then
+    # alias pacaptr
+    alias pacman=pacaptr;
+fi
+
+
 # NOTE: Prefix with 'py' to indicate we are in xonsh
 # We really should be prefixing with 'xonsh', but 'py' is shorter
 # It's not really ambiguous, since this is really the python-prompt (for all
