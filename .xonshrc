@@ -16,8 +16,17 @@ $MACHINE_NAME=$(cat @(p"~/.config.zsh".expanduser()) | grep 'export MACHINE_NAME
 if not $MACHINE_NAME:
     print_color("{YELLOW}WARNING:{DEFAULT} Missing MACHINE_NAME in ~/.config.zsh")
 
-# Use sqlite for history
-$XONSH_HISTORY_BACKEND = 'sqlite'
+if sys.platform != "darwin":
+    # Use sqlite for history
+    #
+    # NOTE: This is disabled on Mac because I lost data once
+    # Possibly related to an issue I read about with fsync not working on M1 Macs
+    #
+    # https://twitter.com/marcan42/status/1494213855387734019
+    #
+    # Still enabled on linux because should be more reliable than json
+    $XONSH_HISTORY_BACKEND = 'sqlite'
+
 # Use 'prompt-toolkit' for $SHELL_TYPE
 #
 # That is the most advanced (and hackable) shell type
