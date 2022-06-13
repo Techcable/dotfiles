@@ -12,9 +12,8 @@ from pathlib import Path
 from xonsh.completers.tools import *
 $XONSH_SHOW_TRACEBACK=True
 
-$MACHINE_NAME=$(cat @(p"~/.config.zsh".expanduser()) | grep 'export MACHINE_NAME' | sed -E 's/export MACHINE_NAME="(.*)"/\1/').rstrip()
-if not $MACHINE_NAME:
-    print_color("{YELLOW}WARNING:{DEFAULT} Missing MACHINE_NAME in ~/.config.zsh")
+def warning(msg: str):
+    print_color("{YELLOW}WARNING:{DEFAULT} " + msg)
 
 if sys.platform != "darwin":
     # Use sqlite for history
@@ -39,15 +38,19 @@ if sys.platform == "darwin":
     # NOTE: This needs to come early because everything else depends on homebrew....
     zsh2xonsh.translate_to_xonsh_and_eval($(/opt/homebrew/bin/brew shellenv))
 
-# Load extra path information from ~/.config.zsh
-if (config := p"~/.config.zsh").exists():
-    import zsh2xonsh.runtime
-    import zsh2xonsh.parser
+
+if (dotfiles_path := Path.home() / "git/dotfiles").is_dir():
+    pass
+else:
+    dotfiles_path = None
+
+# Load extra path information from ~/.shell-config.py
+if (config_path := p"~/.shell-config.py").exists():
     def extend_path(value, var="PATH", /):
         assert not var.startswith('$') and var.endswith('PATH'), f"Not a path variable: {var!r}"
         assert isinstance(value, str), f"Unexpected path value: {value!r}"
         if not Path(value).exists():
-            print(f"WARNING: Path doesn't exist {value!r} (ignoring)", file=sys.stderr)
+            warning(f"Path doesn't exist {value!r} (ignoring)")
             return
         try:
             __xonsh__.env[var].append(value)
@@ -57,22 +60,20 @@ if (config := p"~/.config.zsh").exists():
     extra_builtins={
         'extend_path': (extend_path),
     }
-    try:
-        zsh2xonsh.translate_to_xonsh_and_eval($(cat ~/.config.zsh), extra_builtins=extra_builtins)
-    except (zsh2xonsh.runtime.ZshError, zsh2xonsh.parser.TranslationError) as e:
-        print_color("{YELLOW}WARNING:{DEFAULT} Unable to run zsh2xonsh on ~/.config.zsh: " + str(e))
-    except:
-        print_color("{YELLOW}WARNING:{DEFAULT} Unable to run zsh2xonsh on ~/.config.zsh: " + str(sys.exc_info()[1]))
-    
+    # Run translation as subprocess to inherit updated $PATH variable
+    translated_config = $(python3 @(dotfiles_path / "translate_shell_config.py") xonsh @(config_path))
+
+    # Execute translated code
+    execx(translated_config,  mode='exec', locs={}, glbs=extra_builtins)
 else:
-    print_color("{YELLOW}WARNING:{DEFAULT} Missing ~/.config.zsh")
+    warning("Missing ~/.shell-config.py")
 
 
 # Update sys.path to include ~/git/dotfiles/python-libs
 # NOTE: This is xonsh specific (for now)
 import sys
-if pf"{$HOME}/git/dotfiles".exists():
-    sys.path.append($HOME + "/git/dotfiles/python-libs")
+if dotfiles_path is not None:
+    sys.path.append(dotfiles_path / "python-libs")
 
 def get_by_key(data: dict, key: str, default=None):
     assert isinstance(key, str)

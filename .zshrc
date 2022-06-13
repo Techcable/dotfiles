@@ -18,11 +18,6 @@ else
     export ZSH=$HOME/.oh-my-zsh
 fi
 
-export MACHINE_NAME="$(cat ~/.config.zsh | grep 'export MACHINE_NAME' | sed -E 's/export MACHINE_NAME="(.*)"/\1/')"
-if [[ -z "$MACHINE_NAME" ]]; then
-    echo "WARNING: Missing machine_name";
-fi
-
 # Set name of the theme to load. Optionally, if you set this to "random"
 # it'll load a random theme each time that oh-my-zsh is loaded.
 # See https://github.com/robbyrussell/oh-my-zsh/wiki/Themes
@@ -110,8 +105,8 @@ source $ZSH/oh-my-zsh.sh
 
 # User configuration
 
-# We load our configuration from a ~/.config.zsh file.
-# If that's not found, we just print a warning and exit
+# We load our configuration from a ~/.shell-config.py file.
+# If that's not found, we just print a warning and continue
 
 
 function extend_path() {
@@ -154,8 +149,12 @@ if [ $(uname) = "Darwin" ]; then
     alias pip=pip3
 fi
 
-if [ -f ~/.config.zsh ]; then
-    source ~/.config.zsh
+local translation_script="$HOME/git/dotfiles/translate_shell_config.py";
+if [[ ! -f "$translation_script" ]]; then
+    warning "Missing translation script: $translation_sript"
+elif [ -f ~/.shell-config.py ]; then
+    local translated_config=$(python3 "$translation_script" zsh ~/.shell-config.py);
+    eval "$translated_config";
 else
     warning "Missing configuration file"
 fi
