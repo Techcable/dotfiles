@@ -2,6 +2,11 @@
 #
 # I should look into it in case xonsh falls flat :)
 
+# Setup homebrew
+#
+# This must come early because everything else depends on it
+eval (/opt/homebrew/bin/brew shellenv)
+
 # TODO: Is this ever used?
 set machine_name (rg 'export\(.*MACHINE_NAME' ~/.shell-config.py | env LUA_INIT="export = function(a, b) print(b) end" lua)
 
