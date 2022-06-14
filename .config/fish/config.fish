@@ -14,6 +14,9 @@ if test $machine_name = ""
    echo "WARNING: Empty machine name"
 end
 
+# TODO: Warning messages on failure?
+python3 ~/git/dotfiles/translate_shell_config.py fish ~/.shell-config.py | source
+
 # Add my custom completions
 #
 # NOTE: This must come BEFORE oh-my-zsh (which handles most completions)

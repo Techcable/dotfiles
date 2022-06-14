@@ -52,6 +52,19 @@ class Mode(metaclass=ABCMeta):
 
 # Things allowed without quoting
 _ZSH_SIMPLE_QUOTE_PATTERN = re.compile(r"([\w_\-\/]+)")
+# TODO: Is this ever any different?
+_FISH_SIMPLE_QUOTE_PATTERN = _ZSH_SIMPLE_QUOTE_PATTERN
+
+def escape_quoted(value: str, *, bad_chars: set[str], simple_pattern: re.Pattern) -> str: 
+    if simple_pattern.fullmatch(value) is not None:
+        return value
+    res = ['"']
+    for c in value:
+        if c in bad_chars:
+            res.append("\\")
+        res.append(c)
+    res.append('"')
+    return "".join(res)
 
 
 class ZshMode(Mode):
@@ -76,15 +89,12 @@ class ZshMode(Mode):
             pass
         else:
             raise TypeError(type(value))
-        if _ZSH_SIMPLE_QUOTE_PATTERN.fullmatch(value) is not None:
-            return value
-        res = ['"']
-        for c in value:
-            if c in ('"', "\\", "'", "*", "{", "}", "$", "(", ")"):
-                res.append("\\")
-            res.append(c)
-        res.append('"')
-        return "".join(res)
+        return escape_quoted(
+            value,
+            bad_chars={'"', "\\", "'", "*", "{", "}", "$", "(", ")"},
+            simple_pattern=_ZSH_SIMPLE_QUOTE_PATTERN
+        )
+
 
 
 class XonshMode(Mode):
@@ -116,7 +126,42 @@ class XonshMode(Mode):
         return repr(value)
 
 
-_VALID_MODES = {"zsh": ZshMode(), "xonsh": XonshMode()}
+class FishMode(Mode):
+    def export(self, name: str, value: ShellValue):
+        self._write(f"set -gx {name} {self._quote(value)}")
+
+    def alias(self, name: str, value: ShellValue):
+        # TODO: Do we ever need to quote this value?
+        self._write(f"alias {name} {self._quote(value)}")
+
+    def _extend_path_impl(self, value: Union[str, Path], var_name: Optional[str]):
+        if var_name is None:
+            # Reuse that handy builtin 
+            self._write(f"fish_add_path -ga {self._quote(value)}")
+        else:
+            # This is adhoc
+            self._write(f"if not contains {self._quote(value)} ${var_name}")
+            self._write(f"    set -gxa {var_name} {self._quote(value)}")
+            self._write("end")
+
+    def _quote(self, value: ShellValue) -> str:
+        if isinstance(value, (Path, int)):
+            value = str(value)
+        elif isinstance(value, str):
+            pass
+        else:
+            raise TypeError(type(value))
+        return escape_quoted(
+            value,
+            # fish has very simple quoting rules :)
+            bad_chars={'"', "\\"},
+            simple_pattern=_ZSH_SIMPLE_QUOTE_PATTERN
+        )
+_VALID_MODES = {
+    "zsh": ZshMode(),
+    "xonsh": XonshMode(),
+    "fish": FishMode(),
+}
 
 
 def run_mode(mode: Mode, config_file: Path) -> list[str]:
