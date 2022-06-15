@@ -24,6 +24,18 @@ set -gx GPG_TTY (tty)
 # I like neovim
 set -gx EDITOR "nvim"
 
+# Extra aliases when running under kitty
+#
+# TODO: Is this redundant with kitty's new shell integration?
+# https://sw.kovidgoyal.net/kitty/shell-integration/
+if test $TERM = "xterm-kitty"
+    alias icat "kitty +kitten icat"
+    alias diff "kitty +kitten diff"
+
+    # Need to fix ssh for kitty
+    alias ssh "kitty +kitten ssh"
+end
+
 # Add my custom completions
 #
 # NOTE: This must come BEFORE oh-my-zsh (which handles most completions)
