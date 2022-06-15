@@ -21,6 +21,9 @@ python3 ~/git/dotfiles/translate_shell_config.py fish ~/.shell-config.py | sourc
 # See stackoverflow: https://stackoverflow.com/a/41054093
 set -gx GPG_TTY (tty)
 
+# I like neovim
+set -gx EDITOR "nvim"
+
 # Add my custom completions
 #
 # NOTE: This must come BEFORE oh-my-zsh (which handles most completions)
