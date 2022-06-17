@@ -1,0 +1,20 @@
+#!/usr/bin/env fish
+if test (count $argv) -lt 1
+    echo "ERROR: Expected at least one argument" >&2
+    echo "Usage: check_line_length <file_name>+" >&2
+    return 1
+end
+
+for file_name in $argv
+    if test ! -f $file_name
+        echo "ERROR: File not found: $file_name" >&2
+        return 1
+    end
+end
+
+for file_name in $argv
+    echo -n "$file_name: "
+    for line in (cat $file_name)
+        echo (string length $line)
+    end | sort -n | tail -1
+end
