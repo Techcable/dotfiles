@@ -149,14 +149,21 @@ if [ $(uname) = "Darwin" ]; then
     alias pip=pip3
 fi
 
-local translation_script="$HOME/git/dotfiles/translate_shell_config.py";
-if [[ ! -f "$translation_script" ]]; then
-    warning "Missing translation script: $translation_sript"
-elif [ -f ~/.shell-config.py ]; then
-    local translated_config=$(python3 "$translation_script" zsh ~/.shell-config.py);
-    eval "$translated_config";
-else
+local dotfiles="$HOME/git/dotfiles"
+
+
+if [[ ! -d "$dotfiles" ]]; then
+    warning "Missing dotfiles, shell configuration will fail"
+elif [[ ! -f ~/.shell-config.py ]]; then
     warning "Missing configuration file"
+else
+    export DOTFILES_PATH="$dotfiles";
+    local translation_script="$HOME/git/dotfiles/translate_shell_config.py";
+    # First execute "common" config
+    local translated_config=$(python3 "$translation_script" zsh "$dotfiles/common-config.py");
+    eval "$translated_config";
+    translated_config=$(python3 "$translation_script" zsh ~/.shell-config.py);
+    eval "$translated_config";
 fi
 
 
@@ -172,8 +179,10 @@ fi
 #   export EDITOR='mvim'
 # fi
 
-# Use neovim
-export EDITOR="nvim"
+# Use vim as backup editor
+if ! which "$EDITOR" >/dev/null 2>&1; then
+    export EDITOR="vim"
+fi
 
 # Compilation flags
 # export ARCHFLAGS="-arch x86_64"
@@ -201,10 +210,6 @@ export EDITOR="nvim"
 #   eval "$(pyenv init -)"
 # fi
 
-# Fix GPG error "Inappropriate ioctl for device"
-# See stackoverflow: https://stackoverflow.com/a/41054093
-export GPG_TTY=$(tty)
-
 # Better time command
 # See stackoverflow: https://superuser.com/a/767491
 TIMEFMT='%J   %U  user %S system %P cpu %*E total'$'\n'\
@@ -214,49 +219,6 @@ TIMEFMT='%J   %U  user %S system %P cpu %*E total'$'\n'\
 'max memory:                %M MB'$'\n'\
 'page faults from disk:     %F'$'\n'\
 'other page faults:         %R'
-
-alias paper='. /home/nicholas/git/Paper/paper'
-
-# Prefer exa to ls
-alias ls='exa'
-alias lsa='exa -a'
-
-# Alias cp to prefer reflinks
-# We are using Btrfs :D
-#
-# NOTE: Now unnecessary due to cp version 9.0 
-#
-# CP_VERSION="$(cp --version | rg 'cp .* (\d+\.\d+)' -r '$1')"
-# CP_MAJOR_VERSION=$(echo $CP_VERSION | rg '(\d+)\.(\d+)' -r '$1')
-# CP_MINOR_VERSION=$(echo $CP_VERSION | rg '(\d+)\.(\d+)' -r '$2')
-# FILESYSTEM_TYPE="$(df --output=fstype ~ | grep -v 'Type')"
-# if [ $FILESYSTEM_TYPE != 'btrfs' ]; then
-#    echo "${fg[red]}Using unexpected filesystem type: $FILESYSTEM_TYPE" >&2;
-#    echo "${fg[red]}Expected 'btrfs' for fast COW" >&2;
-# elif [[ $CP_MAJOR_VERSION -gt 8 || $CP_MINOR_VERSION -gt 32 ]]; then
-#    echo "${fg[yellow]}Detected CP version: $CP_VERSION > 8.32" >&2;
-#    echo "${fg[yellow]}GNU cp ${CP_VERSION} likely has --reflink=auto as default" >&2;
-#    echo "${fg[yellow]}  - See coreutils commit: https://github.com/coreutils/coreutils/commit/25725f9d417"
-#else
-#    echo "Overding cp to use ${bold_color}COW${reset_color} by default (btrfs)";
-#    alias cp='cp --reflink=auto';
-#fi;
-
-# Extra aliases when running under kitty
-# Does this override scripts that run 'diff'?
-if [ $TERM = "xterm-kitty" ]; then
-    alias icat="kitty +kitten icat"
-    alias diff="kitty +kitten diff"
-
-    # Need to fix ssh for kitty
-    alias ssh="kitty +kitten ssh"
-fi;
-
-
-# Override browser
-if [ -x "$TOMLQ" ]; then
-    export BROWSER=$($TOMLQ -r '.browser' ~/.config.toml);
-fi
 
 function extract_secret() {
     local key="$1";

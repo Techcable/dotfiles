@@ -45,7 +45,15 @@ else:
     dotfiles_path = None
 
 # Load extra path information from ~/.shell-config.py
-if (config_path := p"~/.shell-config.py").exists():
+def load_extra_config():
+    if dotfiles_path is None:
+        warning("Unable to load configuration (missing DOTFILES)")
+        return
+    config_files = [p"~/.shell-config.py", dotfiles_path / "common-config.py"]
+    for pth in config_files:
+        if not pth.is_file():
+            warning(f"Missing config file: {pth}")
+            return
     def extend_path(value, var="PATH", /):
         assert not var.startswith('$') and var.endswith('PATH'), f"Not a path variable: {var!r}"
         assert isinstance(value, str), f"Unexpected path value: {value!r}"
@@ -59,15 +67,19 @@ if (config_path := p"~/.shell-config.py").exists():
 
     extra_builtins={
         'extend_path': (extend_path),
+        'warning': warning
     }
-    # Run translation as subprocess to inherit updated $PATH variable
-    translated_config = $(python3 @(dotfiles_path / "translate_shell_config.py") xonsh @(config_path))
+    translation_script = dotfiles_path / "translate_shell_config.py"
+    $DOTFILES_PATH=dotfiles_path
+    for config_path in config_files:
+        # Run translation as subprocess to inherit updated $PATH variable
+        translated_config = $(python3 @(translation_script) xonsh @(config_path))
 
-    # Execute translated code
-    execx(translated_config,  mode='exec', locs={}, glbs=extra_builtins)
-else:
-    warning("Missing ~/.shell-config.py")
+        # Execute translated code
+        execx(translated_config,  mode='exec', locs={}, glbs=extra_builtins)
 
+load_extra_config()
+del load_extra_config  # should never need to use again
 
 def get_by_key(data: dict, key: str, default=None):
     assert isinstance(key, str)
@@ -87,10 +99,6 @@ import xonsh
 # TODO: Is this fixed with the recent changes?
 for cmd in ('git', 'gh', 'nvim', 'neovim', 'kitty', 'rua', 'cargo'):
     builtins.__xonsh__.commands_cache.threadable_predictors[cmd] = xonsh.commands_cache.predict_false
-
-
-# I like neovim
-$EDITOR = 'nvim'
 
 # Extend python path
 # TODO: Deprecate?
@@ -166,14 +174,6 @@ xontrib load term_integration
 # Use terminal-default theme
 $XONSH_COLOR_STYLE='default'
 
-if $TERM == "xterm-kitty":
-    # TODO: Should we drop the external plugin 'kitty'?
-    # I don't really trust out-of-tree plugins messing with my prompt!
-    aliases['diff'] = ["kitty", "+kitten", "diff"]
-
-    # Fix ssh, which is otherwise broken
-    aliases['ssh'] = ["kitty", "+kitten", "ssh"]
-
 # This is surreal, I'm programing a shell file in Python
 
 try:
@@ -245,30 +245,6 @@ $PROMPT_FIELDS['hacky_gifast_status'] = hacky_emulate_gitfast_status
 
 # NOTE: Ported from ~/.zshrc
 
-# Fix GPG error "Inappropriate ioctl for device"
-# See stackoverflow: https://stackoverflow.com/a/41054093
-$GPG_TTY=$(tty)
-
-# Execute paper in bash-compatibility mode
-def paper_util(args):
-    temp_file=Path($(mktemp).strip())
-    assert temp_file.exists()
-    paper_path = p"~/git/Paper/paper"
-    if not paper_path.exists():
-        print(f"{{BOLD_RED}}Missing `paper` script:{{RESET}} {paper_path}")
-        return 2
-    proc = ![bash -c -- @(f"source {paper_path} {' '.join(args)}; echo \"$(pwd)\" > {temp_file}")]
-    with open(temp_file, 'rt') as f:
-        result_cwd = Path(f.read().strip())
-        if not result_cwd.is_dir():
-            print_color(f"{{BOLD_RED}}Invalid result cwd:{{RESET}} {result_cwd}")
-            return 2
-        else:
-            ![cd @(result_cwd)]
-    return proc.returncode
-
-aliases['paper'] = paper_util
-
 # Better time command
 # See stackoverflow: https://superuser.com/a/767491
 $TIMEFMT = r"""%J   %U  user %S system %P cpu %*E total
@@ -278,10 +254,6 @@ total (sum):               %K KB
 max memory:                %M MB
 page faults from disk:     %F
 other page faults:         %R"""
-
-# Prefer exa to ls
-aliases['ls'] = ['exa']
-aliases['lsa'] = ['exa', '-a']
 
 # Let rshell be an alias for evcxr
 def rshell_alias(args):

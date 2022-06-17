@@ -4,11 +4,8 @@ export("MACHINE_NAME", "archlinux-lenovo-2017")
 export("BROWSER", "/usr/bin/firefox")
 
 extend_path("~/.yarn/bin")
-extend_path("~/.cargo/bin")
 extend_path("~/go/bin")
 
-# My private bin ($HOME/bin)
-extend_path("~/bin")
 # Where pip puts its bin files
 extend_path("~/.local/bin")
 # TODO: I really don't like hardcoding these

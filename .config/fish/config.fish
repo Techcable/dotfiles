@@ -7,34 +7,38 @@
 # This must come early because everything else depends on it
 eval (/opt/homebrew/bin/brew shellenv)
 
+function warning
+    set_color --bold yellow
+    echo -n "WARNING: "
+    set_color normal
+    echo $argv
+end
+
 # TODO: Is this ever used?
 set machine_name (rg 'export\(.*MACHINE_NAME' ~/.shell-config.py | env LUA_INIT="export = function(a, b) print(b) end" lua)
 
 if test $machine_name = ""
-   echo "WARNING: Empty machine name"
+   warning "Empty machine name"
 end
 
-# TODO: Warning messages on failure?
-python3 ~/git/dotfiles/translate_shell_config.py fish ~/.shell-config.py | source
+set -gx DOTFILES_PATH $HOME/git/dotfiles
 
-# Fix GPG error "Inappropriate ioctl for device"
-# See stackoverflow: https://stackoverflow.com/a/41054093
-set -gx GPG_TTY (tty)
-
-# I like neovim
-set -gx EDITOR "nvim"
-
-# Extra aliases when running under kitty
-#
-# TODO: Is this redundant with kitty's new shell integration?
-# https://sw.kovidgoyal.net/kitty/shell-integration/
-if test $TERM = "xterm-kitty"
-    alias icat "kitty +kitten icat"
-    alias diff "kitty +kitten diff"
-
-    # Need to fix ssh for kitty
-    alias ssh "kitty +kitten ssh"
+function setup_extra_config
+    if ! test -d $DOTFILES_PATH
+        warning "Unable to load configuration (missing dotfiles)"
+    end
+    set -l config_files ~/.shell-config.py "$DOTFILES_PATH/common-config.py"
+    for config_file in $config_files
+        if ! test -f $config_file
+            warning "Missing required config file: $config_file"
+            return 1
+        end
+        # TODO: What if translation fails?
+        python3 "$DOTFILES_PATH/translate_shell_config.py" fish "$config_file" | source
+    end
 end
+setup_extra_config
+functions --erase setup_extra_config
 
 # Add my custom completions
 #

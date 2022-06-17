@@ -18,8 +18,9 @@ class Mode(metaclass=ABCMeta):
     def _write(self, *args: object):
         self._output.append(" ".join(map(str, args)))
 
+    @abstractmethod
     def warning(self, msg: str):
-        self._write()
+        pass
 
     @abstractmethod
     def export(self, name: str, value: ShellValue):
@@ -55,15 +56,19 @@ _ZSH_SIMPLE_QUOTE_PATTERN = re.compile(r"([\w_\-\/]+)")
 # TODO: Is this ever any different?
 _FISH_SIMPLE_QUOTE_PATTERN = _ZSH_SIMPLE_QUOTE_PATTERN
 
-def escape_quoted(value: str, *, bad_chars: set[str], simple_pattern: re.Pattern) -> str: 
+
+def escape_quoted(
+    value: str, *, quote_char: str, bad_chars: set[str], simple_pattern: re.Pattern
+) -> str:
+    assert quote_char in ("'", '"')
     if simple_pattern.fullmatch(value) is not None:
         return value
-    res = ['"']
+    res = [quote_char]
     for c in value:
         if c in bad_chars:
             res.append("\\")
         res.append(c)
-    res.append('"')
+    res.append(quote_char)
     return "".join(res)
 
 
@@ -91,10 +96,13 @@ class ZshMode(Mode):
             raise TypeError(type(value))
         return escape_quoted(
             value,
+            quote_char='"',
             bad_chars={'"', "\\", "'", "*", "{", "}", "$", "(", ")"},
-            simple_pattern=_ZSH_SIMPLE_QUOTE_PATTERN
+            simple_pattern=_ZSH_SIMPLE_QUOTE_PATTERN,
         )
 
+    def warning(self, msg: str):
+        self._write(f"warning {self._quote(msg)}")
 
 
 class XonshMode(Mode):
@@ -125,18 +133,22 @@ class XonshMode(Mode):
         assert isinstance(value, str)
         return repr(value)
 
+    def warning(self, msg: str):
+        self._write(f"warning({self._quote(msg)})")
+
 
 class FishMode(Mode):
     def export(self, name: str, value: ShellValue):
         self._write(f"set -gx {name} {self._quote(value)}")
 
     def alias(self, name: str, value: ShellValue):
-        # TODO: Do we ever need to quote this value?
-        self._write(f"alias {name} {self._quote(value)}")
+        # TODO: Do we ever need to quote the name?
+        self._write(f"alias {name}={self._quote(value)}")
 
     def _extend_path_impl(self, value: Union[str, Path], var_name: Optional[str]):
+        # TODO: Give warnings on missing paths
         if var_name is None:
-            # Reuse that handy builtin 
+            # Reuse that handy builtin
             self._write(f"fish_add_path -ga {self._quote(value)}")
         else:
             # This is adhoc
@@ -153,10 +165,16 @@ class FishMode(Mode):
             raise TypeError(type(value))
         return escape_quoted(
             value,
+            quote_char="'",
             # fish has very simple quoting rules :)
-            bad_chars={'"', "\\"},
-            simple_pattern=_ZSH_SIMPLE_QUOTE_PATTERN
+            bad_chars={"'", "\\"},
+            simple_pattern=_ZSH_SIMPLE_QUOTE_PATTERN,
         )
+
+    def warning(self, msg: str):
+        self._write(f"warning {self._quote(msg)}")
+
+
 _VALID_MODES = {
     "zsh": ZshMode(),
     "xonsh": XonshMode(),

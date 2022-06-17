@@ -32,12 +32,6 @@ else:
     if (preferred_java_home / "Contents/Home").is_dir():
         export("JAVA_HOME", preferred_java_home / "Contents/Home")
 
-# Rust binaries
-#
-# NOTE: This contains almost all the binaries in ~/.rustup/toolchain/<default toolchain>/bin
-extend_path("~/.cargo/bin")
-# My privat bin ($HOME/bin)
-extend_path("~/bin")
 # Keybase path
 extend_path("/Applications/Keybase.app/Contents/SharedSupport/bin")
 
@@ -133,18 +127,8 @@ detect_keg("llvm")
 #
 # See here: https://discussions.apple.com/thread/309193 for suggestion
 # Also "Rosetta stone for Unixes"
-alias("ldd", "zsh -c \"echo 'Using otool -L' && otool -L\"")
+alias("ldd", "echo 'Using otool -L' && otool -L")
 
 if shutil.which("pacaptr") is not None:
     # alias pacaptr
     alias("pacman", "pacaptr")
-
-
-# NOTE: Prefix with 'py' to indicate we are in xonsh
-# We really should be prefixing with 'xonsh', but 'py' is shorter
-# It's not really ambiguous, since this is really the python-prompt (for all
-# intents and purposes)
-# I'm not going to confuse with the regular python interpreter (python3) cause i'll
-# know its a shell
-export("XONSH_PREFIX", "py")
-export("XONSH_PREFIX_COLOR", "yellow")
