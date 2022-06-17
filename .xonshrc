@@ -69,12 +69,6 @@ else:
     warning("Missing ~/.shell-config.py")
 
 
-# Update sys.path to include ~/git/dotfiles/python-libs
-# NOTE: This is xonsh specific (for now)
-import sys
-if dotfiles_path is not None:
-    sys.path.append(dotfiles_path / "python-libs")
-
 def get_by_key(data: dict, key: str, default=None):
     assert isinstance(key, str)
     res = data
