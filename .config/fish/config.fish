@@ -5,7 +5,9 @@
 # Setup homebrew
 #
 # This must come early because everything else depends on it
-eval (/opt/homebrew/bin/brew shellenv)
+if test (uname) = "Darwin"
+    eval (/opt/homebrew/bin/brew shellenv)
+end
 
 function warning
     set_color --bold yellow
