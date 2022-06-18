@@ -262,5 +262,11 @@ echo -e "Remember the power of ${fg_bold[yellow]}xonsh${reset_color}: https://xo
 echo "It uses Python \u2764\uFE0F"
 print_stars
 
+if test -n "$KITTY_INSTALLATION_DIR"; then
+    export KITTY_SHELL_INTEGRATION="enabled"
+    autoload -Uz -- "$KITTY_INSTALLATION_DIR"/shell-integration/zsh/kitty-integration
+    kitty-integration
+    unfunction kitty-integration
+fi
 
 # WARNING: Remember to put path extensions **before** the test for trusted commands
