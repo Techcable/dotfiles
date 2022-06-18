@@ -58,4 +58,11 @@ end
 
 if status is-interactive
     # Commands to run in interactive sessions can go here
+
+
+    # Search only for prefix, not whole word
+    #
+    # Thanks to @faho for pointing this out on Gitter 
+    bind \e\[A history-prefix-search-backward
+    bind \e\[B history-prefix-search-forward
 end
