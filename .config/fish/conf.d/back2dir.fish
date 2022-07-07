@@ -12,7 +12,13 @@
 # As far as I can tell fish has no equivalent to @events.on_post_init
 function __back2dir_on_init --on-event fish_prompt
     if test "$PWD" = "$HOME" -a -n "$techcable_back2dir_last_dir"
-        cd $techcable_back2dir_last_dir
+        if test -d $techcable_back2dir_last_dir
+            cd $techcable_back2dir_last_dir
+        else
+            echo (set_color --bold yellow)WARNING(set_color brblack)\[back2dir\](set_color normal): Previous directory (set_color -u white)$techcable_back2dir_last_dir$(set_color normal) does not exist
+            # Reset last path to home to avoid warning?
+            set -U techcable_back2dir_last_dir $HOME
+        end
     end
     # unload this function
     functions -e __back2dir_on_init
