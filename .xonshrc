@@ -310,18 +310,6 @@ def cheat_sh_list():
     # TODO: Cache beyond just a file? If the user doesn't have a SSD they are screwed....
     return _load_cached()
 
-@contextual_command_completer_for("cht.sh")
-def complete_cheat_sh(command):
-    # See curl cheat.sh/:zsh
-    if command.arg_index >= 0:
-        possible_completions = ['--help', '--shell']
-        possible_completions.extend(cheat_sh_list())
-        return set(word for word in possible_completions if word.startswith(command.prefix))
-    else:
-        return set()
-
-completer add 'cht.sh' complete_cheat_sh
-
 SECRET_FILES = [
     Path(Path.home(), "keys/secrets.json"),
     Path(Path.home(), ".secrets.json")
