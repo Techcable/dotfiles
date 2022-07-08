@@ -14,7 +14,14 @@ end
 
 for file_name in $argv
     echo -n "$file_name: "
+    # Need to keep count to work around empty files
+    set -l line_count 0
     for line in (cat $file_name)
         echo (string length $line)
+        set line_count (math "$line_count + 1")
     end | sort -n | tail -1
+    # Check for empty file
+    if test $line_count = 0
+        echo "0"
+    end
 end
