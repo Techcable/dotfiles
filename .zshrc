@@ -93,8 +93,6 @@ export techcable_completions="$completion_root/zsh"
 export techcable_machine_completions="$completion_root/$machine_name/zsh"
 if [[ -d "$techcable_completions" ]]; then
     export fpath=("$techcable_completions" "$fpath[@]")
-else
-    warning "Unable to find dotfiles 'completion/zsh' directory"
 fi
 
 if [[ -d "$techcable_machine_completions" ]]; then
