@@ -28,3 +28,5 @@
 [diff]
     # difftastic
 	external = difft
+[alias]
+	root = rev-parse --show-toplevel
