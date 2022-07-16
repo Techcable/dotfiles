@@ -73,4 +73,7 @@ if status is-interactive
         source "$KITTY_INSTALLATION_DIR/shell-integration/fish/vendor_conf.d/kitty-shell-integration.fish"
         set --prepend fish_complete_path "$KITTY_INSTALLATION_DIR/shell-integration/fish/vendor_completions.d"
     end
+
+    # Shorter name for 'math' builtin
+    alias m math
 end
