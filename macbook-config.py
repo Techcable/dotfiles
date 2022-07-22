@@ -132,3 +132,10 @@ alias("ldd", "echo 'Using otool -L' && otool -L")
 if shutil.which("pacaptr") is not None:
     # alias pacaptr
     alias("pacman", "pacaptr")
+
+# Sometimes my macbook only has python3 on $PATH, not python
+#
+# Python Environment: https://xkcd.com/1987/
+if shutil.which("python") is None:
+    alias("python", "python3")
+
