@@ -45,7 +45,7 @@ functions --erase setup_extra_config
 # Add my custom completions
 #
 # NOTE: This must come BEFORE oh-my-zsh (which handles most completions)
-set completion_root (dirname (readlink ~/.zshrc))/completion
+set completion_root "$DOTFILES_PATH/completion"
 set techcable_completions "$completion_root/fish"
 set techcable_machine_completions "$completion_root/$machine_name/fish"
 if test -d $techcable_completions
