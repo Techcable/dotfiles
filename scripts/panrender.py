@@ -19,9 +19,8 @@ else:
 # Default file formats based on extensions
 #
 # Implicitly overrides the pandoc defaults
-DEFAULT_FILE_FORMATS = {
-    'md': 'gfm', # Render markdown as github-flavored by default
-}
+DEFAULT_FILE_FORMATS = {}
+
 
 @click.command()
 @click.option('--verbose', '-v', help="Be verbose internally", count=True)
