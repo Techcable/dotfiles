@@ -55,6 +55,10 @@ def panrender(input_file, input_format=None, verbose=False, quiet=False, standal
     if standalone:
         pandoc_args.append('--standalone')
         pandoc_args.extend(('--metadata', f'pagetitle={input_file.name}'))
+    # Default format for markdown needs a way to handle math,
+    # choose katex by default
+    if input_format is None and input_file.suffix == ".md":
+        pandoc_args.append('--katex')
     if verbose >= 1:
         pandoc_args.append('--verbose')
     if quiet:
