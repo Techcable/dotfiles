@@ -1,4 +1,5 @@
 # Configuration for my 2017 Arch Linux Lenovo Laptop
+from pathlib import Path
 
 export("MACHINE_NAME", "archlinux-lenovo-2017")
 export("BROWSER", "/usr/bin/firefox")
@@ -21,3 +22,11 @@ extend_path("~/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin/")
 # know its a shell
 export("XONSH_PREFIX", "py")
 export("XONSH_PREFIX_COLOR", "yellow")
+
+# aurutils
+export("AUR_DEST", Path.home() / "git/aur")
+export("AUR_PAGER", "ranger")
+# seems like a good idea....
+export("AUR_CONFIRM_PAGER", "1")
+# this is magic...
+export("AUR_SYNC_USE_NINJA", "1")
