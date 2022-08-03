@@ -5,6 +5,7 @@ from pathlib import Path
 from subprocess import PIPE, CalledProcessError, run
 
 export("MACHINE_NAME", "macbook-2021")
+export("MACHINE_NAME_SHORT", "macbook")
 
 # Automatically uses the default browser
 export("BROWSER", Path("/usr/bin/open"))
