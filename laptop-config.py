@@ -2,6 +2,7 @@
 from pathlib import Path
 
 export("MACHINE_NAME", "archlinux-lenovo-2017")
+export("MACHINE_NAME_SHORT", "archtop")
 export("BROWSER", "/usr/bin/firefox")
 
 extend_path("~/.yarn/bin")
