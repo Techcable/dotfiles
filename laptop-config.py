@@ -3,6 +3,7 @@ from pathlib import Path
 
 export("MACHINE_NAME", "archlinux-lenovo-2017")
 export("MACHINE_NAME_SHORT", "archtop")
+export("MACHINE_PREFIX_COLOR", ["cyan", "--bold"])
 export("BROWSER", "/usr/bin/firefox")
 
 extend_path("~/.yarn/bin")
