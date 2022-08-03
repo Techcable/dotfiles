@@ -5,7 +5,7 @@ from abc import ABCMeta, abstractmethod
 from pathlib import Path
 from typing import Optional, Type, Union
 
-ShellValue = Union[Path, str, int]
+ShellValue = Union[Path, str, int, list["ShellValue"]]
 
 
 class Mode(metaclass=ABCMeta):
@@ -92,6 +92,9 @@ class ZshMode(Mode):
             value = str(value)
         elif isinstance(value, str):
             pass
+        elif isinstance(value, list):
+            # zsh array
+            return "(" + " ".join(map(self._quote, value)) + ")"
         else:
             raise TypeError(type(value))
         return escape_quoted(
@@ -125,6 +128,8 @@ class XonshMode(Mode):
     def _quote(self, value: ShellValue) -> str:
         if isinstance(value, (Path, int)):
             value = str(value)
+        elif isinstance(value, list):
+            return "[" + ", ".join(map(self._quote, value)) + "]"
         elif isinstance(value, str):
             pass
         else:
@@ -159,6 +164,11 @@ class FishMode(Mode):
     def _quote(self, value: ShellValue) -> str:
         if isinstance(value, (Path, int)):
             value = str(value)
+        elif isinstance(value, list):
+            assert value, "Empty lists are forbidden"
+            # lists are really fundemental in fish, all varaiables are arrays
+            # thus, we just have to space-seperate the quoted variables
+            return " ".join(map(self._quote, value))
         elif isinstance(value, str):
             pass
         else:
