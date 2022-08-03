@@ -56,6 +56,22 @@ function fish_prompt
         end
     end
 
+    # Techcable: patch (add machine-specific prefixes)
+    function _detect_prefix
+        if set -q MACHINE_PREFIX
+            echo -n $MACHINE_PREFIX
+        else
+            if set -q MACHINE_NAME_SHORT
+                set -f used_name $MACHINE_NAME_SHORT
+            else
+                set -f used_name $MACHINE_NAME
+            end
+            echo -n -s (set_color green) $used_name (set_color normal)
+        end
+    end
+
+    set -l machine_prefix (_detect_prefix)
+
     set -l cyan (set_color -o cyan)
     set -l yellow (set_color -o yellow)
     set -l red (set_color -o red)
@@ -86,5 +102,5 @@ function fish_prompt
         end
     end
 
-    echo -n -s $arrow ' '$cwd $repo_info $normal ' '
+    echo -n -s $machine_prefix $arrow ' '$cwd $repo_info $normal ' '
 end
