@@ -58,6 +58,12 @@ function fish_prompt
 
     # Techcable: patch (add machine-specific prefixes)
     function _detect_prefix
+        if set -q MACHINE_PREFIX_COLOR
+            set -f used_color $MACHINE_PREFIX_COLOR
+        else
+            # default to green
+            set -f used_color green
+        end
         if set -q MACHINE_PREFIX
             echo -n $MACHINE_PREFIX
         else
@@ -66,7 +72,7 @@ function fish_prompt
             else
                 set -f used_name $MACHINE_NAME
             end
-            echo -n -s (set_color green) $used_name (set_color normal)
+            echo -n -s (set_color $used_color) $used_name (set_color normal)
         end
     end
 
