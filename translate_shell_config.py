@@ -7,6 +7,17 @@ from typing import Optional, Type, Union
 
 ShellValue = Union[Path, str, int, list["ShellValue"]]
 
+_ANSI_COLOR_NAMES = (
+    "black",
+    "red",
+    "green",
+    "yellow",
+    "blue",
+    "magenta",
+    "cyan",
+    "white",
+)
+
 
 class Mode(metaclass=ABCMeta):
     _output: list[str]
@@ -23,6 +34,58 @@ class Mode(metaclass=ABCMeta):
 
     def _write(self, *args: object):
         self._output.append(" ".join(map(str, args)))
+
+    def reset_color(self) -> str:
+        """A command to reset the ANSI color codes. Equivalent to set_color('reset')"""
+        return self.set_color("reset")
+
+    def set_color(self, color: str, **kwargs):
+        """
+        Emits ANSI color codes to set the terminal color
+
+        Tries to be consistent with click.style
+        and fish set_style
+
+        Valid keyword arguments optio:
+        bold - Sets bold color
+        fg, foreground - Sets the foreground color (implied by deafault)
+        bg, background - Sets the background color
+        """
+
+        def check_flag(*names, default=False) -> bool:
+            for name in names:
+                if name not in kwargs:
+                    continue
+                val = kwargs[name]
+                if type(val) is not bool:
+                    raise TypeError(f"for {name!r}: {val!r}")
+                return val
+            return default
+
+        # https://talyian.github.io/ansicolors/
+        # https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_(Select_Graphic_Rendition)_parameters
+        parts = []
+        foreground = True  # on by default
+        if check_flag("bg", "background"):
+            foreground = False
+        if check_flag("fg", "foreground"):
+            assert foreground, "Background flag is incompatible with foreground"
+        # Handle color
+        if "reset" == color:
+            assert len(kwargs) == 0, "All other flags are incompatible with `reset`"
+            parts.append(0)
+        else:
+            try:
+                offset = _ANSI_COLOR_NAMES.index(color)
+            except ValueError:
+                raise ValueError(f"Unknown color name: {color!r}") from None
+            parts.append((30 if foreground else 40) + offset)
+        # misc attributes
+        if check_flag("bold"):
+            parts.append(1)
+        if check_flag("underline"):
+            parts.append(4)
+        return f"\x1b[" + ";".join(map(str, parts)) + "m"
 
     @abstractmethod
     def warning(self, msg: str):

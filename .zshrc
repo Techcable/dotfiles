@@ -249,12 +249,19 @@ function print_stars() {
     python -c "print('*' * ( $cols - 1 ))";
 }
 
+# Prefix prompt with machine name
+if [[ -z "$MACHINE_PREFIX_COLOR" ]]; then
+    MACHINE_PREFIX_COLOR="%{$fg[magenta]%}";
+fi
+if [[ -z "$MACHINE_NAME_SHORT" ]]; then
+    # Fallback: Give us a 'zsh' indicator before our prompt
+    MACHINE_NAME_SHORT="zsh";
+fi
 
-# Give us a 'zsh' indicator before our prompt
 OLD_PROMPT="$PROMPT"
 # NOTE: Must escape with %{fg[magenta%} or it'll get all confused about
 # cursor position: https://code-examples.net/en/q/796bbb
-export PROMPT="%{$fg[magenta]%}zsh$OLD_PROMPT"
+export PROMPT="%{$MACHINE_PREFIX_COLOR%}$MACHINE_NAME_SHORT$OLD_PROMPT"
 
 # NOTE: Prompt about switching to xonsh
 print_stars
