@@ -152,16 +152,18 @@ local dotfiles="$HOME/git/dotfiles"
 
 if [[ ! -d "$dotfiles" ]]; then
     warning "Missing dotfiles, shell configuration will fail"
-elif [[ ! -f ~/.shell-config.py ]]; then
-    warning "Missing configuration file"
 else
     export DOTFILES_PATH="$dotfiles";
     local translation_script="$HOME/git/dotfiles/translate_shell_config.py";
     # First execute "common" config
     local translated_config=$(python3 "$translation_script" zsh "$dotfiles/common-config.py");
     eval "$translated_config";
-    translated_config=$(python3 "$translation_script" zsh ~/.shell-config.py);
-    eval "$translated_config";
+    if [[ ! -f ~/.shell-config.py ]]; then
+        warning "Missing configuration file"
+    else
+        translated_config=$(python3 "$translation_script" zsh ~/.shell-config.py);
+        eval "$translated_config";
+    fi
 fi
 
 
