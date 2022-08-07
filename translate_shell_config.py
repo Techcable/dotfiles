@@ -15,6 +15,12 @@ class Mode(metaclass=ABCMeta):
         self._output = []
         self._defer_warnings = False
 
+    @classmethod
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        pass
+
     def _write(self, *args: object):
         self._output.append(" ".join(map(str, args)))
 
@@ -73,6 +79,11 @@ def escape_quoted(
 
 
 class ZshMode(Mode):
+    @classmethod
+    @property
+    def name(self) -> str:
+        return "zsh"
+
     def export(self, name: str, value: ShellValue):
         self._write("export", f"{name}={self._quote(value)}")
 
@@ -109,6 +120,11 @@ class ZshMode(Mode):
 
 
 class XonshMode(Mode):
+    @classmethod
+    @property
+    def name(self) -> str:
+        return "xonsh"
+
     def export(self, name: str, value: ShellValue):
         self._write(f"${name}={self._quote(value)}")
 
@@ -143,6 +159,11 @@ class XonshMode(Mode):
 
 
 class FishMode(Mode):
+    @classmethod
+    @property
+    def name(self) -> str:
+        return "fish"
+
     def export(self, name: str, value: ShellValue):
         self._write(f"set -gx {name} {self._quote(value)}")
 
@@ -190,13 +211,17 @@ _VALID_MODES = {
     "xonsh": XonshMode(),
     "fish": FishMode(),
 }
+for name, mode in _VALID_MODES.items():
+    assert mode.name == name, mode.name
 
 
 def run_mode(mode: Mode, config_file: Path) -> list[str]:
     assert not mode._output, "Already have output for mode"
     with open(config_file, "rt") as f:
         config_script = compile(f.read(), str(config_file), "exec")
-    context = {}
+    context = {
+        "SHELL_BACKEND": mode.name,
+    }
     for attr_name in dir(Mode):
         if attr_name.startswith("_"):
             continue
