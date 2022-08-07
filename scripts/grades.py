@@ -23,11 +23,32 @@ class Grade:
             if not ALLOW_OVER_100:
                 raise ValueError("Bad grade: {self.points}/{self.maximum}")
 
+    @property
+    def letter(self) -> str:
+        grd = float(self)
+        if grd >= 0.9:
+            return "A"
+        elif grd >= 0.8:
+            return "B"
+        elif grd >= 0.7:
+            return "C"
+        elif grd >= 0.6:
+            return "D"
+        else:
+            return "F"
+
+    @property
+    def approx(self) -> float:
+        return float(self)
+
     def __float__(self):
         return self.points / self.maximum
 
     def __str__(self):
         return f"{self.points}/{self.maximum}"
+
+    def __repr__(self):
+        return f"Grade({self.points}, {self.maximum}, letter={self.letter}, approx={self.approx})"
 
     def __add__(self, other):
         if isinstance(other, Grade):
