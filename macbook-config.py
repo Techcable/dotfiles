@@ -85,10 +85,6 @@ extend_path("/opt/zig/bin")
 # Janet: jpm is installed to /opt/janet
 extend_path("/opt/janet/bin")
 
-# srht CLI: https://git.sr.ht/~emersion/hut
-extend_path("/opt/srhut/bin")
-extend_path("/opt/srhut/share/man", "MANPATH")
-
 # senpai IRC client (CLI): https://sr.ht/~taiite/senpai/
 extend_path("/opt/senpai/bin")
 extend_path("/opt/senpai/bin/man", "MANPATH")
