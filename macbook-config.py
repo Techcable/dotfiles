@@ -89,6 +89,10 @@ extend_path("/opt/janet/bin")
 extend_path("/opt/srhut/bin")
 extend_path("/opt/srhut/share/man", "MANPATH")
 
+# senpai IRC client (CLI): https://sr.ht/~taiite/senpai/
+extend_path("/opt/senpai/bin")
+extend_path("/opt/senpai/bin/man", "MANPATH")
+
 # Some homebrew things are "keg-only" meaning they are not on the path by default
 #
 # Usually these are alternative versions of the main package.
