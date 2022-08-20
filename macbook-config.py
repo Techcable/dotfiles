@@ -82,9 +82,6 @@ extend_path("/opt/criterion/lib/pkgconfig", "PKG_CONFIG_PATH")
 # Zig: Installed to /opt/zig so I can experiment with latest development versions :)
 extend_path("/opt/zig/bin")
 
-# Janet: jpm is installed to /opt/janet
-extend_path("/opt/janet/bin")
-
 # senpai IRC client (CLI): https://sr.ht/~taiite/senpai/
 extend_path("/opt/senpai/bin")
 extend_path("/opt/senpai/man", "MANPATH")
