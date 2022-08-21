@@ -86,6 +86,34 @@ extend_path("/opt/zig/bin")
 extend_path("/opt/senpai/bin")
 extend_path("/opt/senpai/man", "MANPATH")
 
+# Calling `brew list --versions janet` takes 500 ms,
+# prefer `janet -v` which takes 5ms
+try:
+    def parse_janet_version(output: str):
+        import re  # Bizzare name-error if I import this at top of file
+        mtch = re.match(r"^([\d\.]+)([-\w]+)$", output)
+        if mtch is not None:
+            return mtch.group(1)
+        else:
+            warning("Unable to parse janet version: {output!r}")
+            return None
+    current_janet_version = parse_janet_version(run(
+        ["janet", "-v"],
+        check=True,
+        stdout=PIPE,
+        encoding="utf8",
+    ).stdout.rstrip())
+    del parse_janet_version  # scoping ;)
+except CalledProcessError:
+    warning("Unable to detect Janet version")
+    current_janet_version = None  # AKA "unknown"
+
+if current_janet_version is not None:
+    # add janet-specific bin path (used for janet binary packages)
+    extend_path(f"/opt/homebrew/Cellar/janet/{current_janet_version}/bin")
+else:
+    warning("Missing janet version")
+
 # Some homebrew things are "keg-only" meaning they are not on the path by default
 #
 # Usually these are alternative versions of the main package.
