@@ -84,7 +84,7 @@ extend_path("/opt/zig/bin")
 
 # senpai IRC client (CLI): https://sr.ht/~taiite/senpai/
 extend_path("/opt/senpai/bin")
-extend_path("/opt/senpai/man", "MANPATH")
+extend_path("/opt/senpai/share/man", "MANPATH")
 
 # Calling `brew list --versions janet` takes 500 ms,
 # prefer `janet -v` which takes 5ms
