@@ -18,6 +18,8 @@ _ANSI_COLOR_NAMES = (
     "white",
 )
 
+DOTFILES_PATH = Path(__file__).parent
+
 
 class Mode(metaclass=ABCMeta):
     _output: list[str]
@@ -28,8 +30,19 @@ class Mode(metaclass=ABCMeta):
 
     @classmethod
     @property
+    def helper_path(cls) -> Optional[Path]:
+        """Path to the helper functions"""
+        return None
+
+    @classmethod
+    @property
+    def cleanup_code(cls) -> Optional[str]:
+        return None
+
+    @classmethod
+    @property
     @abstractmethod
-    def name(self) -> str:
+    def name(cls) -> str:
         pass
 
     def _write(self, *args: object):
@@ -88,6 +101,10 @@ class Mode(metaclass=ABCMeta):
         return f"\x1b[" + ";".join(map(str, parts)) + "m"
 
     @abstractmethod
+    def source_file(self, p: Path):
+        pass
+
+    @abstractmethod
     def warning(self, msg: str):
         pass
 
@@ -144,8 +161,11 @@ def escape_quoted(
 class ZshMode(Mode):
     @classmethod
     @property
-    def name(self) -> str:
+    def name(cls) -> str:
         return "zsh"
+
+    def source_file(self, f: Path):
+        self._write("source", str(path))
 
     def export(self, name: str, value: ShellValue):
         self._write("export", f"{name}={self._quote(value)}")
@@ -185,8 +205,15 @@ class ZshMode(Mode):
 class XonshMode(Mode):
     @classmethod
     @property
-    def name(self) -> str:
+    def name(cls) -> str:
         return "xonsh"
+
+    def source_file(self, f: Path):
+        # Not needed because xonsh currently has no helpers
+        #
+        # Once we do implement this, it should probably down to
+        # a from `{f}` import *
+        raise NotImplementedError
 
     def export(self, name: str, value: ShellValue):
         self._write(f"${name}={self._quote(value)}")
@@ -224,8 +251,21 @@ class XonshMode(Mode):
 class FishMode(Mode):
     @classmethod
     @property
-    def name(self) -> str:
+    def name(cls) -> str:
         return "fish"
+
+    @classmethod
+    @property
+    def helper_path(cls) -> Path:
+        return Path("shell_config/fish_helpers.fish")
+
+    def source_file(self, f: Path):
+        self._write("source", str(f))
+
+    @classmethod
+    @property
+    def cleanup_code(cls) -> str:
+        return "clear_helper_funcs\nset --erase clear_helper_funcs"
 
     def export(self, name: str, value: ShellValue):
         self._write(f"set -gx {name} {self._quote(value)}")
@@ -235,15 +275,7 @@ class FishMode(Mode):
         self._write(f"alias {name}={self._quote(value)}")
 
     def _extend_path_impl(self, value: Union[str, Path], var_name: Optional[str]):
-        # TODO: Give warnings on missing paths
-        if var_name is None:
-            # Reuse that handy builtin
-            self._write(f"fish_add_path -ga {self._quote(value)}")
-        else:
-            # This is adhoc
-            self._write(f"if not contains {self._quote(value)} ${var_name}")
-            self._write(f"    set -gxa {var_name} {self._quote(value)}")
-            self._write("end")
+        self._write(f"add_path_any --variable {var_name or 'PATH'}", self._quote(value))
 
     def _quote(self, value: ShellValue) -> str:
         if isinstance(value, (Path, int)):
@@ -280,6 +312,8 @@ for name, mode in _VALID_MODES.items():
 
 def run_mode(mode: Mode, config_file: Path) -> list[str]:
     assert not mode._output, "Already have output for mode"
+    if (helper := mode.helper_path) is not None:
+        mode.source_file(DOTFILES_PATH / helper)
     with open(config_file, "rt") as f:
         config_script = compile(f.read(), str(config_file), "exec")
     context = {
@@ -290,6 +324,10 @@ def run_mode(mode: Mode, config_file: Path) -> list[str]:
             continue
         context[attr_name] = getattr(mode, attr_name)
     exec(config_script, context, {})
+    # Cleanup
+    if (cleanup := mode.cleanup_code) is not None:
+        for line in cleanup.splitlines():
+            mode._write(line)
     return mode._output
 
 
