@@ -1,0 +1,12 @@
+#!/usr/bin/env python3
+import urllib.parse
+import click
+
+@click.command()
+@click.argument('text')
+def urlescape(text: str):
+    """URL escapes the specified text"""
+    print(urllib.parse.quote(text))
+
+if __name__ == "__main__":
+    urlescape()
