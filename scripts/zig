@@ -28,6 +28,7 @@ attempt_exec() {
     fi
 }
 
+attempt_exec "$HOME/git/zig/builds/safe/bin/zig";
 attempt_exec "$HOME/git/zig/builds/release/bin/zig";
 attempt_exec "/opt/zig/bin/zig";
 
