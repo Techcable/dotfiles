@@ -28,7 +28,7 @@ attempt_exec() {
     fi
 }
 
-attempt_exec "$HOME/git/builds/release/bin/zig";
+attempt_exec "$HOME/git/zig/builds/release/bin/zig";
 attempt_exec "/opt/zig/bin/zig";
 
 if which zig >/dev/null; then
