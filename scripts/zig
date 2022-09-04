@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+args=("$@");
+
+should_show_version() {
+    if [[ ! -z "$SHOW_ZIG" ]]; then
+        return 0;
+    fi
+    if [[ "${#args[@]}" -eq 0 ]] || [[ "${args[1]}" == "help" ]]; then
+        return 0;
+    fi
+    return 1;
+}
+function strip_prefix() {
+    echo "$1" | sed 's/\/bin\/zig$//' | sed "s#$HOME#~#";
+}
+attempt_exec() {
+    if [[ -x "$1" ]]; then
+        if [[ -z "$2" ]]; then
+            comment="";
+        else
+            comment=" $2";
+        fi
+        if should_show_version "$1"; then
+            echo "Found$comment zig "$($1 version)" in $(strip_prefix "$(realpath $1)")" >&2;
+        fi
+        exec $1 "${args[@]}";
+    fi
+}
+
+attempt_exec "$HOME/git/builds/release/bin/zig";
+attempt_exec "/opt/zig/bin/zig";
+
+if which zig >/dev/null; then
+    echo "Unable to find `zig` executable on PATH"
+fi
+
+attempt_exec "$(which zig)" "system";
