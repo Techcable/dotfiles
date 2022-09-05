@@ -27,6 +27,33 @@ extend_path(DOTFILES_PATH / "scripts")
 # I like neovim
 export("EDITOR", "nvim")
 
+# Setup opam (ocaml) package manager if available
+if shutil.which("opam"):
+    if SHELL_BACKEND == "xonsh":
+        # Sadly, opam has no xonsh support directly
+        #
+        # We pass through zsh2xonsh instead
+        try:
+            import zsh2xonsh
+
+            zsh_envinit = run(
+                ["opam", "env", "--shell=zsh"], stdout=PIPE, encoding="utf8"
+            ).stdout.rstrip()
+            translated_envinit = zsh2xonsh.translate_to_xonsh(zsh_envinit)
+            eval_text(translated_envinit)
+        except ImportError:
+            warning("Unable to import zsh2xonsh, cannot resolve opam")
+    elif SHELL_BACKEND in ("zsh", "fish"):
+        # Otherwise natively supported
+        eval_text(
+            run(
+                ["opam", "env", f"--shell={SHELL_BACKEND}"],
+                stdout=PIPE,
+                encoding="utf8",
+            ).stdout.rstrip()
+        )
+    else:
+        raise AssertionError(SHELL_BACKEND)
 
 # Fix GPG error "Inappropriate ioctl for device"
 # See stackoverflow: https://stackoverflow.com/a/41054093

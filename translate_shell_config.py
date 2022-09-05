@@ -101,6 +101,10 @@ class Mode(metaclass=ABCMeta):
         return f"\x1b[" + ";".join(map(str, parts)) + "m"
 
     @abstractmethod
+    def eval_text(self, text: str):
+        pass
+
+    @abstractmethod
     def source_file(self, p: Path):
         pass
 
@@ -164,6 +168,9 @@ class ZshMode(Mode):
     def name(cls) -> str:
         return "zsh"
 
+    def eval_text(self, text: str):
+        self._write("eval", self._quote(text))
+
     def source_file(self, f: Path):
         self._write("source", str(path))
 
@@ -207,6 +214,9 @@ class XonshMode(Mode):
     @property
     def name(cls) -> str:
         return "xonsh"
+
+    def eval_text(self, text: str):
+        self._write(f"execx({self._quote(text)})")
 
     def source_file(self, f: Path):
         # Not needed because xonsh currently has no helpers
@@ -258,6 +268,9 @@ class FishMode(Mode):
     @property
     def helper_path(cls) -> Path:
         return Path("shell_config/fish_helpers.fish")
+
+    def eval_text(self, text: str):
+        self._write("eval", self._quote(text))
 
     def source_file(self, f: Path):
         self._write("source", str(f))
