@@ -61,9 +61,13 @@ def load_extra_config():
             warning(f"Path doesn't exist {value!r} (ignoring)")
             return
         try:
-            __xonsh__.env[var].append(value)
+            path = __xonsh__.env[var]
         except KeyError:
+            # Initialize new path variable
             __xonsh__.env[var] = type($PATH)([value])
+            return # No need to check
+        if str(value) not in path and value not in path:
+            path.append(value)
 
     extra_builtins={
         'extend_path': (extend_path),
