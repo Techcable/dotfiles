@@ -28,7 +28,10 @@ extend_path(DOTFILES_PATH / "scripts")
 export("EDITOR", "nvim")
 
 # Setup opam (ocaml) package manager if available
-if shutil.which("opam"):
+#
+# TODO: This clobbers path
+# Essentially it executes at comptime what should be done at runtime
+if shutil.which("opam") and False:
     if SHELL_BACKEND == "xonsh":
         # Sadly, opam has no xonsh support directly
         #
