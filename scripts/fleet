@@ -1,0 +1,53 @@
+#!/usr/bin/env janet
+(import spork/path)
+
+(defn unsupported-operating-system []
+  (errorf "TODO: Unsupported operating system: %q" (string (os/which))))
+
+(def toolbox-location (case (os/which)
+  :macos (path/join (os/getenv "HOME") "Library/Application Support/JetBrains/Toolbox")
+  (unsupported-operating-system)))
+
+(defn expect-file [pth &keys {:ctx context :mode mode}]
+  (default mode :file)
+  (defn fail [fmt & args]
+    (def details (string/format fmt ;args))
+    (assert (string? fmt))
+    (error (if context
+      (string/format "%s\n  %s" context details)
+      details)))
+  (match (get (os/stat pth) :mode)
+    (@ mode) (do)
+    nil (fail "Missing %s: %s" mode pth)
+    actual-mode (fail "Expected a %s, but got %s: %s" actual-mode mode pth)))
+
+(defn expect-directory [& args] (expect-file ;args :mode :directory))
+
+(expect-directory toolbox-location :ctx "Unable to find jetbrains toolbox")
+
+(def app-dir (path/join toolbox-location "apps" "Fleet" "ch-0"))
+
+(expect-directory app-dir :ctx "Unable to find 'Fleet' app in toolbox. Is it installed?")
+
+(defn parse-int [s]
+  (when (not (peg/match '(* :d+ -1) s))
+    (errorf "Invalid integer: %q" s))
+  (scan-number s))
+
+(def version-pattern ~{:main (* (any (* :int ".")) :int -1) :int (/ (<- :d+) ,parse-int)})
+
+(def version-dir (let [versions (sorted (keep |(peg/match version-pattern $) (os/dir app-dir)))]
+  (when (empty? versions)
+    (errorf "No versions of fleet installed!\n  Directory is empty: %s" app-dir))
+  (assert (not (empty? versions)))
+  (path/join app-dir (string/join (map string (last versions)) "."))))
+
+(def binary-location (case (os/which)
+  :macos (path/join version-dir "Fleet.app" "Contents" "app" "bin" "fleet")
+  (unsupported-operating-system)))
+
+(expect-file binary-location :ctx "Unable to find `fleet` binary")
+
+(with [proc (os/spawn [binary-location ;(slice (dyn *args*) 1)])]
+  (os/exit (os/proc-wait proc)))
+
