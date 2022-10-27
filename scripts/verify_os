@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+import platform
+import sys
+
+class CommandError(RuntimeError):
+    pass
+
+class BadArgumentCount(CommandError):
+    pass
+
+def main(args):
+    if len(args) == 0:
+        raise BadArgumentCount("Need at least one argument")
+    expected_platform_name = args[0]
+    actual_platform_name = platform.uname().system
+    if expected_platform_name != actual_platform_name:
+        raise CommandError(f"Expected a {expected_platform_name} system, but got {actual_platform_name}")
+    if len(args) == 1:
+        return
+    elif len(args) > 2:
+        raise BadArgumentCount(f"Too many arguments (got {len(args)})")
+    else:
+        expected_distro_id = args[1]
+        if expected_platform_name != "Linux":
+            raise CommandError(f"Only able to check for distro on Linux (not {expected_platform_name!r})")
+        try:
+            info = platform.freedesktop_os_release()
+            actual_distro_id = info["ID"]
+        except (KeyError, OSError) as e:
+            if isinstance(e, KeyError):
+                cause = f"Unable to find key {e.args[0]!r}"
+            else:
+                cause = f"{type(e).__name__}: {e}"
+            raise CommandError(f"Unable to detect distro\n  Cause: {cause}")
+        if actual_distro_id != expected_distro_id:
+            raise CommandError(f"Expected Linux distro {expected_distro_id!r}, but got {actual_distro_id!r}")
+
+
+if __name__ == "__main__":
+    try:
+        main(sys.argv[1:])
+    except BadArgumentCount as e:
+        print(f"Error: {e}", file=sys.stderr)
+        print(file=sys.stderr)
+        print("Usage: verify_os.py <uname.system> [linux_distro]", file=sys.stderr)
+        exit(1)
+    except CommandError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        exit(1)
+
