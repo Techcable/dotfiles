@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import csv
 import io
 import json
@@ -14,7 +15,10 @@ import click
 class FileType(Enum):
     FILE = "file"
     OTHER = "other"
-    DIR = "directory"
+    DIR = "dir"
+
+    def __str__(self):
+        return self.value
 
 
 @dataclass
@@ -67,13 +71,20 @@ class Output(metaclass=ABCMeta):
             if "excluded" in data:
                 return
             name = data["name"]
-            size = data.get("asize")
-            if size is not None:
-                size = int(size)
             if data.get("notreg"):
                 file_type = FileType.OTHER
+                size = data.get("asize")
+                if size is not None:
+                    size = int(size)
+            elif is_dir:
+                file_type = FileType.DIR
+                size = None
             else:
-                file_type = FileType.DIR if is_dir else FileType.FILE
+                file_type = FileType.FILE
+                try:
+                    size = int(data["asize"])
+                except KeyError:
+                    size = 0
             full_path = parent / name
             self.write_entry(
                 Entry(
