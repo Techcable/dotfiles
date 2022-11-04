@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
+from fractions import Fraction
 from typing import Iterable, Union
 
 ALLOW_OVER_100 = False
 
+Weight = Union[float, tuple[float, float]]
 GradeLike = Union["Grade", tuple[float, float]]
 Grades = Union[GradeLike, Iterable[GradeLike]]
 
@@ -62,6 +64,9 @@ class Grade:
         else:
             return NotImplemented
 
+    def norm(self) -> Grade:
+        return Grade(self.points / self.maximum, 1)
+
     @staticmethod
     def combine(g: Grades) -> Grade:
         if isinstance(g, Grade):
@@ -79,12 +84,16 @@ class Grade:
             return total
 
     @staticmethod
-    def weight(weights: dict[float, Grades]) -> Grade:
+    def weight(weights: Iterable[tuple[Weight, Grades]]) -> Grade:
         total_weight = 0.0
         total = Grade(0, 0)
-        assert math.isclose(sum(weights.keys()), 1.0)
-        for w, grades in weights.items():
+        assert math.isclose(sum(float(Fraction(w)) for w, _ in weights), 1.0)
+        for w, grades in weights:
             assert w > 0 and w <= 1
-            total += Grade.combine(grades) * w
+            total += Grade.combine(grades).norm() * w
             total_weight += w
         return total
+
+    @staticmethod
+    def avg(grades: Iterable[GradeLike]) -> Grade:
+        return Grade.combine(Grade(g.approx, 1) for g in grades)
