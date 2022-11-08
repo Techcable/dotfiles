@@ -1,4 +1,5 @@
 # Configuration for my 2021 Macbook Pro
+import shlex
 import shutil
 import sys
 from pathlib import Path
@@ -35,6 +36,33 @@ else:
 
 # Keybase path
 extend_path("/Applications/Keybase.app/Contents/SharedSupport/bin")
+
+for app_name in ["Keybase", "Sublime Text", "Texifier"]:
+    app_root = Path(f"/Applications/{app_name}.app")
+    if not app_root.is_dir():
+        warning("Unable to find application {app_name}: Missing directory {app_root!r}")
+    try:
+        executable_name = run(
+            ["defaults", "read", str(app_root / "Contents/Info"), "CFBundleExecutable"],
+            check=True,
+            stdout=PIPE,
+            encoding="utf8",
+        ).stdout.rstrip()
+    except CalledProcessError:
+        warning(f"Unable to detect executable name for {app_root!r}")
+        continue
+    support_bin_dir = app_root / "Contents/SharedSupport/bin"
+    main_bin_path = app_root / "Contents/MacOS" / executable_name
+    if not main_bin_path.is_file():
+        warning(f"Missing binary path for {app_name}: {main_bin_path!r}")
+    elif support_bin_dir.is_dir():
+        extend_path(support_bin_dir)
+    else:
+        alias(
+            executable_name.lower().replace("_", "-").replace(" ", "-"),
+            run_in_background_helper([str(main_bin_path)]),
+        )
+
 
 # Where pip install puts console_script executables
 extend_path("/opt/homebrew/Frameworks/Python.framework/Versions/Current/bin")
@@ -86,20 +114,25 @@ extend_path("/opt/senpai/share/man", "MANPATH")
 # Calling `brew list --versions janet` takes 500 ms,
 # prefer `janet -v` which takes 5ms
 try:
+
     def parse_janet_version(output: str):
         import re  # Bizzare name-error if I import this at top of file
+
         mtch = re.match(r"^([\d\.]+)([-\w]+)$", output)
         if mtch is not None:
             return mtch.group(1)
         else:
             warning("Unable to parse janet version: {output!r}")
             return None
-    current_janet_version = parse_janet_version(run(
-        ["janet", "-v"],
-        check=True,
-        stdout=PIPE,
-        encoding="utf8",
-    ).stdout.rstrip())
+
+    current_janet_version = parse_janet_version(
+        run(
+            ["janet", "-v"],
+            check=True,
+            stdout=PIPE,
+            encoding="utf8",
+        ).stdout.rstrip()
+    )
     del parse_janet_version  # scoping ;)
 except CalledProcessError:
     warning("Unable to detect Janet version")
@@ -161,4 +194,3 @@ if shutil.which("pacaptr") is not None:
 # Python Environment: https://xkcd.com/1987/
 if shutil.which("python") is None:
     alias("python", "python3")
-

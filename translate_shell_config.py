@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import re
+import shlex
 import sys
+import warnings
 from abc import ABCMeta, abstractmethod
 from pathlib import Path
 from typing import Optional, Type, Union
@@ -120,6 +122,23 @@ class Mode(metaclass=ABCMeta):
     def alias(self, name: str, value: ShellValue):
         pass
 
+    def run_in_background_helper(self, args: list[str]):
+        """A hack to run in background via python"""
+        assert args, "Need at least 1 command"
+        warnings.warn(
+            "TODO: Replace with proper run-in-background??",
+            PendingDeprecationWarning,
+            stacklevel=2,
+        )
+        python_helper_command = "\n".join(
+            [
+                "import sys, subprocess",
+                "from subprocess import DEVNULL",
+                "subprocess.Popen(sys.argv[1:], stdout=DEVNULL, stderr=DEVNULL)",
+            ]
+        )
+        return " ".join(["python3", "-c", self._quote(python_helper_command), *args])
+
     def extend_path(self, value: Union[str, Path], var_name: Optional[str] = None):
         # Implicitly convert string into path, expanding ~
         if isinstance(value, str):
@@ -150,6 +169,7 @@ _FISH_SIMPLE_QUOTE_PATTERN = _ZSH_SIMPLE_QUOTE_PATTERN
 def escape_quoted(
     value: str, *, quote_char: str, bad_chars: set[str], simple_pattern: re.Pattern
 ) -> str:
+    assert "\\" in bad_chars
     assert quote_char in ("'", '"')
     if simple_pattern.fullmatch(value) is not None:
         return value
@@ -329,6 +349,8 @@ def run_mode(mode: Mode, config_file: Path) -> list[str]:
         mode.source_file(DOTFILES_PATH / helper)
     with open(config_file, "rt") as f:
         config_script = compile(f.read(), str(config_file), "exec")
+    # TODO: Isolate to the specific module, not everything
+    warnings.filterwarnings("default", category=DeprecationWarning)
     context = {
         "SHELL_BACKEND": mode.name,
     }
