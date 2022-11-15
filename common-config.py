@@ -79,6 +79,15 @@ if shutil.which("exa"):
     alias("ls", "exa")
     alias("lsa", "exa -a")
 
+# Warn on usage of bpytop
+if shutil.which("bpytop"):
+    if shutil.which("btop"):
+        alias("bpytop", f'bpytop; echo "{set_color("yellow", bold=True)}NOTE{reset_color()}: Please consider using btop"')
+    else:
+        warning("bpytop is installed, but not btop")
+else:
+    warning("bpytop is not installed")
+
 # This is xonsh-specific (not even sure why it's here)
 #
 # We Prefix with 'py' to indicate we are in xonsh
