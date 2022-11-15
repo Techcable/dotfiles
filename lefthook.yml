@@ -1,0 +1,13 @@
+skip_output:
+  - meta
+  - success
+  - summary
+pre-commit:
+  commands:
+    # Format Python with black & isort
+    black:
+      tags: formatter, python
+      run: black --check .
+    isort:
+      tags: formatter, python
+      run: isort --check --profile black .

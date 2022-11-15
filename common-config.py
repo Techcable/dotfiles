@@ -2,7 +2,7 @@
 import os
 import shutil
 from pathlib import Path
-from subprocess import run, PIPE
+from subprocess import PIPE, run
 
 try:
     DOTFILES_PATH = Path(os.environ["DOTFILES_PATH"])
@@ -82,7 +82,10 @@ if shutil.which("exa"):
 # Warn on usage of bpytop
 if shutil.which("bpytop"):
     if shutil.which("btop"):
-        alias("bpytop", f'bpytop; echo "{set_color("yellow", bold=True)}NOTE{reset_color()}: Please consider using btop"')
+        alias(
+            "bpytop",
+            f'bpytop; echo "{set_color("yellow", bold=True)}NOTE{reset_color()}: Please consider using btop"',
+        )
     else:
         warning("bpytop is installed, but not btop")
 else:
