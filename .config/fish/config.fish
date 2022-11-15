@@ -18,16 +18,6 @@ end
 
 set -gx DOTFILES_PATH $HOME/git/dotfiles
 
-# TODO: Is this ever used?
-#
-# It takes 6 ms to execute and is quickly superceeded by the export("MACHINE_NAME", ...)
-# function from ~/.shell-cofnig
-set -l machine_name (lua $DOTFILES_PATH/scripts/detect_machine_name.lua --long)
-
-if test $status -ne 0;
-   warning "Empty machine name"
-end
-
 function setup_extra_config
     if ! test -d $DOTFILES_PATH
         warning "Unable to load configuration (missing dotfiles)"
