@@ -80,11 +80,11 @@ if shutil.which("exa"):
     alias("lsa", "exa -a")
 
 # Warn on usage of bpytop
-if shutil.which("bpytop"):
+if real_bpytop := shutil.which("bpytop"):
     if shutil.which("btop"):
         alias(
             "bpytop",
-            f'bpytop; echo "{set_color("yellow", bold=True)}NOTE{reset_color()}: Please consider using btop"',
+            f'{real_bpytop}; echo "{set_color("yellow", bold=True)}NOTE{reset_color()}: Please consider using btop"',
         )
     else:
         warning("bpytop is installed, but not btop")
