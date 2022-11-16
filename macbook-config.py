@@ -111,6 +111,11 @@ extend_path("/opt/criterion/lib/pkgconfig", "PKG_CONFIG_PATH")
 extend_path("/opt/senpai/bin")
 extend_path("/opt/senpai/share/man", "MANPATH")
 
+# MacGPG: https://gpgtools.org/
+extend_path("/usr/local/MacGPG2/bin")
+extend_path("/usr/local/MacGPG2/share/man", "MANPATH")
+
+
 # Calling `brew list --versions janet` takes 500 ms,
 # prefer `janet -v` which takes 5ms
 try:
