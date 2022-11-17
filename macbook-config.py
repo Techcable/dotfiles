@@ -158,14 +158,14 @@ else:
 # so they don't conflict with existing versions
 #
 # Use the extend_path builtin to add it to the end (but only if the keg exists)
-def detect_keg(name: str):
+def detect_keg(name: str, *, order: PathOrderSpec = None):
     global Path  # Why is this needed?
     keg_prefix = Path("/opt/homebrew/opt")
     if (keg_bin := keg_prefix / f"{name}/bin").is_dir():
         # echo "Detected keg $1";
-        extend_path(keg_bin)
+        extend_path(keg_bin, order=order)
     if (keg_pkgconfig := keg_prefix / f"{name}/lib/pkgconfig").is_dir():
-        extend_path(keg_pkgconfig, "PKG_CONFIG_PATH")
+        extend_path(keg_pkgconfig, "PKG_CONFIG_PATH", order=order)
 
 
 detect_keg("python@3.10")
@@ -182,7 +182,7 @@ detect_keg("lua@5.3")
 # and system LLVM/clang. However, I need clang-format (which is only in Homebrew)
 # and right now I still want to keep using the system clang,
 # so we are stuck with this
-detect_keg("llvm")
+detect_keg("llvm", order=PathOrderSpec.APPEND_SYSTEM)
 
 # Mac has no LDD command
 #

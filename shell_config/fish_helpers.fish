@@ -8,8 +8,18 @@ function warning
 end
 
 function add_path_any
-    argparse 'v/variable=' -- $argv
+    argparse -x 'append,prepend,append-system' 'v/variable=' 'append-system' 'a/append' 'p/prepend' -- $argv
     or return
+    set -l extra_flags
+    if test $_flag_append_system
+        # append directly to path (not $user_paths)
+        # this means lower priority than system stuff 
+        set -a extra_flags "-a" "--path"
+    else if test $_flag_append
+        set -a extra_flags "-a"
+    else if test $_flag_prepend
+        set -a extra_flags "-p"
+    end
     if test (count $argv) -lt 1
         error "Insufficent arguments! Please specify path too add"
     else if test (count $argv) -gt 1
@@ -32,7 +42,7 @@ function add_path_any
         warning "Path does not exist: $target_path"
     else if test $var_name = "PATH"
         # Delegate to builtin
-        fish_add_path -ga $target_path
+        fish_add_path -g $extra_flags $target_path
     else if contains $target_path $$var_name
         # What we want to add ($target_path) is already part of $$var_name,
         # therefore skip over it

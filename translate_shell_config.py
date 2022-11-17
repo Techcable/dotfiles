@@ -4,8 +4,9 @@ import shlex
 import sys
 import warnings
 from abc import ABCMeta, abstractmethod
+from enum import Enum
 from pathlib import Path
-from typing import Optional, Type, Union
+from typing import Final, Literal, Optional, Type, Union
 
 ShellValue = Union[Path, str, int, list["ShellValue"]]
 
@@ -21,6 +22,21 @@ _ANSI_COLOR_NAMES = (
 )
 
 DOTFILES_PATH = Path(__file__).parent
+
+
+class PathOrderSpec(Enum):
+    # prepend to the beginning of the system paths
+    PREPEND = "prepend"
+    # Append to the end of the user paths ($fish_user_paths)
+    APPEND = "append"
+    # Append to the end of the system paths
+    APPEND_SYSTEM = "append-system"
+
+    @property
+    def fish_flag(self) -> str:
+        return f"--{self.value}"
+
+    DEFAULT: Final["PathOrderSpec"] = APPEND
 
 
 class Mode(metaclass=ABCMeta):
@@ -63,6 +79,7 @@ class Mode(metaclass=ABCMeta):
 
         Valid keyword arguments optio:
         bold - Sets bold color
+        [...] - others
         fg, foreground - Sets the foreground color (implied by deafault)
         bg, background - Sets the background color
         """
@@ -98,6 +115,8 @@ class Mode(metaclass=ABCMeta):
         # misc attributes
         if check_flag("bold"):
             parts.append(1)
+        if check_flag("italics"):
+            parts.append(3)
         if check_flag("underline"):
             parts.append(4)
         return f"\x1b[" + ";".join(map(str, parts)) + "m"
@@ -112,6 +131,7 @@ class Mode(metaclass=ABCMeta):
 
     @abstractmethod
     def warning(self, msg: str):
+        # TODO: Replace with plain 'echo', avoid writing shell-specific code
         pass
 
     @abstractmethod
@@ -139,7 +159,17 @@ class Mode(metaclass=ABCMeta):
         )
         return " ".join(["python3", "-c", self._quote(python_helper_command), *args])
 
-    def extend_path(self, value: Union[str, Path], var_name: Optional[str] = None):
+    def extend_path(
+        self,
+        value: Union[str, Path],
+        var_name: Optional[str] = None,
+        *,
+        order: Optional[PathOrderSpec] = None,
+    ):
+        if order is None:
+            order = PathOrderSpec.DEFAULT
+        else:
+            assert isinstance(order, PathOrderSpec), f"Invalid spec: {order1R}"
         # Implicitly convert string into path, expanding ~
         if isinstance(value, str):
             value = Path(value).expanduser()
@@ -149,10 +179,12 @@ class Mode(metaclass=ABCMeta):
             raise TypeError(type(value))
         if var_name is not None and "PATH" not in var_name:
             self.warning("Unexpected variable name: {var_name!r}")
-        self._extend_path_impl(str(value), var_name)
+        self._extend_path_impl(str(value), var_name, order=order)
 
     @abstractmethod
-    def _extend_path_impl(self, value: str, var_name: Optional[str]):
+    def _extend_path_impl(
+        self, value: str, var_name: Optional[str], *, order: PathOrderSpec
+    ):
         pass
 
     @abstractmethod
@@ -200,13 +232,24 @@ class ZshMode(Mode):
     def alias(self, name: str, value: ShellValue):
         self._write("alias", f"{name}={self._quote(value)}")
 
-    def _extend_path_impl(self, value: str, var_name: Optional[str]):
+    def _extend_path_impl(
+        self, value: str, var_name: Optional[str], *, order: PathOrderSpec
+    ):
         # Assume extend_path function is provided by zsh
-        res = ["extend_path"]
-        res.append(self._quote(value))
-        if var_name is not None:
-            res.append(var_name)
-        self._write(*res)
+        match order:
+            case PathOrderSpec.DEFAULT:
+                res = ["extend_path"]
+                res.append(self._quote(value))
+                if var_name is not None:
+                    res.append(var_name)
+                self._write(*res)
+            case _:
+                self._write(
+                    "echo ",
+                    self._quote(
+                        f"{self.set_color('yellow', italics=True)}TODO:{self.reset_color()} Can't understand order {type(order).__name__}.{order.name} (ignoring {value!r} for {'$' + (var_name or 'PATH')})"
+                    ),
+                )
 
     def _quote(self, value: ShellValue) -> str:
         if isinstance(value, (Path, int)):
@@ -221,7 +264,7 @@ class ZshMode(Mode):
         return escape_quoted(
             value,
             quote_char='"',
-            bad_chars={'"', "\\", "'", "*", "{", "}", "$", "(", ")"},
+            bad_chars={'"', "\\", "*", "{", "}", "$"},
             simple_pattern=_ZSH_SIMPLE_QUOTE_PATTERN,
         )
 
@@ -307,8 +350,13 @@ class FishMode(Mode):
         # TODO: Do we ever need to quote the name?
         self._write(f"alias {name}={self._quote(value)}")
 
-    def _extend_path_impl(self, value: Union[str, Path], var_name: Optional[str]):
-        self._write(f"add_path_any --variable {var_name or 'PATH'}", self._quote(value))
+    def _extend_path_impl(
+        self, value: Union[str, Path], var_name: Optional[str], *, order: PathOrderSpec
+    ):
+        self._write(
+            f"add_path_any --variable {var_name or 'PATH'} {order.fish_flag}",
+            self._quote(value),
+        )
 
     def _quote(self, value: ShellValue) -> str:
         if isinstance(value, (Path, int)):
@@ -353,6 +401,7 @@ def run_mode(mode: Mode, config_file: Path) -> list[str]:
     warnings.filterwarnings("default", category=DeprecationWarning)
     context = {
         "SHELL_BACKEND": mode.name,
+        "PathOrderSpec": PathOrderSpec,
     }
     for attr_name in dir(Mode):
         if attr_name.startswith("_"):
