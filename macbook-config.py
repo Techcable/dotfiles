@@ -34,6 +34,12 @@ else:
     if (preferred_java_home / "Contents/Home").is_dir():
         export("JAVA_HOME", preferred_java_home / "Contents/Home")
 
+haxe_std_path = Path("/opt/homebrew/lib/haxe/std")
+if haxe_std_path.is_dir():
+    export("HAXE_STD_PATH", haxe_std_path)
+else:
+    warning(f"Expected haxe stdlib: {haxe_std_lib}")
+
 # Keybase path
 extend_path("/Applications/Keybase.app/Contents/SharedSupport/bin")
 
