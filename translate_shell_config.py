@@ -6,7 +6,7 @@ import warnings
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 from pathlib import Path
-from typing import Final, Literal, Optional, Type, Union
+from typing import ClassVar, Final, Literal, Optional, Type, Union
 
 ShellValue = Union[Path, str, int, list["ShellValue"]]
 
@@ -42,26 +42,14 @@ class PathOrderSpec(Enum):
 class Mode(metaclass=ABCMeta):
     _output: list[str]
 
+    name: ClassVar[str]
+    # Path to the helper functions
+    helper_path: ClassVar[Optional[Path]] = None
+    cleanup_code: ClassVar[Optional[str]] = None
+
     def __init__(self):
         self._output = []
         self._defer_warnings = False
-
-    @classmethod
-    @property
-    def helper_path(cls) -> Optional[Path]:
-        """Path to the helper functions"""
-        return None
-
-    @classmethod
-    @property
-    def cleanup_code(cls) -> Optional[str]:
-        return None
-
-    @classmethod
-    @property
-    @abstractmethod
-    def name(cls) -> str:
-        pass
 
     def _write(self, *args: object):
         self._output.append(" ".join(map(str, args)))
@@ -215,10 +203,7 @@ def escape_quoted(
 
 
 class ZshMode(Mode):
-    @classmethod
-    @property
-    def name(cls) -> str:
-        return "zsh"
+    name: ClassVar = "zsh"
 
     def eval_text(self, text: str):
         self._write("eval", self._quote(text))
@@ -273,10 +258,7 @@ class ZshMode(Mode):
 
 
 class XonshMode(Mode):
-    @classmethod
-    @property
-    def name(cls) -> str:
-        return "xonsh"
+    name: ClassVar = "xonsh"
 
     def eval_text(self, text: str):
         self._write(f"execx({self._quote(text)})")
@@ -322,26 +304,15 @@ class XonshMode(Mode):
 
 
 class FishMode(Mode):
-    @classmethod
-    @property
-    def name(cls) -> str:
-        return "fish"
-
-    @classmethod
-    @property
-    def helper_path(cls) -> Path:
-        return Path("shell_config/fish_helpers.fish")
+    name: ClassVar = "fish"
+    helper_path: ClassVar = Path("shell_config/fish_helpers.fish")
+    cleanup_code: ClassVar = "clear_helper_funcs\nset --erase clear_helper_funcs"
 
     def eval_text(self, text: str):
         self._write("eval", self._quote(text))
 
     def source_file(self, f: Path):
         self._write("source", str(f))
-
-    @classmethod
-    @property
-    def cleanup_code(cls) -> str:
-        return "clear_helper_funcs\nset --erase clear_helper_funcs"
 
     def export(self, name: str, value: ShellValue):
         self._write(f"set -gx {name} {self._quote(value)}")
