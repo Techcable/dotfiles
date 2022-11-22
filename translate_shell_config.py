@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
+import json
+import os
 import re
 import shlex
+import subprocess
 import sys
 import warnings
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 from pathlib import Path
-from typing import ClassVar, Final, Literal, Optional, Type, Union
+from typing import ClassVar, Final, Iterable, Literal, Optional, Type, Union
 
 ShellValue = Union[Path, str, int, list["ShellValue"]]
 
@@ -46,10 +49,19 @@ class Mode(metaclass=ABCMeta):
     # Path to the helper functions
     helper_path: ClassVar[Optional[Path]] = None
     cleanup_code: ClassVar[Optional[str]] = None
+    cli_option_norc: ClassVar[str]
+    simple_quote_pattern: ClassVar[Optional[re.Pattern]] = None
 
     def __init__(self):
         self._output = []
         self._defer_warnings = False
+
+    @classmethod
+    def is_simple_quote(cls, text: str) -> bool:
+        return (
+            cls.simple_quote_pattern is not None
+            and cls.simple_quote_pattern.fullmatch(text) is not None
+        )
 
     def _write(self, *args: object):
         self._output.append(" ".join(map(str, args)))
@@ -130,6 +142,10 @@ class Mode(metaclass=ABCMeta):
     def alias(self, name: str, value: ShellValue):
         pass
 
+    def shell_completion_path(self) -> list[Path]:
+        # NOTE: Not needed except on fish right now
+        raise NotImplementedError
+
     def run_in_background_helper(self, args: list[str]):
         """A hack to run in background via python"""
         assert args, "Need at least 1 command"
@@ -179,6 +195,57 @@ class Mode(metaclass=ABCMeta):
     def _quote(self, value: ShellValue) -> str:
         pass
 
+    def unquote(self, text: str, *, force_rc: bool = False) -> list[str]:
+        assert isinstance(text, str)
+        if self.is_simple_quote(text):
+            return []
+        cli_flags = []
+        if force_rc:
+            # Would cause an infinite loop
+            raise NotImplementedError
+        else:
+            # Prepend with --no-rc option to disable loading
+            #
+            # Not needed and will only waste startup time
+            #
+            # the path to `jq` will be automatically inherited from parent process
+            #
+            # NOTE: Sometimes this needs to be forcibly enabled (fish)
+            cli_flags.append(self.cli_option_norc)
+        return self._unquote_impl(text, cli_flags=cli_flags)
+
+    def _unquote_impl(
+        self,
+        text: str,
+        *,
+        force_rc: bool = False,
+        cli_flags: Iterable[str] = (),
+        env: Optional[dict[str, str]] = None,
+    ) -> list[str]:
+        assert isinstance(text, str)
+        args = [self.name, *cli_flags]
+        args.extend(("-c", f"jq -nc --args '$ARGS.positional' {text}"))
+        text = subprocess.run(
+            args,
+            check=True,
+            stdout=subprocess.PIPE,
+            encoding="utf-8",
+            env=dict(**os.environ, **(env or {})),
+        ).stdout
+        assert text.startswith("["), text[:5]
+        return json.loads(text)
+
+    def unquote_single(self, text: str) -> str:
+        res = self.unquote(text)
+        if not res:
+            raise ValueError(f"Expected at least one value: {text!r}")
+        elif len(res) > 1:
+            raise ValueError(
+                f"Expanded into {len(res)} values, expected only 1: {text!r}"
+            )
+        else:
+            return res[0]
+
 
 # Things allowed without quoting
 _ZSH_SIMPLE_QUOTE_PATTERN = re.compile(r"([\w_\-\/]+)")
@@ -204,12 +271,14 @@ def escape_quoted(
 
 class ZshMode(Mode):
     name: ClassVar = "zsh"
+    cli_option_norc: ClassVar[str] = "--no-profile"
+    simple_quote_pattern: ClassVar = _ZSH_SIMPLE_QUOTE_PATTERN
 
     def eval_text(self, text: str):
         self._write("eval", self._quote(text))
 
     def source_file(self, f: Path):
-        self._write("source", str(path))
+        self._write("source", str(f))
 
     def export(self, name: str, value: ShellValue):
         self._write("export", f"{name}={self._quote(value)}")
@@ -259,6 +328,7 @@ class ZshMode(Mode):
 
 class XonshMode(Mode):
     name: ClassVar = "xonsh"
+    cli_option_norc: ClassVar[str] = "--no-rc"
 
     def eval_text(self, text: str):
         self._write(f"execx({self._quote(text)})")
@@ -307,6 +377,8 @@ class FishMode(Mode):
     name: ClassVar = "fish"
     helper_path: ClassVar = Path("shell_config/fish_helpers.fish")
     cleanup_code: ClassVar = "clear_helper_funcs\nset --erase clear_helper_funcs"
+    cli_option_norc: ClassVar[str] = "--no-config"
+    simple_quote_pattern: ClassVar = _FISH_SIMPLE_QUOTE_PATTERN
 
     def eval_text(self, text: str):
         self._write("eval", self._quote(text))
@@ -346,11 +418,35 @@ class FishMode(Mode):
             quote_char="'",
             # fish has very simple quoting rules :)
             bad_chars={"'", "\\"},
-            simple_pattern=_ZSH_SIMPLE_QUOTE_PATTERN,
+            simple_pattern=_FISH_SIMPLE_QUOTE_PATTERN,
         )
 
     def warning(self, msg: str):
         self._write(f"warning {self._quote(msg)}")
+
+    def shell_completion_path(self) -> list[Path]:
+        return list(map(Path, self.unquote("$fish_complete_path", force_rc=True)))
+
+    def unquote(
+        self,
+        text: str,
+        *,
+        force_rc: bool = False,
+    ) -> list[str]:
+        assert isinstance(text, str)
+        if self.is_simple_quote(text):
+            return []
+        cli_flags = []
+        extra_env = {}
+        if force_rc:
+            # Set environment variable to disable infintie loop
+            extra_env["_techcable_skip_dotfile_config"] = "1"
+        else:
+            # Prepend with --no-rc option to disable loading
+            #
+            # Not needed and will only waste startup time
+            cli_flags.append(self.cli_option_norc)
+        return self._unquote_impl(text, cli_flags=cli_flags, env=extra_env)
 
 
 _VALID_MODES = {

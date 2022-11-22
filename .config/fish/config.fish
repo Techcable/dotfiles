@@ -19,6 +19,12 @@ end
 set -gx DOTFILES_PATH $HOME/git/dotfiles
 
 function setup_extra_config
+    if set --query _techcable_skip_dotfile_config
+        if status is-interactive
+            warning "Skipping dotfile config"
+        end
+        return 0
+    end
     if ! test -d $DOTFILES_PATH
         warning "Unable to load configuration (missing dotfiles)"
     end
