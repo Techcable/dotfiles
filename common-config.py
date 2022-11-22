@@ -3,7 +3,6 @@ import os
 import shutil
 from pathlib import Path
 from subprocess import PIPE, run
-from sys import path
 
 try:
     DOTFILES_PATH = Path(os.environ["DOTFILES_PATH"])
@@ -73,76 +72,6 @@ if os.getenv("TERM") == "xterm-kitty":
 
     # Need to fix ssh for kitty
     alias("ssh", "kitty +kitten ssh")
-
-
-# TODO: Horrible hack to workaround poetry subcommand issue....
-#
-# See https://gist.github.com/Techcable/97ea4124b3827f1ec55fa8e4c09d965c
-def fixup_fish_completion_file(target: str, patch_file: Path):
-    import hashlib
-    import re
-    import shutil
-    import subprocess
-    import sys
-
-    global DOTFILES_PATH
-
-    if not patch_file.is_absolute():
-        patch_file = DOTFILES_PATH / patch_file
-
-    if not patch_file.is_file():
-        warning(f"Missing patch file for {target}.fish: {patch_file}")
-        return
-
-    original_file: Path | None = None
-    completion_path = shell_completion_path()
-
-    for completion_dir in completion_path:
-        completion_entry = completion_dir / f"{target}.fish"
-        if completion_entry.is_file():
-            original_file = completion_entry
-            break
-
-    if original_file is None:
-        warning(
-            f"Unable to apply corrections for {target!r} command (can't detect file)"
-        )
-        return
-
-    hasher = hashlib.sha256()
-    with open(original_file, "rb") as f:
-        while buf := f.read(4096):
-            hasher.update(buf)
-    actual_hash = hasher.hexdigest()
-
-    expected_hash_pattern = re.compile(r"#\s*expected hash:\s*(\w+)")
-    expected_hash = None
-    with open(patch_file, "rt") as f:
-        for line in f:
-            if (m := expected_hash_pattern.match(line)) is not None:
-                expected_hash = m.group(1)
-                break
-
-    if actual_hash != expected_hash:
-        warning(
-            f"Expected hash {expected_hash!r} but got {actual_hash!r} for {target!r} command: {original_file}"
-        )
-
-    completion_dir = DOTFILES_PATH / "completion" / "fish"
-    shutil.copy(original_file, completion_dir / original_file.name)
-
-    subprocess.run(
-        ["git", "apply", patch_file],
-        cwd=completion_dir,
-        check=True,
-    )
-
-
-if SHELL_BACKEND == "fish":
-    # TODO: Having side-effects here are bad
-    fixup_fish_completion_file(
-        "poetry", Path("patches/poetry-completions-subcommand.fish.patch")
-    )
 
 
 # Prefer exa to ls
