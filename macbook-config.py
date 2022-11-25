@@ -11,6 +11,9 @@ export("MACHINE_NAME_SHORT", "macbook")
 # Automatically uses the default browser
 export("BROWSER", Path("/usr/bin/open"))
 
+if not PLATFORM.is_desktop():
+    warning("Expected a desktop environment for macbook!")
+
 preferred_java_version = 17
 try:
     preferred_java_home = Path(

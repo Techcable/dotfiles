@@ -1,6 +1,7 @@
 """Default configuration shared across all machines"""
 import os
 import shutil
+import sys
 from pathlib import Path
 from subprocess import PIPE, run
 
@@ -61,6 +62,22 @@ if shutil.which("opam") and False:
 # Fix GPG error "Inappropriate ioctl for device"
 # See stackoverflow: https://stackoverflow.com/a/41054093
 export("GPG_TTY", run(["tty"], stdout=PIPE, encoding="utf8").stdout.rstrip())
+
+# Add jetbrains user_config
+if PLATFORM.is_desktop():
+    try:
+        jetbrains_app_dir = (
+            AppDir.USER_CONFIG.resolve(PLATFORM) / "Jetbrains/Toolbox/scripts"
+        )
+        if jetbrains_app_dir.is_dir():
+            print("jetbrains app dir:", repr(str(jetbrains_app_dir)), file=sys.stderr)
+            extend_path(jetbrains_app_dir)
+        else:
+            raise FileNotFoundError(f"could not find directory {jetbrains_app_dir}")
+    except (UnsupportedPlatformError, FileNotFoundError) as e:
+        warning("While attempting to detect jetbrains script path, " + str(e))
+else:
+    print("Not a desktop", file=sys.stderr)
 
 # Extra aliases when running under kitty
 #

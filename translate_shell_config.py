@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+from __future__ import annotations
+
 import re
 import shlex
 import sys
@@ -353,6 +355,70 @@ class FishMode(Mode):
         self._write(f"warning {self._quote(msg)}")
 
 
+class UnsupportedPlatformError(NotImplementedError):
+    platform: Platform | str
+
+    def __init__(
+        self,
+        platform: Platform | str,
+        msg: Optional[str] = None,
+        cause: Optional[BaseException] = None,
+    ):
+        self.platform = platform
+        if msg is not None:
+            msg = f"{msg} on {platform}"
+        else:
+            msg = f"Unsupported platform: {platform}"
+        super().__init__(msg, cause)
+
+
+class Platform(Enum):
+    LINUX = "linux"
+    MAC_OS = "darwin"
+
+    @staticmethod
+    def current():
+        try:
+            return Platform(sys.platform)
+        except KeyError:
+            raise UnsupportedPlatformError(sys.platform) from None
+
+    def is_desktop(self) -> bool:
+        """Detect if this platform is running on a Desktop computer"""
+        match self:
+            case Platform.LINUX:
+                # Check for X11 display (TODO: Wayland?)
+                return os.getenv("DISPLAY") is not None
+            case Platform.MAC_OS:
+                return True  # consider macs always desktops ;)
+            case _:
+                raise UnsupportedPlatformError(self)
+
+    def __str__(self) -> str:
+        return self.name.lower().replace("_", "")
+
+
+class AppDir(Enum):
+    USER_CONFIG = "~/.config"
+
+    def resolve(self, platform: Platform) -> Path:
+        MAC_OS = Platform.MAC_OS
+        USER_CONFIG = AppDir.USER_CONFIG
+        path: Path
+        match (platform, self):
+            case (Platform.LINUX, _):
+                # linux is easy (designed that way)
+                path = Path(kind.value).userexpand()
+            case (MAC_OS, AppDir.USER_CONFIG):
+                path = Path.home() / "Library/Application Support"
+            case _:
+                raise UnsupportedPlatformError(platform, f"Unknown directory {self}")
+        if not path.is_dir():
+            raise FileNotFoundError(f"Expected {self} at {str(path)!r}")
+        else:
+            return path
+
+
 _VALID_MODES = {
     "zsh": ZshMode(),
     "xonsh": XonshMode(),
@@ -373,6 +439,9 @@ def run_mode(mode: Mode, config_file: Path) -> list[str]:
     context = {
         "SHELL_BACKEND": mode.name,
         "PathOrderSpec": PathOrderSpec,
+        "PLATFORM": Platform.current(),
+        "Platform": Platform,
+        "AppDir": AppDir,
     }
     for attr_name in dir(Mode):
         if attr_name.startswith("_"):

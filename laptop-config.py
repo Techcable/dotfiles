@@ -1,6 +1,9 @@
 # Configuration for my 2017 Arch Linux Lenovo Laptop
 from pathlib import Path
 
+if not PLATFORM.is_desktop():
+    warning("Not on a desktop! (TODO: Refine check)")
+
 export("MACHINE_NAME", "archlinux-lenovo-2017")
 export("MACHINE_NAME_SHORT", "archtop")
 export("MACHINE_PREFIX_COLOR", set_color("cyan", bold=True))
