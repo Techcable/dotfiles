@@ -1,0 +1,1 @@
+shellrc/raspberrypi4-2022-config.py
