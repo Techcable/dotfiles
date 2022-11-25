@@ -1,4 +1,8 @@
 # Configuration for my 2021 Macbook Pro
+#
+# TODO: Figure out import errors requiring functions to import in header
+# and have explicit 'global' declarations -_- (something to do with modules...)
+import re
 import shlex
 import shutil
 import sys
@@ -15,24 +19,28 @@ if not PLATFORM.is_desktop():
     warning("Expected a desktop environment for macbook!")
 
 preferred_java_version = 17
-try:
-    preferred_java_home = Path(
-        run(
-            [
-                "fd",
-                f"jdk-{preferred_java_version}.*\\.jdk",
-                "/Library/Java/JavaVirtualMachines",
-                "--maxdepth",
-                "1",
-            ],
-            check=True,
-            stdout=PIPE,
-            encoding="utf8",
-        ).stdout.rstrip()
-    )
-except CalledProcessError as f:
-    warning("Unable to detect java version")
+
+
+def detect_java_home():
+    # wierd globals/import bug....
+    global preferred_java_version
+    import re
+    from pathlib import Path
+
     preferred_java_home = None
+    for java_home in Path("/Library/Java/JavaVirtualMachines").iterdir():
+        if (
+            m := re.match(f"jdk-(\d+)[.\\d]*\\.jdk$", java_home.name)
+        ) is not None and int(m.group(1)) == preferred_java_version:
+            preferred_java_home = java_home
+            break
+    return preferred_java_home
+
+
+preferred_java_home = detect_java_home()
+del detect_java_home  # namespace cleanup
+if preferred_java_home is None:
+    warning("Unable to detect java version")
 else:
     if (preferred_java_home / "Contents/Home").is_dir():
         export("JAVA_HOME", preferred_java_home / "Contents/Home")
@@ -50,6 +58,7 @@ for app_name in ["Keybase", "Sublime Text", "Texifier"]:
     app_root = Path(f"/Applications/{app_name}.app")
     if not app_root.is_dir():
         warning("Unable to find application {app_name}: Missing directory {app_root!r}")
+    # TODO: Cache this?
     try:
         executable_name = run(
             ["defaults", "read", str(app_root / "Contents/Info"), "CFBundleExecutable"],
@@ -76,22 +85,15 @@ for app_name in ["Keybase", "Sublime Text", "Texifier"]:
 # Where pip install puts console_script executables
 extend_path("/opt/homebrew/Frameworks/Python.framework/Versions/Current/bin")
 
-# TODO: Can we just use the python version we're currently executing?
-try:
-    preferred_python_version = run(
-        [
-            "python3",
-            "-c",
-            "import sys; print('.'.join(map(str, sys.version_info[:2])))",
-        ],
-        check=True,
-        stdout=PIPE,
-        encoding="utf8",
-    ).stdout.rstrip()
-except CalledProcessError:
-    warning("Unable to detect python version")
-    # Fallback to current python version
-    preferred_python_version = ".".join(map(str, sys.version_info[:2]))
+# NOTE: Assumes that current python version is the 'preferred' one
+#
+# also 'preffered' is not a good name:
+# if it is preferred that doesn't mean it is the one we should be pointing to
+# for pip purposes ....
+#
+# If any of this is not the case, we need to setup some sort of config file
+# not going back to spawning subprocesses
+preferred_python_version = ".".join(map(str, sys.version_info[:2]))
 # Where pip install puts (user) console_script executables
 extend_path(Path.home() / f"Library/Python/{preferred_python_version}/bin")
 
@@ -129,31 +131,33 @@ extend_path("/opt/stgit/bin")
 extend_path("/opt/stgit/share/man", "MANPATH")
 
 # Calling `brew list --versions janet` takes 500 ms,
-# prefer `janet -v` which takes 5ms
-try:
+# using `janet -v` takes 5ms
+#
+# However even faster to skip subprocess detection
+# and rely on homebrew directory structure
+def detect_janet_version() -> str:
+    import re
+    import shutil
+    from pathlib import Path
 
-    def parse_janet_version(output: str):
-        import re  # Bizzare name-error if I import this at top of file
+    try:
+        janet_exe_path = Path(shutil.which("janet")).readlink()
+    except OSError:
+        return None
 
-        mtch = re.match(r"^([\d\.]+)([-\w]+)$", output)
-        if mtch is not None:
-            return mtch.group(1)
-        else:
-            warning("Unable to parse janet version: {output!r}")
-            return None
+    m = re.fullmatch(r"../Cellar/janet/([^/]+)/bin/janet", str(janet_exe_path))
+    if m is not None:
+        return m.group(1)
+    else:
+        return None
 
-    current_janet_version = parse_janet_version(
-        run(
-            ["janet", "-v"],
-            check=True,
-            stdout=PIPE,
-            encoding="utf8",
-        ).stdout.rstrip()
+
+current_janet_version = detect_janet_version()
+if current_janet_version is None:
+    warning(
+        "Unable to detect Janet version based on PATH (is it installed into homebrew cellar?)"
     )
-    del parse_janet_version  # scoping ;)
-except CalledProcessError:
-    warning("Unable to detect Janet version")
-    current_janet_version = None  # AKA "unknown"
+del detect_janet_version  # scoping ;)
 
 if current_janet_version is not None:
     # add janet-specific bin path (used for janet binary packages)
