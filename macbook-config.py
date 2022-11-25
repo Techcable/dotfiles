@@ -124,6 +124,9 @@ extend_path("/opt/senpai/share/man", "MANPATH")
 extend_path("/usr/local/MacGPG2/bin")
 extend_path("/usr/local/MacGPG2/share/man", "MANPATH")
 
+# stacked git: https://stacked-git.github.io
+extend_path("/opt/stgit/bin")
+extend_path("/opt/stgit/share/man", "MANPATH")
 
 # Calling `brew list --versions janet` takes 500 ms,
 # prefer `janet -v` which takes 5ms
