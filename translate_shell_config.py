@@ -4,8 +4,10 @@ from __future__ import annotations
 import re
 import shlex
 import sys
+import textwrap
 import warnings
 from abc import ABCMeta, abstractmethod
+from contextlib import redirect_stdout
 from enum import Enum
 from pathlib import Path
 from typing import ClassVar, Final, Literal, Optional, Type, Union
@@ -93,7 +95,9 @@ class Mode(metaclass=ABCMeta):
         if check_flag("fg", "foreground"):
             assert foreground, "Background flag is incompatible with foreground"
         # Handle color
-        if "reset" == color:
+        if color is None:
+            pass
+        elif "reset" == color:
             assert len(kwargs) == 0, "All other flags are incompatible with `reset`"
             parts.append(0)
         else:
@@ -109,6 +113,8 @@ class Mode(metaclass=ABCMeta):
             parts.append(3)
         if check_flag("underline"):
             parts.append(4)
+        if parts is None:
+            raise ValueError("No formatting specified!")
         return f"\x1b[" + ";".join(map(str, parts)) + "m"
 
     @abstractmethod
@@ -119,10 +125,60 @@ class Mode(metaclass=ABCMeta):
     def source_file(self, p: Path):
         pass
 
-    @abstractmethod
-    def warning(self, msg: str):
-        # TODO: Replace with plain 'echo', avoid writing shell-specific code
-        pass
+    def _log(self, *msg: object, level: str, fmt: dict):
+        assert fmt is not None
+        assert level.isupper()
+        print(
+            "".join(
+                (
+                    self.set_color(**fmt),
+                    level,
+                    self.reset_color(),  # clear all other attributes
+                    self.set_color(color=None, bold=True),
+                    ":",
+                    self.reset_color(),
+                )
+            ),
+            *msg,
+        )
+
+    # horrible meta magic ^_^
+    def _setup_log_levels():
+        from collections import ChainMap
+
+        # this function basically exists to work
+        # around python's lack of block scoping -_-
+        log_levels = ["TODO", "WARNING", "DEBUG"]
+        res_funcs = {}
+        log_fmt_info = [
+            {"color": "white", "bold": True, "italics": True},
+            {"color": "yellow", "underline": True, "bold": True},
+            {"color": "green", "italics": True},
+        ]
+
+        # dynamically initialize for each level
+        for level, fmt_info in zip(log_levels, log_fmt_info, strict=True):
+            func_name = f"log_at_{level.lower()}"
+            glbls = {"DEFAULT_FMT": fmt_info, "ChainMap": ChainMap}
+            exec(
+                textwrap.dedent(
+                    f"""
+                    def {func_name}(self, *msg: object, **custom_fmt):
+                        if custom_fmt:
+                            fmt=ChainMap(custom_fmt, DEFAULT_FMT)
+                        else:
+                            fmt = DEFAULT_FMT
+                        self._log(*msg, level={level!r}, fmt=fmt)
+                    """
+                ),
+                glbls,
+            )
+            res_funcs[level] = glbls[func_name]
+
+        return [res_funcs[name] for name in log_levels]
+
+    todo, warning, debug = _setup_log_levels()
+    del _setup_log_levels  # avoid namespace polution
 
     @abstractmethod
     def export(self, name: str, value: ShellValue):
@@ -231,11 +287,9 @@ class ZshMode(Mode):
                     res.append(var_name)
                 self._write(*res)
             case _:
-                self._write(
-                    "echo ",
-                    self._quote(
-                        f"{self.set_color('yellow', italics=True)}TODO:{self.reset_color()} Can't understand order {type(order).__name__}.{order.name} (ignoring {value!r} for {'$' + (var_name or 'PATH')})"
-                    ),
+                self.todo(
+                    f"Can't understand order {type(order).__name__}.{order.name}",
+                    f"(ignoring {value!r} for {'$' + (var_name or 'PATH')}",
                 )
 
     def _quote(self, value: ShellValue) -> str:
@@ -254,9 +308,6 @@ class ZshMode(Mode):
             bad_chars={'"', "\\", "*", "{", "}", "$"},
             simple_pattern=_ZSH_SIMPLE_QUOTE_PATTERN,
         )
-
-    def warning(self, msg: str):
-        self._write(f"warning {self._quote(msg)}")
 
 
 class XonshMode(Mode):
@@ -300,9 +351,6 @@ class XonshMode(Mode):
         # xonsh is Python
         assert isinstance(value, str)
         return repr(value)
-
-    def warning(self, msg: str):
-        self._write(f"warning({self._quote(msg)})")
 
 
 class FishMode(Mode):
@@ -350,9 +398,6 @@ class FishMode(Mode):
             bad_chars={"'", "\\"},
             simple_pattern=_ZSH_SIMPLE_QUOTE_PATTERN,
         )
-
-    def warning(self, msg: str):
-        self._write(f"warning {self._quote(msg)}")
 
 
 class UnsupportedPlatformError(NotImplementedError):
@@ -447,7 +492,9 @@ def run_mode(mode: Mode, config_file: Path) -> list[str]:
         if attr_name.startswith("_"):
             continue
         context[attr_name] = getattr(mode, attr_name)
-    exec(config_script, context, {})
+    # stdout is only for translation output, not messages
+    with redirect_stdout(sys.stderr):
+        exec(config_script, context, {})
     # Cleanup
     if (cleanup := mode.cleanup_code) is not None:
         for line in cleanup.splitlines():
