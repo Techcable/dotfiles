@@ -1,3 +1,5 @@
+# Fig pre block. Keep at the top of this file.
+[[ -f "$HOME/.fig/shell/zshrc.pre.zsh" ]] && builtin source "$HOME/.fig/shell/zshrc.pre.zsh"
 # ================== WARNING =================== #
 # This file is version controled (and public)    #
 # Do not store secret information here. Instead, #
@@ -277,3 +279,6 @@ if test -n "$KITTY_INSTALLATION_DIR"; then
 fi
 
 # WARNING: Remember to put path extensions **before** the test for trusted commands
+
+# Fig post block. Keep at the bottom of this file.
+[[ -f "$HOME/.fig/shell/zshrc.post.zsh" ]] && builtin source "$HOME/.fig/shell/zshrc.post.zsh"
