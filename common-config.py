@@ -70,7 +70,6 @@ if PLATFORM.is_desktop():
             AppDir.USER_CONFIG.resolve(PLATFORM) / "Jetbrains/Toolbox/scripts"
         )
         if jetbrains_app_dir.is_dir():
-            print("jetbrains app dir:", repr(str(jetbrains_app_dir)), file=sys.stderr)
             extend_path(jetbrains_app_dir)
         else:
             raise FileNotFoundError(f"could not find directory {jetbrains_app_dir}")
