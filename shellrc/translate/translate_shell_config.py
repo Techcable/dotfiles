@@ -25,7 +25,9 @@ _ANSI_COLOR_NAMES = (
     "white",
 )
 
-DOTFILES_PATH = Path(__file__).parent
+assert Path(__file__).parents[0].name == "translate"
+assert Path(__file__).parents[1].name == "shellrc"
+DOTFILES_PATH = Path(__file__).parents[2]
 
 
 class PathOrderSpec(Enum):
@@ -360,7 +362,7 @@ class XonshMode(Mode):
 
 class FishMode(Mode):
     name: ClassVar = "fish"
-    helper_path: ClassVar = Path("shell_config/fish_helpers.fish")
+    helper_path: ClassVar = Path("shellrc/translate/fish_helpers.fish")
     cleanup_code: ClassVar = "clear_helper_funcs\nset --erase clear_helper_funcs"
 
     def eval_text(self, text: str):

@@ -53,7 +53,7 @@ def load_extra_config():
     if dotfiles_path is None:
         warning("Unable to load configuration (missing DOTFILES)")
         return
-    config_files = [p"~/.shell-config.py", dotfiles_path / "common-config.py"]
+    config_files = [p"~/.shell-config.py", dotfiles_path / "shellrc/common-config.py"]
     for pth in config_files:
         if not pth.is_file():
             warning(f"Missing config file: {pth}")
@@ -86,7 +86,7 @@ def load_extra_config():
         'extend_path': (extend_path),
         'warning': warning
     }
-    translation_script = dotfiles_path / "translate_shell_config.py"
+    translation_script = dotfiles_path / "shellrc/translate/translate_shell_config.py"
     $DOTFILES_PATH=dotfiles_path
     for config_path in config_files:
         # Run translation as subprocess to inherit updated $PATH variable

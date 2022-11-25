@@ -22,14 +22,14 @@ function setup_extra_config
     if ! test -d $DOTFILES_PATH
         warning "Unable to load configuration (missing dotfiles)"
     end
-    set -l config_files ~/.shell-config.py "$DOTFILES_PATH/common-config.py"
+    set -l config_files ~/.shell-config.py "$DOTFILES_PATH/shellrc/common-config.py"
     for config_file in $config_files
         if ! test -f $config_file
             warning "Missing required config file: $config_file"
             return 1
         end
         # TODO: What if translation fails?
-        python3 "$DOTFILES_PATH/translate_shell_config.py" fish "$config_file" | source
+        python3 "$DOTFILES_PATH/shellrc/translate/translate_shell_config.py" fish "$config_file" | source
     end
 end
 setup_extra_config
