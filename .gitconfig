@@ -28,7 +28,13 @@
 [alias]
     root = rev-parse --show-toplevel
     difft = difftool --tool=difftastic
+    kdiff = difftool --tool=kitty
 [difftool]
     prompt = false
+    trustExitCode = true
+[difftool "kitty"]
+    cmd = kitty +kitten diff $LOCAL $REMOTE
+[difftool "kitty.gui"]
+    cmd = kitty kitty +kitten diff $LOCAL $REMOTE
 [difftool "difftastic"]
     cmd = difft "$LOCAL" "$REMOTE"
