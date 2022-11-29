@@ -1,7 +1,4 @@
 # Configuration for my 2021 Macbook Pro
-#
-# TODO: Figure out import errors requiring functions to import in header
-# and have explicit 'global' declarations -_- (something to do with modules...)
 import re
 import shlex
 import shutil
@@ -22,15 +19,10 @@ preferred_java_version = 17
 
 
 def detect_java_home():
-    # wierd globals/import bug....
-    global preferred_java_version
-    import re
-    from pathlib import Path
-
     preferred_java_home = None
     for java_home in Path("/Library/Java/JavaVirtualMachines").iterdir():
         if (
-            m := re.match(f"jdk-(\d+)[.\\d]*\\.jdk$", java_home.name)
+            m := re.match(f"jdk-(\\d+)[.\\d]*\\.jdk$", java_home.name)
         ) is not None and int(m.group(1)) == preferred_java_version:
             preferred_java_home = java_home
             break
@@ -136,10 +128,6 @@ extend_path("/opt/stgit/share/man", "MANPATH")
 # However even faster to skip subprocess detection
 # and rely on homebrew directory structure
 def detect_janet_version() -> str:
-    import re
-    import shutil
-    from pathlib import Path
-
     try:
         janet_exe_path = Path(shutil.which("janet")).readlink()
     except OSError:
@@ -175,7 +163,6 @@ else:
 #
 # Use the extend_path builtin to add it to the end (but only if the keg exists)
 def detect_keg(name: str, *, order: PathOrderSpec = None):
-    global Path  # Why is this needed?
     keg_prefix = Path("/opt/homebrew/opt")
     if (keg_bin := keg_prefix / f"{name}/bin").is_dir():
         # echo "Detected keg $1";

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+import runpy
 import shlex
 import sys
 import textwrap
@@ -484,8 +485,6 @@ def run_mode(mode: Mode, config_file: Path) -> list[str]:
     assert not mode._output, "Already have output for mode"
     if (helper := mode.helper_path) is not None:
         mode.source_file(DOTFILES_PATH / helper)
-    with open(config_file, "rt") as f:
-        config_script = compile(f.read(), str(config_file), "exec")
     assert isinstance(DOTFILES_PATH, Path)
     # TODO: Isolate to the specific module, not everything
     warnings.filterwarnings("default", category=DeprecationWarning)
@@ -503,7 +502,11 @@ def run_mode(mode: Mode, config_file: Path) -> list[str]:
         context[attr_name] = getattr(mode, attr_name)
     # stdout is only for translation output, not messages
     with redirect_stdout(sys.stderr):
-        exec(config_script, context, {})
+        runpy.run_path(
+            str(config_file),
+            init_globals=context,
+            run_name=config_file.stem.replace("-", "_"),
+        )
     # Cleanup
     if (cleanup := mode.cleanup_code) is not None:
         for line in cleanup.splitlines():
