@@ -35,20 +35,15 @@ end
 setup_extra_config
 functions --erase setup_extra_config
 
-# Add my custom completions
-#
-# NOTE: This must come BEFORE oh-my-zsh (which handles most completions)
-set completion_root "$DOTFILES_PATH/completion"
-set techcable_completions "$completion_root/fish"
-set techcable_machine_completions "$completion_root/$machine_name/fish"
-if test -d $techcable_completions
-    set fish_complete_path $fish_complete_path $techcable_completions
-else
-    echo "WARNING: unable to find dotfiles 'completion/fish' directory"
-end
+begin
+    # Add dotfile completions
+    set -l completion_root "$DOTFILES_PATH/completions"
 
-if test -d "$techcable_machine_completions"
-    set fish_complete_path $fish_complete_path $techcable_machine_completions
+    # NOTE: Order matters here
+    for dir in $completion_root/{,$MACHINE_NAME,auto_generated};
+        if not test -d $dir; mkdir -p $dir; end
+        set -a fish_complete_path $dir;
+    end
 end
 
 if status is-interactive

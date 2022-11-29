@@ -5,6 +5,7 @@ import shutil
 import sys
 from pathlib import Path
 from subprocess import PIPE, CalledProcessError, run
+from typing import Callable
 
 export("MACHINE_NAME", "macbook-2021")
 export("MACHINE_NAME_SHORT", "macbook")
@@ -87,7 +88,45 @@ extend_path("/opt/homebrew/Frameworks/Python.framework/Versions/Current/bin")
 # not going back to spawning subprocesses
 preferred_python_version = ".".join(map(str, sys.version_info[:2]))
 # Where pip install puts (user) console_script executables
+#
+# TODO: Is this obseleted by pipx?
 extend_path(Path.home() / f"Library/Python/{preferred_python_version}/bin")
+
+# pipx
+extend_path("~/.local/bin")  # path for pipx
+
+
+def lazy_generate_fish_completions(name: str, generate: Callable[[str, Path], str]):
+    completions_file = DOTFILES_PATH / f"completions/auto_generated/{name}.fish"
+    if completions_file.is_file():
+        return  # already exists
+    completions_file.parent.mkdir(parents=True, exist_ok=True)
+    # should only ever be run once!
+    text = generate(name, completions_file)
+    assert isinstance(text, str), type(text)
+    with open(completions_file, "wt") as f:
+        f.write(text)
+
+
+# Load completions
+#
+# TODO: Figure out better way for this
+match SHELL_BACKEND:
+    case "fish":
+        lazy_generate_fish_completions(
+            "pipx",
+            lambda _name, _pth: (
+                run(
+                    ["register-python-argcomplete", "--shell", "fish", "pipx"],
+                    stdout=PIPE,
+                    check=True,
+                    encoding="utf-8",
+                ).stdout
+            ),
+        )
+    case _:
+        todo("Completions for pipx")
+
 
 # Scala installation managed by "coursier". See here: https://get-coursier.io/docs/cli-overview
 extend_path("~/Library/Application Support/Coursier/bin")
