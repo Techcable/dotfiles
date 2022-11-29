@@ -57,25 +57,9 @@ if shutil.which("opam") and False:
     else:
         raise AssertionError(SHELL_BACKEND)
 
-# Check for the ugly compat hack needed for new directory structure
-BRANCH_JANET_PORT_IS_MERGED = False  # needed because janet port isn't merged yet
-
-has_compat_hacks = any(
-    path.is_symlink() and path.suffix == "py" for path in DOTFILES_PATH.iterdir()
-)
-match (has_compat_hacks, BRANCH_JANET_PORT_IS_MERGED):
-    case (True, True):
-        # have the hacks but don't need them
-        todo("Get rid of those nasty compat hacks in the root directory")
-    case (True, False):
-        # need them, ignore them
-        pass
-    case (False, True):
-        todo("Need compat hack between master branch and port to Janet!")
-    case (False, False):
-        todo("Remove the check for the compat hack")
-    case _:
-        raise AssertionError
+# nasty compat symlinks
+if any(path.is_symlink() and path.suffix == ".py" for path in DOTFILES_PATH.iterdir()):
+    todo("Get rid of those nasty compat symlinks in the root directory")
 
 # Fix GPG error "Inappropriate ioctl for device"
 # See stackoverflow: https://stackoverflow.com/a/41054093
