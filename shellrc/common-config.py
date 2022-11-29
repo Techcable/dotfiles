@@ -57,9 +57,16 @@ if shutil.which("opam") and False:
     else:
         raise AssertionError(SHELL_BACKEND)
 
-# nasty compat symlinks
-if any(path.is_symlink() and path.suffix == ".py" for path in DOTFILES_PATH.iterdir()):
-    todo("Get rid of those nasty compat symlinks in the root directory")
+# nasty compat symlinks (NOTE: This counts the number of 'True' == 1 symlinks)
+num_compat_symlinks = sum(
+    path.is_symlink() and path.suffix == ".py" for path in DOTFILES_PATH.iterdir()
+)
+if num_compat_symlinks:
+    todo(
+        "Get rid of nasty compat symlinks in the root directory",
+        f"({set_color('yellow')}{num_compat_symlinks}{reset_color()} symlinks remaining)",
+    )
+del num_compat_symlinks
 
 # Fix GPG error "Inappropriate ioctl for device"
 # See stackoverflow: https://stackoverflow.com/a/41054093
