@@ -9,6 +9,7 @@ try:
     assert DOTFILES_PATH == Path(os.environ["DOTFILES_PATH"])
 except KeyError:
     warning("Missing $DOTFILES_PATH environment variable")
+assert DOTFILES_PATH.is_relative_to(Path.home())
 
 # Rust binaries
 #
@@ -128,3 +129,32 @@ else:
 # This is the default value for
 export("XONSH_PREFIX", "py")
 export("XONSH_PREFIX_COLOR", "yellow")
+
+
+def detect_changes(tgt: Path) -> list[str]:
+    # NOTE: pygit2 is somewhat faster than subprocess..
+    try:
+        import pygit2
+    except ImportError:
+        pygit2 = None
+    if pygit2 is not None:
+        repo = pygit2.Repository(str(tgt))
+        return list(repo.status().keys())
+    else:
+        return [
+            line.split()[:-1]
+            for line in run(
+                ["git", "status", "--porcelain=v1"],
+                stdout=PIPE,
+                encoding="utf-8",
+                check=True,
+                cwd=str(tgt),
+            ).stdout.splitlines()
+        ]
+
+
+if changes := detect_changes(DOTFILES_PATH):
+    warning(
+        f"Detected {set_color(bold=True, color=None)}{len(changes)}{reset_color()}",
+        f"uncomitted changes in dotfiles repo (~/{DOTFILES_PATH.relative_to(Path.home())})",
+    )
