@@ -1,1 +1,1 @@
-shellrc/raspberrypi4-2022-config.py
+shellrc/raspberrypi4_2022_config.py

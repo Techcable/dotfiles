@@ -1,1 +1,1 @@
-shellrc/common-config.py
+shellrc/common_config.py
