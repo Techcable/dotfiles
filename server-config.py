@@ -1,1 +1,1 @@
-shellrc/server_config.py
+shellrc/server-config.py

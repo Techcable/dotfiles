@@ -1,1 +1,1 @@
-shellrc/macbook_config.py
+shellrc/macbook-config.py

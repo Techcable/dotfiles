@@ -1,1 +1,1 @@
-shellrc/laptop_config.py
+shellrc/laptop-config.py
