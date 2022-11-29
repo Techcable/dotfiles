@@ -6,11 +6,9 @@ from pathlib import Path
 from subprocess import PIPE, run
 
 try:
-    DOTFILES_PATH = Path(os.environ["DOTFILES_PATH"])
+    assert DOTFILES_PATH == Path(os.environ["DOTFILES_PATH"])
 except KeyError:
     warning("Missing $DOTFILES_PATH environment variable")
-    DOTFILES_PATH = Path.home()  # dummy
-
 
 # Rust binaries
 #

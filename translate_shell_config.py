@@ -484,10 +484,12 @@ def run_mode(mode: Mode, config_file: Path) -> list[str]:
         mode.source_file(DOTFILES_PATH / helper)
     with open(config_file, "rt") as f:
         config_script = compile(f.read(), str(config_file), "exec")
+    assert isinstance(DOTFILES_PATH, Path)
     # TODO: Isolate to the specific module, not everything
     warnings.filterwarnings("default", category=DeprecationWarning)
     context = {
         "SHELL_BACKEND": mode.name,
+        "DOTFILES_PATH": DOTFILES_PATH,
         "PathOrderSpec": PathOrderSpec,
         "PLATFORM": Platform.current(),
         "Platform": Platform,
