@@ -1,1 +1,0 @@
-/opt/srhut/share/fish/vendor_completions.d/hut.fish
