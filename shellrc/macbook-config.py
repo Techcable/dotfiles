@@ -106,28 +106,6 @@ def lazy_generate_fish_completions(name: str, generate: Callable[[str, Path], st
     assert isinstance(text, str), type(text)
     with open(completions_file, "wt") as f:
         f.write(text)
-
-
-# Load completions
-#
-# TODO: Figure out better way for this
-match SHELL_BACKEND:
-    case "fish":
-        lazy_generate_fish_completions(
-            "pipx",
-            lambda _name, _pth: (
-                run(
-                    ["register-python-argcomplete", "--shell", "fish", "pipx"],
-                    stdout=PIPE,
-                    check=True,
-                    encoding="utf-8",
-                ).stdout
-            ),
-        )
-    case _:
-        todo("Completions for pipx")
-
-
 # Scala installation managed by "coursier". See here: https://get-coursier.io/docs/cli-overview
 extend_path("~/Library/Application Support/Coursier/bin")
 
