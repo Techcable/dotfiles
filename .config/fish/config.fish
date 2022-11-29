@@ -40,7 +40,7 @@ begin
     set -l completion_root "$DOTFILES_PATH/completions"
 
     # NOTE: Order matters here
-    for dir in $completion_root/{,$MACHINE_NAME,auto_generated};
+    for dir in $completion_root/{,$MACHINE_NAME};
         if not test -d $dir; mkdir -p $dir; end
         set -a fish_complete_path $dir;
     end

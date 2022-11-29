@@ -95,17 +95,6 @@ extend_path(Path.home() / f"Library/Python/{preferred_python_version}/bin")
 # pipx
 extend_path("~/.local/bin")  # path for pipx
 
-
-def lazy_generate_fish_completions(name: str, generate: Callable[[str, Path], str]):
-    completions_file = DOTFILES_PATH / f"completions/auto_generated/{name}.fish"
-    if completions_file.is_file():
-        return  # already exists
-    completions_file.parent.mkdir(parents=True, exist_ok=True)
-    # should only ever be run once!
-    text = generate(name, completions_file)
-    assert isinstance(text, str), type(text)
-    with open(completions_file, "wt") as f:
-        f.write(text)
 # Scala installation managed by "coursier". See here: https://get-coursier.io/docs/cli-overview
 extend_path("~/Library/Application Support/Coursier/bin")
 
