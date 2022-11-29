@@ -330,12 +330,17 @@ class XonshMode(Mode):
         # TODO: Do we ever need to quote this value?
         self._write(f"aliases[{name!r}]", "=", self._quote(value))
 
-    def _extend_path_impl(self, value: Union[str, Path], var_name: Optional[str]):
+    def _extend_path_impl(
+        self, value: Union[str, Path], var_name: Optional[str], *, order
+    ):
         # Assume extend_path function is provided by xonsh
         res = ["extend_path("]
         res.append(self._quote(value))
         if var_name is not None:
             res.append(f", {var_name!r}")
+        if order != PathOrderSpec.DEFAULT:
+            res.append(", order="),
+            res.append(repr(order.name))
         res.append(")")
         self._write("".join(res))
 

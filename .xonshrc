@@ -10,10 +10,14 @@ import sys
 import json
 from pathlib import Path
 from xonsh.completers.tools import *
+
 $XONSH_SHOW_TRACEBACK=True
 
 def warning(msg: str):
-    print_color("{YELLOW}WARNING:{DEFAULT} " + msg)
+    print_color("{BOLD_YELLOW}WARNING{BOLD_DEFAULT}:{DEFAULT} " + msg)
+
+def todo(msg: str):
+    print_color("{ITALIC_BOLD_WHITE}TODO{BOLD_DEFAULT}:{DEFAULT} " + msg)
 
 if sys.platform != "darwin":
     # Use sqlite for history
@@ -54,7 +58,7 @@ def load_extra_config():
         if not pth.is_file():
             warning(f"Missing config file: {pth}")
             return
-    def extend_path(value, var="PATH", /):
+    def extend_path(value, var="PATH", *, order=None):
         assert not var.startswith('$') and var.endswith('PATH'), f"Not a path variable: {var!r}"
         assert isinstance(value, str), f"Unexpected path value: {value!r}"
         if not Path(value).exists():
@@ -66,8 +70,17 @@ def load_extra_config():
             # Initialize new path variable
             __xonsh__.env[var] = type($PATH)([value])
             return # No need to check
+        if order is not None and order.endswith(system_suffix := "_system"):
+            todo(f"Implement distinction between regular and 'system' order: {order!r}")
+            order = order[:-len(system_suffix)]
         if str(value) not in path and value not in path:
-            path.append(value)
+            match order:
+                case 'append':
+                    path.append(value)
+                case 'prepend':
+                    path.insert(0, value)
+                case _:
+                    warning(f"Unknown order {order}")
 
     extra_builtins={
         'extend_path': (extend_path),
@@ -103,16 +116,6 @@ import xonsh
 # TODO: Is this fixed with the recent changes?
 for cmd in ('git', 'gh', 'nvim', 'neovim', 'kitty', 'rua', 'cargo'):
     builtins.__xonsh__.commands_cache.threadable_predictors[cmd] = xonsh.commands_cache.predict_false
-
-# Extend python path
-# TODO: Deprecate?
-USR_PYTHON_PATH = Path("~/python").expanduser()
-if not USR_PYTHON_PATH.exists():
-    print_color("{RED}Unable to find python usr path:{RESET} ~/python")
-elif USR_PYTHON_PATH in frozenset(map(Path, sys.path)):
-    pass  # Path already added
-else:
-    sys.path.append(str(USR_PYTHON_PATH))
 
 from xonsh.ansi_colors import ansi_partial_color_format
 # NOTE: We use our own emulation of 'gitfast' instead of builtin '{gitstatus}'
