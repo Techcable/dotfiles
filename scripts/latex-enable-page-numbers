@@ -1,0 +1,114 @@
+#!/usr/bin/env python3
+import re
+import sys
+import textwrap
+from pathlib import Path
+from typing import Iterator, cast
+
+from more_itertools import peekable
+from termcolor import colored
+
+EXPECTED_COMMENT = re.compile("%([%])? This disables page numbering\s*")
+EXPECTED_LINE = re.compile(re.escape(r"\pagenumbering{gobble}"))
+REPLACEMENT_TEXT = textwrap.dedent(
+    """\
+    % Line numbers are enabled by default.
+    % If you want to turn them off,
+    % uncomment this 'gobble' directive
+    % (NOTE: The footer space is wasted either way)
+    % \pagenumbering{gobble}"""
+).splitlines()
+
+
+def print_error(msg: str, *, level: str = "ERROR") -> None:
+    color: str
+    attrs: tuple[str, ...]
+    match level:
+        case "ERROR":
+            color, attrs = "red", ("dark", "bold")
+        case "WARNING":
+            color, attrs = "yellow", ("bold",)
+        case "INFO":
+            color, attrs = "green", ("italic",)
+        case _:
+            raise NotImplementedError(f"Unsupported level: {level!r}")
+    print(
+        colored(level, color, attrs=attrs) + colored(":", attrs=("bold",)),
+        msg,
+        file=sys.stderr,
+    )
+
+
+def print_warning(msg: str) -> None:
+    print_error(msg, level="WARNING")
+
+
+class CLIError(Exception):
+    def __init__(self, msg: str):
+        super().__init__(msg)
+        assert msg is not None
+
+    @property
+    def msg(self) -> str:
+        return cast(str, self.args[0])
+
+
+matched_any = False
+
+
+def main(args: list[str]) -> None:
+    if len(args) != 1:
+        raise CLIError(f"Invalid number of arguments: {len(args)}")
+    target = Path(args[0])
+    matched_any = False
+    backup_path = target.resolve().parent / (target.name + ".bak")
+    with open(target, "rt") as f:
+        assert not matched_any
+        rewritten_lines = list(rewrite_lines(
+            target, ((line_idx + 1, line) for line_idx, line in enumerate(f))
+        ))
+    if not matched_any:
+        print_warning(f"Could not match any lines in {target.name}")
+        return
+    prit
+    shutil.copy2(target, backup_path)
+    with open(target, 'wt') as f:
+        for line in rewritten_lines:
+            f.writeline(line)
+
+
+def rewrite_lines(target: Path, lines: Iterator[tuple[int, str]]) -> Iterator[str]:
+    global matched_any
+    assert not matched_any
+    if target.suffix != ".tex":
+        print_warning(f"Path suffix {target.suffix!r} != {'.tex'!r} (are you sure {target.name} is LaTeX?)")
+    while True:
+        lineno, line = next(lines, (-1, None))
+        if line is None:
+            break
+        if EXPECTED_COMMENT.match(line) is not None:
+            lineno, line = next(lines, (-1, None))
+            had_comment = True
+            if line is not None and EXPECTED_LINE.match(line) is not None:
+                matched_any = True
+                yield from REPLACEMENT_TEXT
+            else:
+                raise CLIError(
+                    f"Must match line after comment at {target.name}:{lineno}"
+                )
+        elif EXPECTED_LINE.match(line) is not None:
+            print_warning(f"Expected a comment before {target.name}{lineno}")
+            matched_any = True
+            yield from REPLACEMENT_TEXT
+        else:
+            # doesn't match anything
+            yield line
+
+
+if __name__ == "__main__":
+    try:
+        main(sys.argv[1:])
+    except CLIError as e:
+        print_error(e.msg)
+    except Exception as e:
+        print_error(f"Unexpected internal error: {repr(e)}")
