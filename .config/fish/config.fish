@@ -22,7 +22,7 @@ function setup_extra_config
     if ! test -d $DOTFILES_PATH
         warning "Unable to load configuration (missing dotfiles)"
     end
-    set -l config_files ~/.shell-config.py "$DOTFILES_PATH/shellrc/common-config.py"
+    set -l config_files ~/.shell-config.py "$DOTFILES_PATH/shellrc/common-config.hy"
     for config_file in $config_files
         if ! test -f $config_file
             warning "Missing required config file: $config_file"

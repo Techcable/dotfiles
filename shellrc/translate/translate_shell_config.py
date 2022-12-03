@@ -502,7 +502,15 @@ def run_mode(mode: Mode, config_file: Path) -> list[str]:
         context[attr_name] = getattr(mode, attr_name)
     # stdout is only for translation output, not messages
     with redirect_stdout(sys.stderr):
-        runpy.run_path(
+        if config_file.suffix == ".py":
+            runner = runpy
+        elif config_file.suffix == ".hy":
+            from hy.importer import runhy
+
+            runner = runhy
+        else:
+            raise ValueError(f"Unknown suffix: {config_file.suffix}")
+        runner.run_path(
             str(config_file),
             init_globals=context,
             run_name=config_file.stem.replace("-", "_"),
