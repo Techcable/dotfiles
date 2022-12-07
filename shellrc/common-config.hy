@@ -26,14 +26,6 @@
 ; I like neovim
 ((do export) "EDITOR" "nvim")
 
-; nasty compat symlinks (NOTE: This counts the number of 'True' == 1 symlinks)
-(let [num_compat_symlinks (sum
-    (gfor path (. DOTFILES_PATH (iterdir)) (and (. path (is_symlink)) (= (. path suffix) ".py"))))]
-    (when num_compat_symlinks
-        (todo 
-            "Get rid of nasty compat symlinks in the root directory"
-            f"({(set_color "yellow")}{num_compat_symlinks}{(reset_color)} symlinks remaining)")))
-
 ; Fix GPG error "Inappropriate ioctl for device"
 ; See stackoverflow: https://stackoverflow.com/a/41054093
 ((do export) "GPG_TTY" (. (run ["tty"] :stdout PIPE :encoding "utf8") stdout (rstrip)))

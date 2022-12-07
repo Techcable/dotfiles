@@ -1,1 +1,0 @@
-shellrc/laptop-config.py

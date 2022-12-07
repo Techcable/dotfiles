@@ -1,1 +1,0 @@
-shellrc/server-config.py
