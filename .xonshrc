@@ -48,12 +48,12 @@ if (dotfiles_path := Path.home() / "git/dotfiles").is_dir():
 else:
     dotfiles_path = None
 
-# Load extra path information from ~/.shell-config.py
+# Load extra path information from ~/.shell-config.rc
 def load_extra_config():
     if dotfiles_path is None:
         warning("Unable to load configuration (missing DOTFILES)")
         return
-    config_files = [p"~/.shell-config.py", dotfiles_path / "shellrc/common-config.hy"]
+    config_files = [p"~/.shell-config.rc", dotfiles_path / "shellrc/common-config.hy"]
     for pth in config_files:
         if not pth.is_file():
             warning(f"Missing config file: {pth}")
