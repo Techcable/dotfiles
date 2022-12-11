@@ -65,9 +65,3 @@ if status is-interactive
     # Shorter name for 'math' builtin
     alias m math
 end
-
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-eval /Users/nicholas/opt/anaconda3/bin/conda "shell.fish" "hook" $argv | source
-# <<< conda initialize <<<
-
