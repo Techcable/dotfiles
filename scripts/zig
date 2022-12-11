@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/zsh
 
 args=("$@");
 
@@ -12,9 +12,10 @@ should_show_version() {
     return 1;
 }
 function strip_prefix() {
-    echo "$1" | sed 's/\/bin\/zig$//' | sed "s#$HOME#~#";
+    echo "$1" | sed "s#$HOME#~#";
 }
 attempt_exec() {
+    #echo "DEBUG: exec($1 ; ${args[@]})";
     if [[ -x "$1" ]]; then
         if [[ -z "$2" ]]; then
             comment="";
@@ -22,7 +23,7 @@ attempt_exec() {
             comment=" $2";
         fi
         if should_show_version "$1"; then
-            echo "Found$comment zig "$($1 version)" in $(strip_prefix "$(realpath $1)")" >&2;
+            echo "Found$comment zig "$($1 version)" in $(strip_prefix "$(realpath -s $1)")" >&2;
         fi
         exec $1 "${args[@]}";
     fi
@@ -32,8 +33,15 @@ attempt_exec "$HOME/git/zig/builds/safe/bin/zig";
 attempt_exec "$HOME/git/zig/builds/release/bin/zig";
 attempt_exec "/opt/zig/bin/zig";
 
-if which zig >/dev/null; then
-    echo "Unable to find `zig` executable on PATH"
+# https://unix.stackexchange.com/a/710369
+system_zigs=("${(@f)$(which -a zig)}")
+
+if [[ "${system_zigs[1]}" != "$0" ]]; then
+    echo "Expected this script ($0) to come first on path: ${system_zigs[1]}"
+    exit 1;
+elif [[ "${#system_zigs[@]}" -lt 2 ]]; then
+    echo "Unable to find `zig` executable on PATH" >&2;
+    exit 1;
 fi
 
-attempt_exec "$(which zig)" "system";
+attempt_exec "${system_zigs[2]}" "system";
