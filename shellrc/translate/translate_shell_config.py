@@ -482,8 +482,7 @@ for name, mode in _VALID_MODES.items():
 
 
 def run_mode(mode: Mode, config_file: Path) -> list[str]:
-    if config_file.is_symlink():
-        config_file = config_file.readlink()
+    config_file = config_file.resolve()
     assert not mode._output, "Already have output for mode"
     if (helper := mode.helper_path) is not None:
         mode.source_file(DOTFILES_PATH / helper)
