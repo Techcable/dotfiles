@@ -156,7 +156,7 @@ else
     export DOTFILES_PATH="$dotfiles";
     local translation_script="$dotfiles/shellrc/translate/translate_shell_config.py";
     # First execute "common" config
-    local translated_config=$(python3 "$translation_script" zsh "$dotfiles/shellrc/common-config.hy");
+    local translated_config=$(python3 "$translation_script" zsh "$dotfiles/shellrc/common-config.py");
     eval "$translated_config";
     if [[ ! -f ~/.shell-config.rc ]]; then
         warning "Missing configuration file"
