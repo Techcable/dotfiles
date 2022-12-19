@@ -103,7 +103,7 @@ source $ZSH/oh-my-zsh.sh
 
 # User configuration
 
-# We load our configuration from a ~/.shell-config.rc file.
+# We load our configuration from a ~/.shell-config.py file.
 # If that's not found, we just print a warning and continue
 
 
@@ -158,10 +158,10 @@ else
     # First execute "common" config
     local translated_config=$(python3 "$translation_script" zsh "$dotfiles/shellrc/common-config.py");
     eval "$translated_config";
-    if [[ ! -f ~/.shell-config.rc ]]; then
+    if [[ ! -f ~/.shell-config.py ]]; then
         warning "Missing configuration file"
     else
-        translated_config=$(python3 "$translation_script" zsh ~/.shell-config.rc);
+        translated_config=$(python3 "$translation_script" zsh ~/.shell-config.py);
         eval "$translated_config";
     fi
 fi
