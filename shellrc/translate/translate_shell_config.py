@@ -343,7 +343,7 @@ class XonshMode(Mode):
             res.append(f", {var_name!r}")
         if order != PathOrderSpec.DEFAULT:
             res.append(", order="),
-            res.append(repr(order.name))
+            res.append(repr(order.value))
         res.append(")")
         self._write("".join(res))
 

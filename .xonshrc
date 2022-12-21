@@ -70,12 +70,13 @@ def load_extra_config():
             # Initialize new path variable
             __xonsh__.env[var] = type($PATH)([value])
             return # No need to check
-        if order is not None and order.endswith(system_suffix := "_system"):
+        if order is not None and order.endswith(system_suffix := "-system"):
             todo(f"Implement distinction between regular and 'system' order: {order!r}")
             order = order[:-len(system_suffix)]
         if str(value) not in path and value not in path:
             match order:
-                case 'append':
+                # NOTE: `append` is the default
+                case 'append' | None:
                     path.append(value)
                 case 'prepend':
                     path.insert(0, value)
