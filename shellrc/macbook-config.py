@@ -75,33 +75,11 @@ for app_name in ["Keybase", "Sublime Text", "Texifier"]:
         )
 
 
-# Where pip install puts console_script executables
-extend_path("/opt/homebrew/Frameworks/Python.framework/Versions/Current/bin")
-
-# NOTE: Assumes that current python version is the 'preferred' one
-#
-# also 'preffered' is not a good name:
-# if it is preferred that doesn't mean it is the one we should be pointing to
-# for pip purposes ....
-#
-# If any of this is not the case, we need to setup some sort of config file
-# not going back to spawning subprocesses
-preferred_python_version = ".".join(map(str, sys.version_info[:2]))
-# Where pip install puts (user) console_script executables
-#
-# TODO: Is this obseleted by pipx?
-extend_path(Path.home() / f"Library/Python/{preferred_python_version}/bin")
-
 # pipx
 extend_path("~/.local/bin")  # path for pipx
 
 # Scala installation managed by "coursier". See here: https://get-coursier.io/docs/cli-overview
 extend_path("~/Library/Application Support/Coursier/bin")
-
-# Python 3.11 (beta builds)
-#
-# TODO: Remove this once 3.11 becomes stable
-extend_path("/Library/Frameworks/Python.framework/Versions/3.11/bin")
 
 # Custom $PKG_CONFIG_PATH (to find libraries)
 
@@ -159,6 +137,11 @@ if current_janet_version is not None:
 else:
     warning("Missing janet version")
 
+# Unversioned python provided by homebrew
+#
+# Resolves a strange conflict with a 'pip' command for wrong version
+extend_path("/opt/homebrew/opt/python/libexec/bin")
+
 # Some homebrew things are "keg-only" meaning they are not on the path by default
 #
 # Usually these are alternative versions of the main package.
@@ -177,7 +160,6 @@ def detect_keg(name: str, *, order: PathOrderSpec = None):
         extend_path(keg_pkgconfig, "PKG_CONFIG_PATH", order=order)
 
 
-detect_keg("python@3.10")
 detect_keg("lua@5.3")
 # Detect LLVM keg. This is nessicary because homebrew llvm
 # has some utilities that system LLVM does not have (like clang-format and )
@@ -202,9 +184,3 @@ alias("ldd", "echo 'Using otool -L' && otool -L")
 if shutil.which("pacaptr") is not None:
     # alias pacaptr
     alias("pacman", "pacaptr")
-
-# Sometimes my macbook only has python3 on $PATH, not python
-#
-# Python Environment: https://xkcd.com/1987/
-if shutil.which("python") is None:
-    alias("python", "python3")
