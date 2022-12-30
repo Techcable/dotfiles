@@ -4,6 +4,10 @@ import shutil
 import sys
 from pathlib import Path
 from subprocess import PIPE, run
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from translate.config_api import *
 
 try:
     assert DOTFILES_PATH == Path(os.environ["DOTFILES_PATH"])

@@ -1,5 +1,9 @@
 # Configuration for my 2017 Arch Linux Lenovo Laptop
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from translate.config_api import *
 
 if not PLATFORM.is_desktop():
     warning("Not on a desktop! (TODO: Refine check)")

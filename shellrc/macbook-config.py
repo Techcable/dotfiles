@@ -1,11 +1,12 @@
 # Configuration for my 2021 Macbook Pro
 import re
-import shlex
 import shutil
-import sys
 from pathlib import Path
 from subprocess import PIPE, CalledProcessError, run
-from typing import Callable
+from typing import TYPE_CHECKING, Optional, Union
+
+if TYPE_CHECKING:
+    from translate.config_api import *
 
 export("MACHINE_NAME", "macbook-2021")
 export("MACHINE_NAME_SHORT", "macbook")
@@ -42,7 +43,7 @@ haxe_std_path = Path("/opt/homebrew/lib/haxe/std")
 if haxe_std_path.is_dir():
     export("HAXE_STD_PATH", haxe_std_path)
 else:
-    warning(f"Expected haxe stdlib: {haxe_std_lib}")
+    warning(f"Expected haxe stdlib: {haxe_std_path}")
 
 # Keybase path
 extend_path("/Applications/Keybase.app/Contents/SharedSupport/bin")
@@ -111,9 +112,13 @@ extend_path("/opt/stgit/share/man", "MANPATH")
 #
 # However even faster to skip subprocess detection
 # and rely on homebrew directory structure
-def detect_janet_version() -> str:
+def detect_janet_version() -> Optional[str]:
     try:
-        janet_exe_path = Path(shutil.which("janet")).readlink()
+        janet_exe_path: Union[Path, str, None]
+        if (janet_exe_path := shutil.which("janet")) is not None:
+            janet_exe_path = Path(janet_exe_path).readlink()
+        else:
+            return None
     except OSError:
         return None
 
@@ -151,7 +156,7 @@ extend_path("/opt/homebrew/opt/python/libexec/bin")
 # so they don't conflict with existing versions
 #
 # Use the extend_path builtin to add it to the end (but only if the keg exists)
-def detect_keg(name: str, *, order: PathOrderSpec = None):
+def detect_keg(name: str, *, order: Optional[PathOrderSpec] = None):
     keg_prefix = Path("/opt/homebrew/opt")
     if (keg_bin := keg_prefix / f"{name}/bin").is_dir():
         # echo "Detected keg $1";

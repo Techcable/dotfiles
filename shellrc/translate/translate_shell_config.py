@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import os
 import re
 import runpy
 import shlex
@@ -43,7 +44,10 @@ class PathOrderSpec(Enum):
     def fish_flag(self) -> str:
         return f"--{self.value}"
 
-    DEFAULT: Final["PathOrderSpec"] = APPEND
+    DEFAULT: ClassVar["PathOrderSpec"]
+
+
+PathOrderSpec.DEFAULT = PathOrderSpec.APPEND
 
 
 class Mode(metaclass=ABCMeta):
@@ -65,7 +69,7 @@ class Mode(metaclass=ABCMeta):
         """A command to reset the ANSI color codes. Equivalent to set_color('reset')"""
         return self.set_color("reset")
 
-    def set_color(self, color: str, **kwargs):
+    def set_color(self, color: Optional[str], **kwargs):
         """
         Emits ANSI color codes to set the terminal color
 
@@ -146,6 +150,7 @@ class Mode(metaclass=ABCMeta):
         )
 
     # horrible meta magic ^_^
+    @staticmethod
     def _setup_log_levels():
         from collections import ChainMap
 
@@ -218,7 +223,7 @@ class Mode(metaclass=ABCMeta):
         if order is None:
             order = PathOrderSpec.DEFAULT
         else:
-            assert isinstance(order, PathOrderSpec), f"Invalid spec: {order1R}"
+            assert isinstance(order, PathOrderSpec), f"Invalid spec: {order}"
         # Implicitly convert string into path, expanding ~
         if isinstance(value, str):
             value = Path(value).expanduser()
@@ -270,7 +275,7 @@ class ZshMode(Mode):
         self._write("eval", self._quote(text))
 
     def source_file(self, f: Path):
-        self._write("source", str(path))
+        self._write("source", str(f))
 
     def export(self, name: str, value: ShellValue):
         self._write("export", f"{name}={self._quote(value)}")
@@ -342,7 +347,7 @@ class XonshMode(Mode):
         if var_name is not None:
             res.append(f", {var_name!r}")
         if order != PathOrderSpec.DEFAULT:
-            res.append(", order="),
+            res.append(", order=")
             res.append(repr(order.value))
         res.append(")")
         self._write("".join(res))
@@ -461,7 +466,7 @@ class AppDir(Enum):
         match (platform, self):
             case (Platform.LINUX, _):
                 # linux is easy (designed that way)
-                path = Path(kind.value).userexpand()
+                path = Path(self.value).expanduser()
             case (MAC_OS, AppDir.USER_CONFIG):
                 path = Path.home() / "Library/Application Support"
             case _:

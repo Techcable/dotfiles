@@ -1,5 +1,8 @@
 # Configuration for my primary server for techcable.net
-from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from translate.config_api import *
 
 export("MACHINE_NAME", "server-techcable")
 export("MACHINE_NAME_SHORT", "server")
