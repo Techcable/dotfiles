@@ -27,9 +27,17 @@ _ANSI_COLOR_NAMES = (
     "white",
 )
 
-assert Path(__file__).parents[0].name == "translate"
-assert Path(__file__).parents[1].name == "shellrc"
-DOTFILES_PATH = Path(__file__).parents[2]
+if (override_dotfiles_path := os.getenv("FORCE_OVERRIDE_DOTFILES_PATH")) is not None:
+    # Provide a mechanism to bypass usage of `__file__` because that ocassionally breaks
+    DOTFILES_PATH = Path(override_dotfiles_path)
+    assert DOTFILES_PATH.is_dir(), f"Missing dir: {DOTFILES_PATH}"
+else:
+    assert (
+        Path(__file__).parents[0].name == "translate"
+        and Path(__file__).parents[1].name == "shellrc"
+    ), f"Unexpected __file__: {__file__}"
+    DOTFILES_PATH = Path(__file__).parents[2]
+assert (DOTFILES_PATH / "shellrc").is_dir(), "Missing $DOTFILES_PATH/shellrc directory"
 
 
 class ConfigException(BaseException):
