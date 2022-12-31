@@ -101,6 +101,14 @@ for app_name in ["Keybase", "Sublime Text", "Texifier"]:
 # pipx
 extend_path("~/.local/bin")  # path for pipx
 
+# $GOBIN (used for go install)
+go_bin = Path.home() / "go/bin"
+if go_bin.is_dir():
+    extend_path(str(go_bin))
+else:
+    warning("Missing $GOBIN directory", str(go_bin))
+
+
 # Scala installation managed by "coursier". See here: https://get-coursier.io/docs/cli-overview
 extend_path("~/Library/Application Support/Coursier/bin")
 
