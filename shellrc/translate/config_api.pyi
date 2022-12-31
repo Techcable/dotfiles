@@ -4,6 +4,7 @@ from pathlib import Path
 
 from .translate_shell_config import (
     AppDir,
+    ConfigException,
     Mode,
     PathOrderSpec,
     Platform,
@@ -38,6 +39,7 @@ extend_path = _MODE_IMPL.extend_path
 __all__ = [
     # exposed types
     "AppDir",
+    "ConfigException",
     "PathOrderSpec",
     "Platform",
     "UnsupportedPlatformError",

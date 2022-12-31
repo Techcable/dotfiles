@@ -32,6 +32,10 @@ assert Path(__file__).parents[1].name == "shellrc"
 DOTFILES_PATH = Path(__file__).parents[2]
 
 
+class ConfigException(BaseException):
+    pass
+
+
 class PathOrderSpec(Enum):
     # prepend to the beginning of the system paths
     PREPEND = "prepend"
@@ -508,6 +512,7 @@ def run_mode(mode: Mode, config_file: Path) -> list[str]:
         context[attr_name] = getattr(mode, attr_name)
     # stdout is only for translation output, not messages
     with redirect_stdout(sys.stderr):
+        sys.path.append(str(Path(__file__).parents[1]))
         runpy.run_path(
             str(config_file),
             init_globals=context,
