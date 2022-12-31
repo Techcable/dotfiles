@@ -75,7 +75,7 @@ class HashFunc(Enum):
     PREFERRED: ClassVar[HashFunc]
 
 
-HashFunc.PREFERRED = HashFunc.BLAKE3 if HashFunc.BLAKE3.supported else HashFunc.SHA256
+HashFunc.PREFERRED = HashFunc.SHA256
 
 
 class CacheException(Exception):
