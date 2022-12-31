@@ -312,7 +312,7 @@ class CachedValue(Generic[T]):
         self.rehash.check(log)
 
 
-LATEST_DATABASE_VERSION = 1
+LATEST_DATABASE_VERSION = 2
 MIGRATION_DIR = Path(__file__).parent / "migrations"
 
 
