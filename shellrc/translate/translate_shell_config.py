@@ -5,7 +5,6 @@ import os
 import re
 import runpy
 import shlex
-import shutil
 import sys
 import textwrap
 import warnings
@@ -39,6 +38,19 @@ else:
     ), f"Unexpected __file__: {__file__}"
     DOTFILES_PATH = Path(__file__).parents[2]
 assert (DOTFILES_PATH / "shellrc").is_dir(), "Missing $DOTFILES_PATH/shellrc directory"
+
+
+def which(command: str) -> Optional[Path]:
+    """Alternate implementation of shutil.which"""
+    path = os.getenv("PATH")
+    if path is None:
+        print("WARNING: Missing $PATH variable")
+        return None
+    for path_dir in map(Path, path.split(":")):
+        actual = path_dir / command
+        if os.access(actual, os.F_OK | os.X_OK):
+            return actual
+    return None
 
 
 class ConfigException(BaseException):
@@ -459,7 +471,7 @@ class Platform(Enum):
         match self:
             case Platform.LINUX:
                 # Check for X11 installation
-                return shutil.which("Xorg") is not None
+                return which("Xorg") is not None
             case Platform.MAC_OS:
                 return True  # consider macs always desktops ;)
             case _:
@@ -515,6 +527,7 @@ def run_mode(mode: Mode, config_file: Path) -> list[str]:
         "Platform": Platform,
         "AppDir": AppDir,
         "UnsupportedPlatformError": UnsupportedPlatformError,
+        "which": which,
     }
     for attr_name in dir(Mode):
         if attr_name.startswith("_"):

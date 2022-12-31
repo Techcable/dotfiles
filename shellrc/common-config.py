@@ -1,6 +1,5 @@
 """Default configuration shared across all machines"""
 import os
-import shutil
 import sys
 from pathlib import Path
 from subprocess import PIPE, run
@@ -60,13 +59,13 @@ if os.getenv("TERM") == "xterm-kitty":
 
 
 # Prefer exa to ls
-if shutil.which("exa"):
+if which("exa"):
     alias("ls", "exa")
     alias("lsa", "exa -a")
 
 # Warn on usage of bpytop
-if real_bpytop := shutil.which("bpytop"):
-    if shutil.which("btop"):
+if real_bpytop := which("bpytop"):
+    if which("btop"):
         alias(
             "bpytop",
             f'{real_bpytop}; echo "{set_color("yellow", bold=True)}NOTE{reset_color()}: Please consider using btop"',

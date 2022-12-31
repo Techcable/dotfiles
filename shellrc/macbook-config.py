@@ -1,6 +1,5 @@
 # Configuration for my 2021 Macbook Pro
 import re
-import shutil
 from pathlib import Path
 from subprocess import PIPE, CalledProcessError, run
 from typing import TYPE_CHECKING, Optional, Union
@@ -145,7 +144,7 @@ extend_path("/opt/stgit/share/man", "MANPATH")
 def detect_janet_version() -> Optional[str]:
     try:
         janet_exe_path: Union[Path, str, None]
-        if (janet_exe_path := shutil.which("janet")) is not None:
+        if (janet_exe_path := which("janet")) is not None:
             janet_exe_path = Path(janet_exe_path).readlink()
         else:
             return None
@@ -216,6 +215,6 @@ detect_keg("llvm", order=PathOrderSpec.APPEND_SYSTEM)
 # Also "Rosetta stone for Unixes"
 alias("ldd", "echo 'Using otool -L' && otool -L")
 
-if shutil.which("pacaptr") is not None:
+if which("pacaptr") is not None:
     # alias pacaptr
     alias("pacman", "pacaptr")

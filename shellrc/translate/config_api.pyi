@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Optional
 
 from .translate_shell_config import (
     AppDir,
@@ -9,6 +10,7 @@ from .translate_shell_config import (
     PathOrderSpec,
     Platform,
     UnsupportedPlatformError,
+    which,
 )
 
 SHELL_BACKEND: str
@@ -47,6 +49,7 @@ __all__ = [
     "SHELL_BACKEND",
     "DOTFILES_PATH",
     "PLATFORM",
+    "which",
     "reset_color",
     "set_color",
     "eval_text",
