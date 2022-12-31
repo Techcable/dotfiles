@@ -259,7 +259,7 @@ class RehashSimple(RehashCondition):
 
 RehashSimple.ALWAYS = RehashSimple(RehashKind.ALWAYS)
 RehashSimple.NEVER = RehashSimple(RehashKind.NEVER)
-
+SKIP_EXPIRED_TIME_CHECKS = True
 
 TIMEDELTA_PATTERN = re.compile(r"(?:(\d+) days?, )?(\d?\d):(\d\d):(\d\d)(?:\.(\d+))?")
 
@@ -299,7 +299,7 @@ class CachedValue(Generic[T]):
         time_elapsed = datetime.now() - self.last_checked
         return time_elapsed >= self.check_frequency or time_elapsed < timedelta()
 
-    def check_validity(self, log: logging.Logger, *, only_if_time_expired=True):
+    def check_validity(self, log: logging.Logger):
         """
         Check if the cached value still valid.
 
@@ -307,7 +307,7 @@ class CachedValue(Generic[T]):
 
         Throws CacheInvalidateException if the cache is invalid
         """
-        if only_if_time_expired and not self.is_time_expired():
+        if not SKIP_EXPIRED_TIME_CHECKS and not self.is_time_expired():
             return
         self.rehash.check(log)
 
