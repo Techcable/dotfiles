@@ -38,7 +38,7 @@ export("GPG_TTY", run(["tty"], stdout=PIPE, encoding="utf8").stdout.rstrip())
 if PLATFORM.is_desktop():
     try:
         jetbrains_app_dir = (
-            AppDir.USER_CONFIG.resolve(PLATFORM) / "Jetbrains/Toolbox/scripts"
+            AppDir.USER_DATA.resolve(PLATFORM) / "JetBrains/Toolbox/scripts"
         )
         if jetbrains_app_dir.is_dir():
             extend_path(jetbrains_app_dir)

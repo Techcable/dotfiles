@@ -471,16 +471,16 @@ class Platform(Enum):
 
 class AppDir(Enum):
     USER_CONFIG = "~/.config"
+    USER_DATA = "~/.local/share"
 
     def resolve(self, platform: Platform) -> Path:
         MAC_OS = Platform.MAC_OS
-        USER_CONFIG = AppDir.USER_CONFIG
         path: Path
         match (platform, self):
             case (Platform.LINUX, _):
                 # linux is easy (designed that way)
                 path = Path(self.value).expanduser()
-            case (MAC_OS, AppDir.USER_CONFIG):
+            case (MAC_OS, AppDir.USER_CONFIG) | (MAC_OS, AppDir.USER_DATA):
                 path = Path.home() / "Library/Application Support"
             case _:
                 raise UnsupportedPlatformError(platform, f"Unknown directory {self}")
