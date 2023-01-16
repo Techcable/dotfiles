@@ -46,8 +46,6 @@ if PLATFORM.is_desktop():
             raise FileNotFoundError(f"could not find directory {jetbrains_app_dir}")
     except (UnsupportedPlatformError, FileNotFoundError) as e:
         warning("While attempting to detect jetbrains script path, " + str(e))
-else:
-    print("Not a desktop", file=sys.stderr)
 
 # Extra aliases when running under kitty
 #

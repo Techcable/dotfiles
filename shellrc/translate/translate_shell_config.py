@@ -5,6 +5,7 @@ import os
 import re
 import runpy
 import shlex
+import shutil
 import sys
 import textwrap
 import warnings
@@ -457,8 +458,8 @@ class Platform(Enum):
         """Detect if this platform is running on a Desktop computer"""
         match self:
             case Platform.LINUX:
-                # Check for X11 display (TODO: Wayland?)
-                return os.getenv("DISPLAY") is not None
+                # Check for X11 installation
+                return shutil.which("Xorg") is not None
             case Platform.MAC_OS:
                 return True  # consider macs always desktops ;)
             case _:
