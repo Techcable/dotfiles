@@ -514,6 +514,7 @@ def run_mode(mode: Mode, config_file: Path) -> list[str]:
         "PLATFORM": Platform.current(),
         "Platform": Platform,
         "AppDir": AppDir,
+        "UnsupportedPlatformError": UnsupportedPlatformError,
     }
     for attr_name in dir(Mode):
         if attr_name.startswith("_"):
