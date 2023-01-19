@@ -9,12 +9,44 @@ import sys
 import textwrap
 import warnings
 from abc import ABCMeta, abstractmethod
-from contextlib import redirect_stdout
+from contextlib import AbstractContextManager, contextmanager, redirect_stdout
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import ClassVar, Final, Literal, Optional, Type, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    ClassVar,
+    Final,
+    Literal,
+    Optional,
+    Type,
+    Union,
+    final,
+)
 
-ShellValue = Union[Path, str, int, list["ShellValue"]]
+
+class VarAccess:
+    __slots__ = "name"
+    name: str
+
+    def __eq__(self, other):
+        return (
+            self.name == other.name if isinstance(other, VarAccess) else NotImplemented
+        )
+
+    def __init__(self, name: str):
+        self.name = name
+        # Easier to ban than to handle ;)
+        forbidden_chars = set(name) & {" ", "'", '"', "$"}
+        if forbidden_chars:
+            raise ValueError(f"Forbidden chars in {name!r} ({forbidden_chars!r})")
+
+    def __str__(self) -> str:
+        return f"${self.name}"
+
+
+ShellValue = Union[Path, str, int, VarAccess, list["ShellValue"]]
 
 _ANSI_COLOR_NAMES = (
     "black",
@@ -75,8 +107,16 @@ class PathOrderSpec(Enum):
 PathOrderSpec.DEFAULT = PathOrderSpec.APPEND
 
 
+class _Scope(Enum):
+    EXPORT = "export"
+    LOCAL = "local"
+    ALIAS = "alias"
+
+
 class Mode(metaclass=ABCMeta):
     _output: list[str]
+    _block_level: int
+    _indent_level: int
 
     name: ClassVar[str]
     # Path to the helper functions
@@ -86,14 +126,22 @@ class Mode(metaclass=ABCMeta):
     def __init__(self):
         self._output = []
         self._defer_warnings = False
+        self._block_level = 0
+        self._indent_level = 0
+        self._indent = ""
+
+    @final
+    def var(self, name: str) -> VarAccess:
+        return VarAccess(name)
 
     def _write(self, *args: object):
-        self._output.append(" ".join(map(str, args)))
+        self._output.append(self._indent + " ".join(map(str, args)))
 
     def reset_color(self) -> str:
         """A command to reset the ANSI color codes. Equivalent to set_color('reset')"""
         return self.set_color("reset")
 
+    # TODO: Make this static
     def set_color(self, color: Optional[str], **kwargs):
         """
         Emits ANSI color codes to set the terminal color
@@ -149,6 +197,10 @@ class Mode(metaclass=ABCMeta):
             raise ValueError("No formatting specified!")
         return f"\x1b[" + ";".join(map(str, parts)) + "m"
 
+    @final
+    def exec_cmd(self, command: str, *args: ShellValue):
+        self._write(command, *map(self._quote, args))
+
     @abstractmethod
     def eval_text(self, text: str):
         pass
@@ -156,6 +208,25 @@ class Mode(metaclass=ABCMeta):
     @abstractmethod
     def source_file(self, p: Path):
         pass
+
+    @final
+    @contextmanager
+    def indent(self):
+        self._indent_level += 1
+        self._indent = " " * self._indent_level
+        try:
+            yield
+        finally:
+            self._indent_level -= 1
+            self._indent = " " * self._indent_level
+
+    @abstractmethod
+    def block(self) -> AbstractContextManager[None]:
+        pass
+
+    @final
+    def set_local(self, name: str, value: ShellValue, *, export: bool = True):
+        self._assign(name, value, scope=_Scope.LOCAL, export=export)
 
     def _log(self, *msg: object, level: str, fmt: dict):
         assert fmt is not None
@@ -214,12 +285,16 @@ class Mode(metaclass=ABCMeta):
     del _setup_log_levels  # avoid namespace polution
 
     @abstractmethod
-    def export(self, name: str, value: ShellValue):
+    def _assign(self, name: str, value: ShellValue, *, scope: _Scope, export: bool):
         pass
 
-    @abstractmethod
+    @final
+    def export(self, name: str, value: ShellValue):
+        self._assign(name, value, scope=_Scope.EXPORT, export=True)
+
+    @final
     def alias(self, name: str, value: ShellValue):
-        pass
+        self._assign(name, value, scope=_Scope.ALIAS, export=True)
 
     def run_in_background_helper(self, args: list[str]):
         """A hack to run in background via python"""
@@ -302,11 +377,26 @@ class ZshMode(Mode):
     def source_file(self, f: Path):
         self._write("source", str(f))
 
-    def export(self, name: str, value: ShellValue):
-        self._write("export", f"{name}={self._quote(value)}")
+    def _assign(self, name: str, value: ShellValue, *, scope: _Scope, export: bool):
+        flags = []
+        if not export:
+            match scope:
+                case _Scope.LOCAL:
+                    flags.append("-x")
+                case _:
+                    raise NotImplementedError
+        self._write(scope.value, *flags, f"{name}={self._quote(value)}")
 
-    def alias(self, name: str, value: ShellValue):
-        self._write("alias", f"{name}={self._quote(value)}")
+    @contextmanager
+    def block(self):
+        self._write("( # block")
+        self._block_level += 1
+        try:
+            with self.indent():
+                yield
+        finally:
+            self._block_level -= 1
+            self._write(")")
 
     def _extend_path_impl(
         self, value: str, var_name: Optional[str], *, order: PathOrderSpec
@@ -326,10 +416,10 @@ class ZshMode(Mode):
                 )
 
     def _quote(self, value: ShellValue) -> str:
-        if isinstance(value, (Path, int)):
+        if isinstance(value, (int, VarAccess)):
+            return str(value)
+        elif isinstance(value, (str, Path)):
             value = str(value)
-        elif isinstance(value, str):
-            pass
         elif isinstance(value, list):
             # zsh array
             return "(" + " ".join(map(self._quote, value)) + ")"
@@ -343,8 +433,21 @@ class ZshMode(Mode):
         )
 
 
+class _XonshBlock:
+    local_vars: set[str]
+
+    def __init__(self):
+        self.local_vars = set()
+
+
 class XonshMode(Mode):
     name: ClassVar = "xonsh"
+    _ast_mod: ClassVar[Any] = None
+    _blocks: list[_XonshBlock]
+
+    def __init__(self):
+        super().__init__()
+        self._blocks = []
 
     def eval_text(self, text: str):
         self._write(f"execx({self._quote(text)})")
@@ -356,12 +459,60 @@ class XonshMode(Mode):
         # a from `{f}` import *
         raise NotImplementedError
 
-    def export(self, name: str, value: ShellValue):
-        self._write(f"${name}={self._quote(value)}")
+    def _assign(self, name: str, value: ShellValue, *, scope: _Scope, export: bool):
+        target: str
+        if scope != _Scope.LOCAL and not export:
+            raise NotImplementedError
+        match scope:
+            case _Scope.EXPORT:
+                target = f"${name}"
+            case _Scope.LOCAL:
+                target = f"${name}" if export else name
+            case _Scope.ALIAS:
+                target = f"aliases[{name!r}]"
+            case _:
+                raise NotImplementedError
+        if scope == _Scope.LOCAL and export:
+            self._blocks[-1].local_vars.add(name)
+        self._write(target, "=", self._quote(value))
 
-    def alias(self, name: str, value: ShellValue):
-        # TODO: Do we ever need to quote this value?
-        self._write(f"aliases[{name!r}]", "=", self._quote(value))
+    @staticmethod
+    def _validate_python_name(name: str):
+        if TYPE_CHECKING:
+            import ast
+        else:
+            ast = XonshMode._ast_mod
+            if ast is None:
+                del ast
+                import ast
+
+                XonshMode._ast_mod = ast
+        try:
+            expr_body = ast.parse(name, mode="eval").body
+            if not isinstance(expr_body, ast.Name):
+                raise TypeError(f"Expected ast.Name: {type(expr_body)}")
+        except (SyntaxError, TypeError):
+            raise ValueError(f"Not a valid python name: {name}")
+
+    @contextmanager
+    def block(self):
+        self._write()
+        self._write("def _block():")
+        self._blocks.append(block := _XonshBlock())
+        self._block_level += 1
+        try:
+            with self.indent():
+                yield
+        finally:
+            assert self._block_level == len(self._blocks)
+            assert self._blocks[-1] is block
+            self._blocks.pop()
+            self._block_level -= 1
+            self._write("_block()")
+            for local in block.local_vars:
+                self._write(f"del ${local}")
+            self._write("del _block")
+            self._write()
 
     def _extend_path_impl(
         self, value: Union[str, Path], var_name: Optional[str], *, order
@@ -378,12 +529,12 @@ class XonshMode(Mode):
         self._write("".join(res))
 
     def _quote(self, value: ShellValue) -> str:
-        if isinstance(value, (Path, int)):
+        if isinstance(value, (int, VarAccess)):
+            return str(value)
+        elif isinstance(value, (str, Path)):
             value = str(value)
         elif isinstance(value, list):
             return "[" + ", ".join(map(self._quote, value)) + "]"
-        elif isinstance(value, str):
-            pass
         else:
             raise TypeError(type(value))
         # xonsh is Python
@@ -402,12 +553,37 @@ class FishMode(Mode):
     def source_file(self, f: Path):
         self._write("source", str(f))
 
-    def export(self, name: str, value: ShellValue):
-        self._write(f"set -gx {name} {self._quote(value)}")
+    def _assign(self, name: str, value: ShellValue, *, scope: _Scope, export: bool):
+        value = self._quote(value)
+        set_scope = None
+        match scope:
+            case _Scope.EXPORT:
+                set_scope = "--global"
+            case _Scope.LOCAL:
+                assert self._block_level > 0
+                set_scope = "--local"
+            case _Scope.ALIAS:
+                self._write(f"alias {name}={value}")
+                return  # break early
+        if set_scope is None:
+            raise AssertionError
+        flags = [set_scope]
+        if export:
+            flags.append("--export")
+        elif scope != _Scope.LOCAL:
+            raise NotImplementedError
+        self._write("set", *flags, name, value)
 
-    def alias(self, name: str, value: ShellValue):
-        # TODO: Do we ever need to quote the name?
-        self._write(f"alias {name}={self._quote(value)}")
+    @contextmanager
+    def block(self):
+        self._block_level += 1
+        self._write("begin")
+        try:
+            with self.indent():
+                yield
+        finally:
+            self._block_level -= 1
+            self._write("end")
 
     def _extend_path_impl(
         self, value: Union[str, Path], var_name: Optional[str], *, order: PathOrderSpec
@@ -418,15 +594,15 @@ class FishMode(Mode):
         )
 
     def _quote(self, value: ShellValue) -> str:
-        if isinstance(value, (Path, int)):
+        if isinstance(value, (int, VarAccess)):
+            return str(value)
+        elif isinstance(value, (Path, str)):
             value = str(value)
         elif isinstance(value, list):
             assert value, "Empty lists are forbidden"
             # lists are really fundemental in fish, all varaiables are arrays
             # thus, we just have to space-seperate the quoted variables
             return " ".join(map(self._quote, value))
-        elif isinstance(value, str):
-            pass
         else:
             raise TypeError(type(value))
         return escape_quoted(
@@ -486,13 +662,15 @@ class AppDir(Enum):
     USER_DATA = "~/.local/share"
 
     def resolve(self, platform: Platform) -> Path:
-        MAC_OS = Platform.MAC_OS
         path: Path
         match (platform, self):
             case (Platform.LINUX, _):
                 # linux is easy (designed that way)
                 path = Path(self.value).expanduser()
-            case (MAC_OS, AppDir.USER_CONFIG) | (MAC_OS, AppDir.USER_DATA):
+            case (Platform.MAC_OS, AppDir.USER_CONFIG) | (
+                Platform.MAC_OS,
+                AppDir.USER_DATA,
+            ):
                 path = Path.home() / "Library/Application Support"
             case _:
                 raise UnsupportedPlatformError(platform, f"Unknown directory {self}")
