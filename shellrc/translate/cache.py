@@ -13,7 +13,6 @@ from enum import Enum
 from pathlib import Path
 from typing import (
     TYPE_CHECKING,
-    Any,
     Callable,
     ClassVar,
     Generic,
@@ -23,13 +22,15 @@ from typing import (
 )
 
 if TYPE_CHECKING:
+    # TODO: Avoid impl details (this is typeshed issue...)
+    from hashlib import _Hash as Hasher
     from os import PathLike
 
     from typing_extensions import Self
 
 
 try:
-    import blake3
+    import blake3  # type: ignore
 except ImportError:
     blake3 = None
 
@@ -45,11 +46,11 @@ class HashFunc(Enum):
     @functools.cached_property
     def supported(self) -> bool:
         try:
-            return self.create_impl()
+            return self.create_impl() is not None
         except NotImplementedError:
             return False
 
-    def create_impl(self) -> Any:
+    def create_impl(self) -> Hasher:
         match self:
             case HashFunc.SHA256:
                 return hashlib.sha256()
