@@ -1,6 +1,6 @@
 # Configuration for Asahi linux, running within my M1 macbook-2021
-from pathlib import Path
 import os
+from pathlib import Path
 
 export("MACHINE_NAME", "macbook-2021-asahi")
 export("MACHINE_NAME_SHORT", "apple" + set_color("cyan", bold=True) + "arch")
