@@ -155,15 +155,23 @@ if [[ ! -d "$dotfiles" ]]; then
 else
     export DOTFILES_PATH="$dotfiles";
     local translation_script="$dotfiles/shellrc/translate/translate_shell_config.py";
-    # First execute "common" config
-    local translated_config=$(python3 "$translation_script" zsh "$dotfiles/shellrc/common-config.py");
-    eval "$translated_config";
-    if [[ ! -f ~/.shell-config.rc ]]; then
-        warning "Missing configuration file"
-    else
-        translated_config=$(python3 "$translation_script" zsh ~/.shell-config.rc);
-        eval "$translated_config";
-    fi
+    local translated_config_dir="$(mktemp -d)"
+    local original_configs=("$dotfiles/shellrc/common-config.py" ~/.shell-config.rc)
+    local translated_configs=()
+    local args=(--mode zsh);
+    for config in "${original_configs[@]}"; do
+        if [[ ! -f "$config" ]]; then
+            warning "Missing configuration file: $config"
+            continue
+        fi
+        args+=(--in $config)
+        translated_configs+=("$translated_config_dir/$(basename $config)")
+        args+=(--out "${translated_configs[-1]}")
+    done
+    python3 "$translation_script" "${args[@]}"
+    for translated in "${translated_configs[@]}"; do
+        source "$translated"
+    done
 fi
 
 

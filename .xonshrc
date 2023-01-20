@@ -50,14 +50,11 @@ else:
 
 # Load extra path information from ~/.shell-config.py
 def load_extra_config():
+    import tempfile
     if dotfiles_path is None:
         warning("Unable to load configuration (missing DOTFILES)")
         return
     config_files = [p"~/.shell-config.rc", dotfiles_path / "shellrc/common-config.py"]
-    for pth in config_files:
-        if not pth.is_file():
-            warning(f"Missing config file: {pth}")
-            return
     def extend_path(value, var="PATH", *, order=None):
         assert not var.startswith('$') and var.endswith('PATH'), f"Not a path variable: {var!r}"
         assert isinstance(value, str), f"Unexpected path value: {value!r}"
@@ -89,10 +86,17 @@ def load_extra_config():
     }
     translation_script = dotfiles_path / "shellrc/translate/translate_shell_config.py"
     $DOTFILES_PATH=dotfiles_path
-    for config_path in config_files:
+    with tempfile.TemporaryDirectory() as dir:
+        translated_config_files = []
+        args = ["--mode", "xonsh"]
+        for config in config_files:
+            translated_config = Path(dir) / config.name
+            args.extend(("--in", config, "--out", translated_config))
         # Run translation as subprocess to inherit updated $PATH variable
-        translated_config = $(python3 @(translation_script) xonsh @(config_path))
-
+        python3 @(translation_script) @(args)
+    for translated_config_file in translated_config_files:
+        with open(translated_config_file, 'rt') as f:
+            translated_config = f.read()
         # Execute translated code
         execx(translated_config,  mode='exec', locs={}, glbs=extra_builtins)
 
