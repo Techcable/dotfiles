@@ -25,6 +25,9 @@ from typing import (
     final,
 )
 
+# TODO: Reconsider startup time impact
+import click
+
 
 class VarAccess:
     __slots__ = "name"
@@ -46,7 +49,7 @@ class VarAccess:
         return f"${self.name}"
 
 
-ShellValue = Union[Path, str, int, VarAccess, list["ShellValue"]]
+ShellValue = Union[Path, str, int, list["ShellValue"]]
 
 _ANSI_COLOR_NAMES = (
     "black",
@@ -726,56 +729,32 @@ def run_mode(mode: Mode, config_file: Path) -> list[str]:
     return mode._output
 
 
-def main():
-    remaining_args = sys.argv[1:]
-
-    def consume_arg(*, amount: Optional[int] = None) -> str | list[str]:
-        if amount is None:
-            return remaining_args.remove(0)
-        else:
-            consumed = remaining_args[:amount]
-            del remaining_args[:amount]
-            return consumed
-
-    def require_arg(flag_name: str) -> str:
-        try:
-            return remaining_args[1]
-        except IndexError:
-            print(f"Expected an argument to {flag_name} flag", file=sys.stderr)
-
-    mode_type = None
-    in_files = []
-    out_files = []
-    while remaining_args and (flag := remaining_args[0]).startswith("-"):
-        match flag:
-            case "--":
-                consume_arg()
-                break  # Done processing flags
-            case "--mode":
-                if mode_type is not None:
-                    print("Cannot specify --mode twice", file=sys.stderr)
-                    sys.exit(1)
-                mode_name = require_arg("--mode")
-                try:
-                    mode_type = _VALID_MODES[mode_name]
-                except KeyError:
-                    print(f"Invalid mode: {mode_name}", file=sys.stderr)
-                    sys.exit(1)
-                else:
-                    consume_arg(amount=2)
-            case "--in" | "-i":
-                in_files.append(Path(require_arg("--in")))
-                consume_arg(amount=2)
-            case "--out" | "-o":
-                out_files.append(Path(require_arg("--out")))
-                consume_arg(amount=2)
-            case _:
-                print(f"Unexpected flag: {flag!r}", file=sys.stderr)
-                sys.exit(1)
-
-    if len(in_files) == 0:
-        print("ERROR: Got no input files", file=sys.stderr)
-        sys.exit(1)
+@click.command()
+@click.option(
+    "--mode",
+    "mode_type_name",
+    type=click.Choice(list(_VALID_MODES.keys())),
+    help="The mode (output format) to translate into",
+    required=True,
+)
+@click.option(
+    "--in",
+    "in_files",
+    type=click.Path(path_type=Path, exists=True, dir_okay=False),
+    help="The input files to process",
+    multiple=True,
+    required=True,
+)
+@click.option(
+    "--out",
+    "out_files",
+    type=click.Path(path_type=Path),
+    help="The output files to write input to",
+    multiple=True,
+)
+def translate_shell_config(in_files, out_files, mode_type_name):
+    assert len(in_files) > 0
+    mode_type = _VALID_MODES[mode_type_name]
 
     if len(in_files) == 1 and len(out_files) == 0:
         # With only one in file (and no explicit output), write to stdout
@@ -783,7 +762,7 @@ def main():
 
     if len(in_files) != len(out_files):
         print(
-            f"Expected {len(out_files)} outputs for {len(in_files)} inputs",
+            f"Expected {len(in_files)} outputs for {len(in_files)} inputs, but got {len(out_files)}",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -806,4 +785,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    translate_shell_config()
