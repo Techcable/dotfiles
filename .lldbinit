@@ -1,0 +1,2 @@
+command script import -- ~/git/zig/zig/tools/stage2_lldb_pretty_printers.py
+type category enable stage2
