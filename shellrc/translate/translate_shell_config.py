@@ -680,10 +680,10 @@ class AppDir(Enum):
             return path
 
 
-_VALID_MODES = {
-    "zsh": ZshMode(),
-    "xonsh": XonshMode(),
-    "fish": FishMode(),
+_VALID_MODES: dict[str, type[Mode]] = {
+    "zsh": ZshMode,
+    "xonsh": XonshMode,
+    "fish": FishMode,
 }
 for name, mode in _VALID_MODES.items():
     assert mode.name == name, mode.name
@@ -713,7 +713,7 @@ def run_mode(mode: Mode, config_file: Path) -> list[str]:
         context[attr_name] = getattr(mode, attr_name)
     # stdout is only for translation output, not messages
     with redirect_stdout(sys.stderr):
-        sys.path.append(str(Path(__file__).parents[1]))
+        sys.path.append(str(DOTFILES_PATH / "shellrc"))
         runpy.run_path(
             str(config_file),
             init_globals=context,
@@ -727,18 +727,82 @@ def run_mode(mode: Mode, config_file: Path) -> list[str]:
 
 
 def main():
-    if len(sys.argv) != 3:
-        print("Expected 2 arguments: <mode> <config_file>", file=sys.stderr)
+    remaining_args = sys.argv[1:]
+
+    def consume_arg(*, amount: Optional[int] = None) -> str | list[str]:
+        if amount is None:
+            return remaining_args.remove(0)
+        else:
+            consumed = remaining_args[:amount]
+            del remaining_args[:amount]
+            return consumed
+
+    def require_arg(flag_name: str) -> str:
+        try:
+            return remaining_args[1]
+        except IndexError:
+            print(f"Expected an argument to {flag_name} flag", file=sys.stderr)
+
+    mode_type = None
+    in_files = []
+    out_files = []
+    while remaining_args and (flag := remaining_args[0]).startswith("-"):
+        match flag:
+            case "--":
+                consume_arg()
+                break  # Done processing flags
+            case "--mode":
+                if mode_type is not None:
+                    print("Cannot specify --mode twice", file=sys.stderr)
+                    sys.exit(1)
+                mode_name = require_arg("--mode")
+                try:
+                    mode_type = _VALID_MODES[mode_name]
+                except KeyError:
+                    print(f"Invalid mode: {mode_name}", file=sys.stderr)
+                    sys.exit(1)
+                else:
+                    consume_arg(amount=2)
+            case "--in" | "-i":
+                in_files.append(Path(require_arg("--in")))
+                consume_arg(amount=2)
+            case "--out" | "-o":
+                out_files.append(Path(require_arg("--out")))
+                consume_arg(amount=2)
+            case _:
+                print(f"Unexpected flag: {flag!r}", file=sys.stderr)
+                sys.exit(1)
+
+    if len(in_files) == 0:
+        print("ERROR: Got no input files", file=sys.stderr)
         sys.exit(1)
-    mode_name = sys.argv[1]
-    try:
-        mode = _VALID_MODES[sys.argv[1]]
-    except KeyError:
-        print("Invalid mode: {mode_name}", file=sys.stderr)
+
+    if len(in_files) == 1 and len(out_files) == 0:
+        # With only one in file (and no explicit output), write to stdout
+        out_files.append(sys.stdout)
+
+    if len(in_files) != len(out_files):
+        print(
+            f"Expected {len(out_files)} outputs for {len(in_files)} inputs",
+            file=sys.stderr,
+        )
         sys.exit(1)
-    config_file = Path(sys.argv[2])
-    for line in run_mode(mode, config_file):
-        print(line)
+
+    for in_file, out_file in zip(in_files, out_files, strict=True):
+        # Avoid contextlib due to potential for longer import times
+        if isinstance(out_file, Path):
+            out_file_handle = open(out_file, "wt")
+            needs_closing = True
+        else:
+            out_file_handle = out_file
+            needs_closing = False
+        mode = mode_type()  # Construct mode object
+        try:
+            for line in run_mode(mode, in_file):
+                print(line, file=out_file_handle)
+        finally:
+            if needs_closing:
+                out_file_handle.close()
 
 
 if __name__ == "__main__":
