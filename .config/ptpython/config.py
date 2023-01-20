@@ -18,8 +18,8 @@ def configure(repl):
     # NOTE: Be careful because some colorschemes are hard
     # to see in the terminal!
     repl.use_code_colorscheme("monokai")
-    repl.min_brightness = .30
-    repl.color_depth = "DEPTH_24_BIT" # Truecolor
+    repl.min_brightness = 0.30
+    repl.color_depth = "DEPTH_24_BIT"  # Truecolor
 
     # If output is very large, use a pager
     repl.enable_pager = True
