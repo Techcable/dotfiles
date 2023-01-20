@@ -9,7 +9,12 @@ import sys
 import textwrap
 import warnings
 from abc import ABCMeta, abstractmethod
-from contextlib import AbstractContextManager, contextmanager, redirect_stdout
+from contextlib import (
+    AbstractContextManager,
+    ExitStack,
+    contextmanager,
+    redirect_stdout,
+)
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -769,19 +774,14 @@ def translate_shell_config(in_files, out_files, mode_type_name):
 
     for in_file, out_file in zip(in_files, out_files, strict=True):
         # Avoid contextlib due to potential for longer import times
-        if isinstance(out_file, Path):
-            out_file_handle = open(out_file, "wt")
-            needs_closing = True
-        else:
-            out_file_handle = out_file
-            needs_closing = False
-        mode = mode_type()  # Construct mode object
-        try:
+        with ExitStack() as stack:
+            if isinstance(out_file, Path):
+                out_file_handle = stack.enter_context(open(out_file, "wt"))
+            else:
+                out_file_handle = out_file
+            mode = mode_type()  # Construct mode object
             for line in run_mode(mode, in_file):
                 print(line, file=out_file_handle)
-        finally:
-            if needs_closing:
-                out_file_handle.close()
 
 
 if __name__ == "__main__":
