@@ -8,6 +8,7 @@ set smartindent
 call plug#begin('~/.vim/plugged')
 
 Plug 'bakpakin/janet.vim'
+Plug 'NoahTheDuke/vim-just'
 
 call plug#end()
 
