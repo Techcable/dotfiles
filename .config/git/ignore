@@ -1,0 +1,15 @@
+## Global gitignore ##
+#
+## Only put personal OS/IDE files here                   ##
+## Lang-specific caches should be in project .gitignore  ##
+
+# Python
+# __pycache__
+#
+# NO: Because if the project uses Python, it should exclude it.
+
+# Mac
+.DS_Store
+
+# Exclude Jetbrains IDE data
+/.idea/
