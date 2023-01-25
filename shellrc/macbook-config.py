@@ -121,9 +121,6 @@ extend_path("~/Library/Application Support/Coursier/bin")
 # detected libraires (including homebrew libraries).
 extend_path("/opt/homebrew/lib/pkgconfig", "PKG_CONFIG_PATH")
 
-# Criterion: a unit testing framework for C - https://github.com/Snaipe/Criterion
-extend_path("/opt/criterion/lib/pkgconfig", "PKG_CONFIG_PATH")
-
 # senpai IRC client (CLI): https://sr.ht/~taiite/senpai/
 extend_path("/opt/senpai/bin")
 extend_path("/opt/senpai/share/man", "MANPATH")
