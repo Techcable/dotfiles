@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import functools
-import hashlib
 import logging
-import pickle
 import re
 import sqlite3
 from abc import ABCMeta, abstractmethod
@@ -28,6 +26,14 @@ if TYPE_CHECKING:
 
     from typing_extensions import Self
 
+# Lazy-loaded modules
+#
+# These can have a significant impact on import time
+# hashlib and pickle were 2 and 5% of total import time
+pickle = None
+if TYPE_CHECKING:
+    import hashlib
+    import pickle
 
 try:
     import blake3  # type: ignore
@@ -38,10 +44,17 @@ except ImportError:
 class HashFunc(Enum):
     SHA256 = "sha256"
     BLAKE3 = "blake3"
+    BLAKE2 = "blake2"
 
     @property
     def digest_length(self) -> int:
-        return 64
+        match self:
+            case HashFunc.BLAKE3 | HashFunc.SHA256:
+                return 64
+            case HashFunc.BLAKE2:
+                return 128
+            case _:
+                raise AssertionError
 
     @functools.cached_property
     def supported(self) -> bool:
@@ -51,14 +64,31 @@ class HashFunc(Enum):
             return False
 
     def create_impl(self) -> Hasher:
+        return self.impl_func
+
+    _impl_func: Callable[[], Hasher]
+    def __init__(self, name):
+        global hashlib, _blake2
         match self:
             case HashFunc.SHA256:
-                return hashlib.sha256()
+                if hashlib is not None:
+                    import hashlib
+                self._impl_func = hashlib.sha256
+            case HashFunc.BLAKE2:
+                try:
+                    import _blake2
+                    
+                except (ImportError, AttributeError):
+                if hashlib is not None:
+                    import hashlib
+                self._impl_func = hashlib.blake2
             case HashFunc.BLAKE3:
                 if blake3 is not None:
                     return blake3.blake3()
                 else:
-                    raise NotImplementedError("Missing blake3 impl")
+                    def notImpl():
+                        raise NotImplementedError("Missing blake3 impl")
+                    self._impl_func = notImpl
             case _:
                 raise AssertionError
 
@@ -76,7 +106,7 @@ class HashFunc(Enum):
     PREFERRED: ClassVar[HashFunc]
 
 
-HashFunc.PREFERRED = HashFunc.SHA256
+HashFunc.PREFERRED = HashFunc.BLAKE2
 
 
 class CacheException(Exception):
