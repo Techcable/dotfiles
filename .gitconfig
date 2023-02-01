@@ -39,3 +39,6 @@
     cmd = kitty kitty +kitten diff $LOCAL $REMOTE
 [difftool "difftastic"]
     cmd = difft "$LOCAL" "$REMOTE"
+# Stacked git: https://stacked-git.github.io/
+[stgit]
+	gpgsign = false
