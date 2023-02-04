@@ -9,6 +9,7 @@ call plug#begin('~/.vim/plugged')
 
 Plug 'bakpakin/janet.vim'
 Plug 'NoahTheDuke/vim-just'
+Plug 'dag/vim-fish'
 
 call plug#end()
 
