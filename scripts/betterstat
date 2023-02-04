@@ -1,0 +1,321 @@
+#!/usr/bin/env fish
+
+function test_opt_value
+    argparse --min-args 1 --max-args 1 'f/false=+' 'default-status=' -- $argv
+    or return;
+
+    set -f value $argv[1]
+
+    if test -z "$value"
+        if set -q _flag_default_status
+            return $_flag_default_status
+        else
+            return $(false);
+        end
+    end
+
+    if not count $_flag_false_values
+        set -f _flag_false_values 0
+    end
+
+    for false_val in $_flag_false_values
+        if test "$value" = "$false_val"
+            return $(false);
+        end
+    end
+    return true;
+end
+
+# Option parsing
+
+
+function should_use_sys
+    argparse --max-args 0 -- $argv
+    or return;
+    if test_opt_value "$BETTERSTAT_SYS_FORCE";
+        true; return
+    end
+
+    if test "$(status basename)" = "stat"
+        set -f default_use_sys $(true)
+    else
+        set -f default_use_sys $(false)
+    end
+
+    if test_opt_value --default-status=$default_use_sys "$BETTERSTAT_SYS_CHECK";
+        # Use sys command if stdout is not terminal
+        not isatty stdout;
+        return
+    else
+        return 1
+    end
+end
+function should_enable_colors
+    # Check cache to avoid incorrect isatty result in subcommand expansion
+    if set -q _cached_enable_colors
+        return $_cached_enable_colors
+    end
+    switch "$BETTERSTAT_ENABLE_COLORS"
+        case always 1
+            true; return
+        case never 0
+            false; return
+        case auto "" '*'
+            isatty stdout
+            return
+    end
+    return unreachable;
+end
+
+
+function colored
+    argparse --min-args 2 --max-args 2 'b/bold' 'i/italics' 'dim' 'n' -- $argv
+    or exit
+
+    set -f color $argv[1]
+    set -f message $argv[2]
+
+    set -f color_flags
+    set -f echo_flags
+
+    if set -q _flag_bold
+        set -f --append color_flags "--bold"
+    end
+    if set -q _flag_italic
+        set -f --append color_flags "--italics"
+    end
+    if set -q _flag_dim
+        set -f --append color_flags "--dim"
+    end
+
+    if set -q _flag_n
+        set -f --append echo_flags "-n"
+    end
+
+    if should_enable_colors
+        echo $echo_flags -s -- $(set_color $color_flags $color) $message $(set_color reset)
+    else
+        echo $echo_flags -- $message
+    end
+end
+
+function msg_header
+    argparse --min-args 1 --max-args 1 'nobold' 'c/color=' -- $argv
+
+    set -f message $argv[1]
+
+    set -f flags
+
+    if not set -q _flag_nobold
+        set -f --append flags "--bold"
+    end
+
+    if not set -q _flag_color
+        echo "internal err: color required" >&2;
+        for st in $(status stack-trace)
+            echo "  $st" >&2
+        end
+
+        # Fallback
+        echo -n $message
+        return 1
+    end
+
+    colored -n $flags -- $_flag_color $message
+end
+
+function print_help
+    argparse --max-args 0 "full" -- $argv
+    or return;
+
+    if set -q _flag_full;
+        echo "Combines stat, du, and file into a friendly CLI"
+        echo
+    end
+
+    echo "Usage: betterstat [options] <target>" 
+
+    if set -q _flag_full;
+        echo "Gives file, size, and stat information on the target file"
+        echo
+        echo "Options:"
+        echo "  -h, --help        Prints this help message"
+        echo "  --sys/-s          Simply delegate to the system `stat` implementation"
+        echo "                      All other arguments are ignored by betterstat and passed"
+        echo "                      to the system stat binary"
+        echo "  --color [mode]    Enable colors [auto,never,always]"
+        echo "                      The default 'auto' option automatically enables colors"
+        echo "                      if the output is a terminal"
+        echo ""
+        # TODO: This should go in a man page. (Use scdoc?)
+        echo "Environment variables:"
+        echo " * BETTERSTAT_ENABLE_COLORS    Enable colors [auto,never,always,1,0]"
+        echo "                                 Equivalent to --color option"
+        echo " * BETTERSTAT_SYS_FORCE        Force usage of compatibility mode"
+        echo "                                 Simply delegates to the system stat command"
+        echo "                                 Equivalent to -sys option"
+        echo " * BETTERSTAT_SYS_CHECK        Enable compatibility mode if the output"
+        echo "                                 is not a terminal. This is the default"
+        echo "                                 if command name \$0 is named `stat`"
+        echo ""
+        echo "NOTE: Options take precedence over their corresponding environment variables"
+    end
+end
+
+# Execute early argparsing to handle --sys option
+#
+# This way arguments to system stat can't trigger errors for us
+
+argparse --ignore-unknown --stop-nonopt 's/sys' -- $argv
+or return
+
+if should_use_sys
+    or set -q _flag_sys
+    exec stat $argv
+end
+
+# NOTE: Compat handled seperately above
+argparse --name="betterstat" "h/help" "colors" -- $argv
+or return
+
+if set -q _flag_help
+    print_help --full
+end
+
+
+if set -q _flag_colors
+    set -g BETTERSTAT_ENABLE_COLORS "$_flag_colors"
+    if not contains "$_flag_colors" "always" "never" "auto";
+        echo $(msg_header -c red ERROR:) "Invalid argument for --color: `$_flag_color`"
+        exit 1;
+    end
+end
+
+# NOTE: When invoking should_enable_colors inside a command
+# # substitution (...), calling `isatty stdout` returns false
+# even if root stdout is a terminal
+#
+# Instead, cache value in global variable
+should_enable_colors
+set -g _cached_enable_colors $status
+
+# Main logic
+
+function guess_file_type
+    argparse --max-args 1 --min-args 1 -- $argv
+
+    file --brief $argv[1]
+end
+
+function run-native-stat
+    argparse --min-args 1 --max-args 1 -- $argv
+    set -l target $argv[1]
+    if test $(uname) = "Darwin";
+        command stat -x $target
+    else
+        command stat $target
+    end
+end
+
+function indent
+    argparse 'a/amount' -- $argv
+    if set -q _flag_amount
+        set amount $_flag_amount
+    else
+        set amount 2
+    end
+    set leading $(string repeat -n $amount ' ')
+    for line in $argv
+        echo -s $leading $line
+    end
+end
+
+function relative-path
+    for target in $argv;
+        string replace $(pwd -P) './' $target
+    end
+end
+
+function run
+    argparse --max-args 1 --min-args 1 -- $argv
+    set -f target $argv[1]
+
+
+    if test -L "$target";
+        echo $(msg_header -c white 'type:') symlink
+        set -l real_target "$(realpath "$target")"
+        echo -n $(msg_header -c white 'target:')
+        echo -n " "
+        if test ! -e "$real_target"
+            colored -n --italics red "$real_target"
+            echo -s " (" $(colored -n --dim normal invalid) ")"
+        else
+            echo "$real_target"
+            echo
+            set -l text $(run $real_target)
+            if test $status -ne 0
+                return $status;
+            end
+            indent $text
+            return;
+        end
+    else if test -e "$target";
+        set -l category_name
+        if test -f "$target"
+            if test -x "$target"
+                set category_name "executable"
+            else
+                set category_name "file"
+            end
+        else if test -d "$target"
+            set category_name "directory"
+        else
+            set category_name "other"
+        end
+        if test $category_name != "directory"
+            echo -n $(msg_header -c white 'type:') "$category_name, "
+            guess_file_type $target
+        end
+
+        echo $(msg_header -c white 'size:') $(du -sh $target | string match -r '\S+')
+
+        # TODO: Use one of those 'better file packages'?
+        echo $(msg_header -c white 'stat:')
+        run-native-stat $target;
+        return;
+    else
+        echo $(msg_header -c red "ERROR:") "Missing file `$target`" >&2;
+        return 1;
+    end
+end
+
+# Final invocation
+switch $(count $argv)
+    case 0
+        msg_header -c red "ERROR: " >&2;
+        echo "Expected at least 1 argument!" >&2;
+        echo "">&2;
+        print_help >&2;
+        exit 1;
+    case 1
+        run $argv[1];
+        exit $status;
+    case '*'
+        set -l failures 0
+        set -l last_status
+        for target in $argv
+            if test ! -z "$last_status"
+                echo
+            end
+            set -l text $(run $target)
+            set last_status $status
+            if test $last_status -eq 0
+                echo $(msg_header -c white "File:") "$target"
+                indent $text
+            else
+                string join '\n' $text
+                set -l failures $(math "$failures + 1")
+            end
+        end
+        exit $failures;
+end

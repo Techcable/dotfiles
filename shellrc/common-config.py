@@ -29,7 +29,6 @@ extend_path(DOTFILES_PATH / "scripts")
 # I like neovim
 export("EDITOR", "nvim")
 
-# Fix GPG error "Inappropriate ioctl for device"
 # See stackoverflow: https://stackoverflow.com/a/41054093
 export("GPG_TTY", run(["tty"], stdout=PIPE, encoding="utf8").stdout.rstrip())
 
@@ -57,6 +56,11 @@ if os.getenv("TERM") == "xterm-kitty":
     # Need to fix ssh for kitty
     alias("ssh", "kitty +kitten ssh")
 
+
+# NOTE: The `which` command doesn't update with path :/
+# which("betterstat"):
+
+alias("stat", "betterstat")
 
 # Prefer exa to ls
 if which("exa"):
