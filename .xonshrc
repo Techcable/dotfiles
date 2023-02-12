@@ -38,6 +38,19 @@ $SHELL_TYPE = "prompt-toolkit"
 
 import zsh2xonsh
 
+# We want macports path to come after homebrew, so we initialize first
+#
+# This is because path prepends
+if sys.platform == "darwin":
+    # Add macports
+    $MACPORTS_PREFIX = p"/opt/local"
+    if $MACPORTS_PREFIX.is_dir() and ($MACPORTS_PREFIX / "bin").is_dir():
+        $PATH.insert(0, $MACPORTS_PREFIX / "bin")
+        $PATH.insert(0, $MACPORTS_PREFIX / "sbin")
+    else:
+        warning("Cannot find macports")
+        del $MACPORTS_PREFIX
+
 if sys.platform == "darwin":
     # NOTE: This needs to come early because everything else depends on homebrew....
     zsh2xonsh.translate_to_xonsh_and_eval($(/opt/homebrew/bin/brew shellenv))

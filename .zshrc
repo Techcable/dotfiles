@@ -110,25 +110,48 @@ source $ZSH/oh-my-zsh.sh
 function extend_path() {
     local value="$1";
     local target="$2";
+    local order="$3";
     if [[ "$target" = "" ]]; then
         target="PATH";
     fi
+    if [[ -z "$order" ]]; then
+        order="append";
+    fi
+    case "$order" in
+        append | prepend)
+            ;;
+        *)
+            warning "Invalid 'order' for extend_path: $order"
+            return 1
+            ;;
+    esac
     if [[ -d "$value" ]]; then
         if [[ "$target" == "PATH" ]]; then
             # Simple
-            export PATH="$PATH:$1";
+            if [[ $order = "append" ]]; then
+                export PATH="$PATH:$1";
+            else
+                export PATH="$1:$PATH";
+            fi
         else
             if ! echo "$target" | rg '^[\w-]+$' >/dev/null; then
                 warning "Malformed path variable: ${target} (ignoring $1)";
-                return
+            return
             elif ! echo "$target" | rg 'PATH$' >/dev/null; then
                 warning "Variable name should end with 'PATH': ${target}"
             fi
             local old_value="$(env | rg "^${target}=(.*)" -r '$1')";
-            if [[ "$old_value" == "" ]]; then
+            local prefix=""
+            if [[ "$old_value" = "" ]]; then
+                prefix=":"
                 export "$target"="$value";
             else
-                export "$target"="${old_value}:$1";
+                prefix="${old_value}:"
+            fi
+            if [[ $order = "append" ]]; then
+                export "$target"="${prefix}${value}"
+            else
+                export "$target"="${prefix}${value}"
             fi
         fi
     else
@@ -136,13 +159,31 @@ function extend_path() {
     fi
 }
 
+# I want the macports path to come *after* homebrew
+#
+# therfore we must run the init *before*
+# macports must come before homebrew
+if [[ $(uname) = "Darwin" ]]; then
+    export MACPORTS_PREFIX="/opt/local"
+    if [[ -d "$MACPORTS_PREFIX" && -d "$MACPORTS_PREFIX/bin" ]]; then
+        extend_path "$MACPORTS_PREFIX/bin" "PATH" "prepend"
+        extend_path "$MACPORTS_PREFIX/sbin" "PATH" "prepend"
+    else
+        unset MACPORTS_PREFIX
+        warning "Failed to find macports!"
+    fi
+fi
+
+# init homebrew
 if [ $(uname) = "Darwin" ]; then
     if [ -x /opt/homebrew/bin/brew ]; then
         # TODO: Security?
         # TODO: This should be done via config, not auto-detection.
-        echo "Setting up homebrew...";
+        #echo "Setting up homebrew...";
         eval "$(/opt/homebrew/bin/brew shellenv)"
-    fi;
+    else
+        warning "Failed to find hoembrew"
+    fi
     alias python=python3
     alias pip=pip3
 fi
