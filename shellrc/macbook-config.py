@@ -133,6 +133,7 @@ extend_path("/usr/local/MacGPG2/share/man", "MANPATH")
 extend_path("/opt/stgit/bin")
 extend_path("/opt/stgit/share/man", "MANPATH")
 
+
 # Calling `brew list --versions janet` takes 500 ms,
 # using `janet -v` takes 5ms
 #
@@ -172,6 +173,7 @@ else:
 #
 # Resolves a strange conflict with a 'pip' command for wrong version
 extend_path("/opt/homebrew/opt/python/libexec/bin")
+
 
 # Some homebrew things are "keg-only" meaning they are not on the path by default
 #
