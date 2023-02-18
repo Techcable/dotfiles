@@ -20,27 +20,12 @@ export("BROWSER", Path("/usr/bin/open"))
 if not PLATFORM.is_desktop():
     warning("Expected a desktop environment for macbook!")
 
-preferred_java_version = 17
-
-
-def detect_java_home():
-    preferred_java_home = None
-    for java_home in Path("/Library/Java/JavaVirtualMachines").iterdir():
-        if (
-            m := re.match(f"jdk-(\\d+)[.\\d]*\\.jdk$", java_home.name)
-        ) is not None and int(m.group(1)) == preferred_java_version:
-            preferred_java_home = java_home
-            break
-    return preferred_java_home
-
-
-preferred_java_home = detect_java_home()
-del detect_java_home  # namespace cleanup
-if preferred_java_home is None:
+# Use homebrew sdk
+preferred_java_home = Path("/Library/Java/JavaVirtualMachines/homebrew-openjdk")
+if not (preferred_java_home / "Contents/Home").is_dir():
     warning("Unable to detect java version")
 else:
-    if (preferred_java_home / "Contents/Home").is_dir():
-        export("JAVA_HOME", preferred_java_home / "Contents/Home")
+    export("JAVA_HOME", preferred_java_home / "Contents/Home")
 
 haxe_std_path = Path("/opt/homebrew/lib/haxe/std")
 if haxe_std_path.is_dir():
