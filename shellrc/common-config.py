@@ -79,6 +79,8 @@ if real_bpytop := which("bpytop"):
 else:
     warning("bpytop is not installed")
 
+extend_python_path(DOTFILES_PATH / "libs/python")
+
 # This is xonsh-specific (not even sure why it's here)
 #
 # We Prefix with 'py' to indicate we are in xonsh
