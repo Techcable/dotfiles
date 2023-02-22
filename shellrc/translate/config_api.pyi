@@ -37,6 +37,7 @@ export = _MODE_IMPL.export
 alias = _MODE_IMPL.alias
 run_in_background_helper = _MODE_IMPL.run_in_background_helper
 extend_path = _MODE_IMPL.extend_path
+extend_python_path = _MODE_IMPL.extend_python_path
 
 __all__ = [
     # exposed types

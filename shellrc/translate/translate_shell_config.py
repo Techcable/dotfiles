@@ -15,7 +15,7 @@ from contextlib import (
     contextmanager,
     redirect_stdout,
 )
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import (
@@ -118,10 +118,17 @@ class _Scope(Enum):
     ALIAS = "alias"
 
 
+@dataclass
+class ModeState:
+    added_python_paths: list[Path] = field(default_factory=list)
+
+
 class Mode(metaclass=ABCMeta):
     _output: list[str]
     _block_level: int
     _indent_level: int
+
+    _state: Optional[ModeState]
 
     name: ClassVar[str]
     # Path to the helper functions
@@ -134,6 +141,7 @@ class Mode(metaclass=ABCMeta):
         self._block_level = 0
         self._indent_level = 0
         self._indent = ""
+        self._state = None
 
     @final
     def var(self, name: str) -> VarAccess:
@@ -318,6 +326,16 @@ class Mode(metaclass=ABCMeta):
         )
         return " ".join(["python3", "-c", self._quote(python_helper_command), *args])
 
+    @final
+    def extend_python_path(self, value: Union[str, Path]):
+        self.debug(f"Adding python path: {value}")
+        if not Path(value).is_dir():
+            self.warning(f"Unable to find python path: {value!r}")
+        self.require_state().added_python_paths.append(Path(value))
+        self.extend_path(value, "PYTHON_PATH", order=PathOrderSpec.APPEND)
+        if str(value) not in sys.path:
+            sys.path.append(str(value))
+
     def extend_path(
         self,
         value: Union[str, Path],
@@ -349,6 +367,36 @@ class Mode(metaclass=ABCMeta):
     @abstractmethod
     def _quote(self, value: ShellValue) -> str:
         pass
+
+    @final
+    def require_state(self) -> ModeState:
+        if self._state is None:
+            raise AssertionError("Mode does not have state!")
+        return self._state
+
+    @final
+    @contextmanager
+    def with_state(
+        self, new_state: ModeState | None = None
+    ) -> AbstractContextManager[ModeState]:
+        if new_state is None:
+            new_state = ModeState()
+        assert self._state is None
+        self._state = new_state
+        try:
+            yield new_state
+            assert self._state is new_state
+        finally:
+            self._state = None
+
+    # Names excluded from auto-export
+    #
+    # This is in addition to those starting with _
+    AUTOEXPORT_EXCLUDE: ClassVar[set[str]] = {
+        "EXCLUDED_NAMES",
+        "require_state",
+        "with_state",
+    }
 
 
 # Things allowed without quoting
@@ -713,18 +761,27 @@ def run_mode(mode: Mode, config_file: Path) -> list[str]:
         "which": which,
     }
     for attr_name in dir(Mode):
-        if attr_name.startswith("_"):
+        if attr_name.startswith("_") or attr_name in Mode.AUTOEXPORT_EXCLUDE:
             continue
         context[attr_name] = getattr(mode, attr_name)
     # stdout is only for translation output, not messages
     with redirect_stdout(sys.stderr):
-        sys.path.append(str(DOTFILES_PATH / "shellrc"))
-        runpy.run_path(
-            str(config_file),
-            init_globals=context,
-            run_name=config_file.stem.replace("-", "_"),
-        )
-    # Cleanup
+        if (shellrc_path := str(DOTFILES_PATH / "shellrc")) not in sys.path:
+            sys.path.append(shellrc_path)
+        with mode.with_state() as state:
+            runpy.run_path(
+                str(config_file),
+                init_globals=context,
+                run_name=config_file.stem.replace("-", "_"),
+            )
+            # If python paths were added inside script,
+            # extend them to outer context
+            #
+            # TODO: Instead, tell runpy not to reset sys.path
+            for added_path in state.added_python_paths:
+                if str(added_path) not in sys.path:
+                    sys.path.add(str(added_path))
+        # Cleanup
     if (cleanup := mode.cleanup_code) is not None:
         for line in cleanup.splitlines():
             mode._write(line)
