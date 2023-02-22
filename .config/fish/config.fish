@@ -57,6 +57,9 @@ function setup_extra_config
     python3 "$DOTFILES_PATH/shellrc/translate/translate_shell_config.py" $translate_args;
     if test $status -ne 0;
         warning "Failed to translate configs: $translated_config_files";
+        echo "Debug vars:">&2;
+        echo "  \$translate_args: `$(string replace --all $translated_config_dir "\$translated_config_dir" -- $(string join ' ' -- $translate_args))`">&2;
+        echo "  \$translated_config_dir: $translated_config_dir"
         return 1;
     end
     for translated in $translated_config_files
