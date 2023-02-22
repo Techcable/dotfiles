@@ -1,0 +1,40 @@
+#!/usr/bin/env pip-run --
+import json
+import sys
+import shutil
+
+from pathlib import Path
+from subprocess import Popen, PIPE
+
+import rich
+import click
+
+__requires__ = ["rich", "click"]
+
+@click.group
+def analyse():
+    pass
+
+@analyse.command('list')
+@click.option('--json', 'is_json', is_flag=True, help="Give json output")
+def pipx_list(is_json=False):
+    if not is_json:
+        raise NotImplementedError("TODO: Support human-readable output (specify --json for now)")
+    
+    metadata_paths = list(Path.home().glob(".local/pipx/venvs/*/pipx_metadata.json"))
+
+    with Popen(['jaq', '-s',"--", 'def shrink_pkg: {name: .package, spec: .package_or_url, pip_args, suffix, include_apps, include_dependencies} | with_entries({pip_args: [], suffix: "", include_apps: false, include_dependencies: false}[.key] as $def | if .value == $def then empty else . end); [.[] | {main_package: .main_package | shrink_pkg, injected_packages: .injected_packages | map(shrink_pkg)}]'], text=True, stdin=PIPE, stdout=PIPE) as proc:
+        for mpath in metadata_paths:
+            with open(mpath, 'rt') as mf:
+                shutil.copyfileobj(mf, proc.stdin)
+        stdout, stderr = proc.communicate()
+        if proc.returncode != 0:
+            raise click.ClickException("Failed to execute jq!")
+        assert stderr is None  # did not ask for stderr
+        assert isinstance(stdout, str)
+        json.loads(stdout)  # Verify
+        rich.print_json(stdout)
+
+
+if __name__ == "__main__":
+    analyse()
