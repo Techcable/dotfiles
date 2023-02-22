@@ -43,7 +43,8 @@ function setup_extra_config
     if ! test -d $DOTFILES_PATH
         warning "Unable to load configuration (missing dotfiles)"
     end
-    set -f config_files ~/.shell-config.rc "$DOTFILES_PATH/shellrc/common-config.py"
+    # NOTE: Common config must come *before* shell-config
+    set -f config_files "$DOTFILES_PATH/shellrc/common-config.py" ~/.shell-config.rc
     set -f translated_config_dir (mktemp -d -t dotfiles)
     set -f translate_args --mode fish
     for config_file in $config_files
