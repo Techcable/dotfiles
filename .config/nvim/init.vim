@@ -11,5 +11,8 @@ Plug 'bakpakin/janet.vim'
 Plug 'NoahTheDuke/vim-just'
 Plug 'dag/vim-fish'
 
+" Asynchronous Lint Engine
+Plug 'dense-analysis/ale'
+
 call plug#end()
 
