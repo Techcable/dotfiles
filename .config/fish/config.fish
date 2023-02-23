@@ -100,3 +100,15 @@ if status is-interactive
     # Shorter name for 'math' builtin
     alias m math
 end
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+if test -f /Users/nicholas/lib/mambaforge/bin/conda
+    eval /Users/nicholas/lib/mambaforge/bin/conda "shell.fish" "hook" $argv | source
+end
+
+if test -f "/Users/nicholas/lib/mambaforge/etc/fish/conf.d/mamba.fish"
+    source "/Users/nicholas/lib/mambaforge/etc/fish/conf.d/mamba.fish"
+end
+# <<< conda initialize <<<
+
