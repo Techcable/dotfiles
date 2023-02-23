@@ -1,1 +1,5 @@
 channels: [conda-forge]
+# Do not modify prompt
+#
+# See here: https://stackoverflow.com/questions/36499220/anaconda-disable-prompt-change
+changeps1: False
