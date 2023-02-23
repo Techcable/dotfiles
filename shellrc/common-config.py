@@ -45,6 +45,14 @@ if PLATFORM.is_desktop():
     except (UnsupportedPlatformError, FileNotFoundError) as e:
         warning("While attempting to detect jetbrains script path, " + str(e))
 
+# Have pip-run cache its created environments
+#
+# https://github.com/jaraco/pip-run#environment-persistence
+#
+# TODO: This may eventually result in bloat :/
+# It is never cleaned up.
+export("PIP_RUN_MODE", "persist")
+
 # Extra aliases when running under kitty
 #
 # TODO: Is this redundant with kitty's new shell integration?
