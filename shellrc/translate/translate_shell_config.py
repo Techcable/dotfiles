@@ -31,6 +31,19 @@ from typing import (
 )
 
 
+class LogLevel(Enum):
+    DEBUG = (-1, {"color": "green", "italics": True})
+    INFO = (0, {"color": "white", "bold": True})
+    TODO = (1, {"color": "white", "bold": True, "italics": True})
+    WARNING = (2, {"color": "yellow", "underline": True, "bold": True})
+
+    def __init__(self, level_id: int, fmt_info: dict[str, object]):
+        super().__init__(level_id)
+        self.fmt_info = fmt_info
+
+    DEFAULT_LEVEL: ClassVar["LogLevel"] = INFO
+
+
 class VarAccess:
     __slots__ = "name"
     name: str
@@ -332,7 +345,7 @@ class Mode(metaclass=ABCMeta):
         if not Path(value).is_dir():
             self.warning(f"Unable to find python path: {value!r}")
         self.require_state().added_python_paths.append(Path(value))
-        self.extend_path(value, "PYTHON_PATH", order=PathOrderSpec.APPEND)
+        self.extend_path(value, "PYTHONPATH", order=PathOrderSpec.APPEND)
         if str(value) not in sys.path:
             sys.path.append(str(value))
 
