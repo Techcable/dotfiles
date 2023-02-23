@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import functools
 import os
 import re
 import runpy
@@ -31,17 +32,28 @@ from typing import (
 )
 
 
+@functools.total_ordering  # TODO: Switch to my wrapper instead
 class LogLevel(Enum):
-    DEBUG = (-1, {"color": "green", "italics": True})
-    INFO = (0, {"color": "white", "bold": True})
-    TODO = (1, {"color": "white", "bold": True, "italics": True})
-    WARNING = (2, {"color": "yellow", "underline": True, "bold": True})
+    DEBUG = -1, {"color": "green", "italics": True}
+    INFO = 0, {"color": "white", "bold": True}
+    TODO = 1, {"color": "white", "bold": True, "italics": True}
+    WARNING = 2, {"color": "yellow", "underline": True, "bold": True}
 
-    def __init__(self, level_id: int, fmt_info: dict[str, object]):
-        super().__init__(level_id)
-        self.fmt_info = fmt_info
+    def __new__(cls, level_id: int, fmt_info: dict[str, object]):
+        obj = object.__new__(cls)
+        obj._value_ = level_id
+        obj.level_id = level_id
+        obj.fmt_info = fmt_info
+        return obj
 
-    DEFAULT_LEVEL: ClassVar["LogLevel"] = INFO
+    def __lt__(self, other):
+        if not isinstance(other, LogLevel):
+            return NotImplemented
+        return self.level_id < other.level_id
+
+
+LogLevel.DEFAULT_LEVEL = LogLevel.INFO
+LogLevel.ENV_VAR_NAME = "SHELL_TRANS_LOG"
 
 
 class VarAccess:
@@ -254,7 +266,23 @@ class Mode(metaclass=ABCMeta):
     def set_local(self, name: str, value: ShellValue, *, export: bool = True):
         self._assign(name, value, scope=_Scope.LOCAL, export=export)
 
-    def _log(self, *msg: object, level: str, fmt: dict):
+    def _log(self, *msg: object, level: LogLevel, fmt: dict):
+        if (enabled_level := getattr(self, "_log_level_enabled", None)) is None:
+            enabled_level_name = os.getenv(
+                LogLevel.ENV_VAR_NAME, LogLevel.DEFAULT_LEVEL.name
+            )
+            try:
+                enabled_level = LogLevel[enabled_level_name.upper()]
+            except KeyError:
+                # Avoid circular errors
+                self._log_level_enabled = enabled_level = LogLevel.DEFAULT_LEVEL
+                warning(
+                    f"Unknown log level name: {enabled_level_name!r} (env var ${LogLevel.ENV_VAR_NAME})"
+                )
+            self._log_level_enabled = enabled_level
+        assert enabled_level is not None
+        if level < enabled_level:
+            return
         assert fmt is not None
         assert level.isupper()
         print(
@@ -278,18 +306,17 @@ class Mode(metaclass=ABCMeta):
 
         # this function basically exists to work
         # around python's lack of block scoping -_-
-        log_levels = ["TODO", "WARNING", "DEBUG"]
         res_funcs = {}
-        log_fmt_info = [
-            {"color": "white", "bold": True, "italics": True},
-            {"color": "yellow", "underline": True, "bold": True},
-            {"color": "green", "italics": True},
-        ]
+        log_fmt_info = [level.fmt_info for level in LogLevel]
 
         # dynamically initialize for each level
-        for level, fmt_info in zip(log_levels, log_fmt_info, strict=True):
-            func_name = f"log_at_{level.lower()}"
-            glbls = {"DEFAULT_FMT": fmt_info, "ChainMap": ChainMap}
+        for level, fmt_info in zip(LogLevel, log_fmt_info, strict=True):
+            func_name = f"log_at_{level.name.lower()}"
+            glbls = {
+                "DEFAULT_FMT": fmt_info,
+                "ChainMap": ChainMap,
+                "LogLevel": LogLevel,
+            }
             exec(
                 textwrap.dedent(
                     f"""
@@ -298,16 +325,16 @@ class Mode(metaclass=ABCMeta):
                             fmt=ChainMap(custom_fmt, DEFAULT_FMT)
                         else:
                             fmt = DEFAULT_FMT
-                        self._log(*msg, level={level!r}, fmt=fmt)
+                        self._log(*msg, level=LogLevel.{level.name}, fmt=fmt)
                     """
                 ),
                 glbls,
             )
             res_funcs[level] = glbls[func_name]
 
-        return [res_funcs[name] for name in log_levels]
+        return [res_funcs[level] for level in LogLevel]
 
-    todo, warning, debug = _setup_log_levels()
+    debug, info, todo, warning = _setup_log_levels()
     del _setup_log_levels  # avoid namespace polution
 
     @abstractmethod
