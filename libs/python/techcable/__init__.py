@@ -1,4 +1,6 @@
 """My utility libraries..."""
+from __future__ import annotations
+from abc import ABC, ABCMeta
 import importlib
 import inspect
 import os
@@ -6,7 +8,24 @@ import sys
 from collections.abc import Sequence
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Final, Optional, TypeVar, final
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Final,
+    ForwardRef,
+    Optional,
+    TypeAlias,
+    TypeGuard,
+    TypeVar,
+    final,
+    ClassVar,
+    Never,
+    runtime_checkable,
+    overload,
+    Literal,
+)
+import functools
+import operator
 
 if TYPE_CHECKING:
     # new in 3.11
@@ -21,41 +40,97 @@ else:
 __all__ = ("PlatformPath", "PlatformError", "define_order", "MISSING")
 
 
+assert isinstance(None, MarkerValue)
+
+
+def is_marker(value: Any) -> TypeGuard[MarkerValue]:
+    """Check if the specified value is a marker value"""
+    return isinstance(value, MarkerValue)
+
+
 @final
-class _Missing:
-    def __repr__(self):
+class Missing:
+    """
+    Reprsents a singleton missing value
+
+    Retreivable via techcable.MISSING
+    """
+
+    def __init__(self):
+        raise TypeError(f"{MISSING!r} is a singleton!")
+
+    def __repr__(self) -> str:
         return "techcable.MISSING"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self!r} (marker value)"
 
+    def __bool__(self) -> bool:
+        return False
 
-MISSING: Final[object] = _Missing()
+    @staticmethod
+    def test(val: Any) -> bool:
+        """
+        Test if the specified value is MISSING
+
+        Equivalent to `lambda x: x is MISSING`, useful in functional chaining.
+        However, more efficiently implemented to avoid global lookup
+        """
+        raise AssertionError  # Note: Overriden later
+
+    @staticmethod
+    def test_not(val: Any) -> bool:
+        """
+        Test if the specified value is *not* MISSING
+
+        This is the opposite of Missing.TEST
+
+        Equivalent to `lambda x: x is not MISSING`, useful in functional chaining.
+        However, more efficiently implemented to avoid global lookup
+        """
+        raise AssertionError  # Note: Overriden later
+
+    VALUE: ClassVar[Missing]
+    """The singleton value. An alias for MISSING"""
+
+
+MissingOrNone: TypeAlias = Missing | None
+
+MISSING: Final[Missing] = object.__new__(Missing)
 """Marker value for missing values"""
+
+Missing.VALUE = MISSING
+
+
+if not TYPE_CHECKING:
+    Missing.test = partial(
+        operator.is_,
+    )
 
 
 class PlatformPath(Enum):
     HOMEBREW_PREFIX = ("darwin", "HOMEBREW_PREFIX")
 
     def __init__(self, platform: str | None, env_var: str):
-        super().__init__(self.name)
+        super().__init__()
         self.required_platform = platform
         self._env_var = env_var
+        self._cached_value = MISSING
 
     def try_resolve(self) -> Path | None:
         try:
-            return self._cached_value
+            return self._cached_value  # type: ignore
         except AttributeError:
             pass
         try:
             return self.resolve()
         except (PlatformError, FileNotFoundError):
-            self._cached_value = None
+            self._cached_value = None  # type: ignore
             return None
 
     def resolve(self) -> Path:
         if getattr(self, "_cached_value", None) is not None:
-            return self._cached_value
+            return self._cached_value  # type: ignore
         if (
             self.required_platform is not None
             and self.required_platform != sys.platform
@@ -69,7 +144,8 @@ class PlatformPath(Enum):
             raise PlatformError(
                 "Missing expected environment variable {self._env.var} for {self}"
             )
-        path = self._cached_value = Path(res)
+        path = Path(res)
+        self._cached_value = path  # type: ignore
         return path
 
     def exists(self) -> bool:
@@ -79,7 +155,7 @@ class PlatformPath(Enum):
         return self.try_resolve() is not None
 
     def __str__(self):
-        return f"{self.name}({self._try_resolve()})"
+        return f"{self.name}({self.try_resolve()})"
 
 
 class PlatformError(OSError):
