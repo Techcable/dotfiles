@@ -24,12 +24,16 @@ from typing import (
     Any,
     ClassVar,
     Final,
+    Iterator,
     Literal,
     Optional,
     Type,
+    TypeAlias,
     Union,
     final,
 )
+
+FmtInfo: TypeAlias = dict[str, bool | str]
 
 
 @functools.total_ordering  # TODO: Switch to my wrapper instead
@@ -39,7 +43,7 @@ class LogLevel(Enum):
     TODO = 1, {"color": "white", "bold": True, "italics": True}
     WARNING = 2, {"color": "yellow", "underline": True, "bold": True}
 
-    def __new__(cls, level_id: int, fmt_info: dict[str, object]):
+    def __new__(cls, level_id: int, fmt_info: FmtInfo):
         obj = object.__new__(cls)
         obj._value_ = level_id
         obj.level_id = level_id
@@ -50,6 +54,13 @@ class LogLevel(Enum):
         if not isinstance(other, LogLevel):
             return NotImplemented
         return self.level_id < other.level_id
+
+    # fields
+    level_id: int
+    fmt_info: FmtInfo
+
+    DEFAULT_LEVEL: ClassVar[LogLevel]
+    ENV_VAR_NAME: ClassVar[str]
 
 
 LogLevel.DEFAULT_LEVEL = LogLevel.INFO
@@ -268,7 +279,7 @@ class Mode(metaclass=ABCMeta):
 
     def _log(self, *msg: object, level: LogLevel, fmt: dict):
         if (enabled_level := getattr(self, "_log_level_enabled", None)) is None:
-            enabled_level_name = os.getenv(
+            enabled_level_name = os.getenv(  # type: ignore[call-overload]
                 LogLevel.ENV_VAR_NAME, LogLevel.DEFAULT_LEVEL.name
             )
             try:
@@ -276,7 +287,7 @@ class Mode(metaclass=ABCMeta):
             except KeyError:
                 # Avoid circular errors
                 self._log_level_enabled = enabled_level = LogLevel.DEFAULT_LEVEL
-                warning(
+                self.warning(
                     f"Unknown log level name: {enabled_level_name!r} (env var ${LogLevel.ENV_VAR_NAME})"
                 )
             self._log_level_enabled = enabled_level
@@ -284,12 +295,11 @@ class Mode(metaclass=ABCMeta):
         if level < enabled_level:
             return
         assert fmt is not None
-        assert level.isupper()
         print(
             "".join(
                 (
                     self.set_color(**fmt),
-                    level,
+                    level.name,
                     self.reset_color(),  # clear all other attributes
                     self.set_color(color=None, bold=True),
                     ":",
@@ -416,9 +426,7 @@ class Mode(metaclass=ABCMeta):
 
     @final
     @contextmanager
-    def with_state(
-        self, new_state: ModeState | None = None
-    ) -> AbstractContextManager[ModeState]:
+    def with_state(self, new_state: ModeState | None = None) -> Iterator[ModeState]:
         if new_state is None:
             new_state = ModeState()
         assert self._state is None
@@ -820,7 +828,7 @@ def run_mode(mode: Mode, config_file: Path) -> list[str]:
             # TODO: Instead, tell runpy not to reset sys.path
             for added_path in state.added_python_paths:
                 if str(added_path) not in sys.path:
-                    sys.path.add(str(added_path))
+                    sys.path.append(str(added_path))
         # Cleanup
     if (cleanup := mode.cleanup_code) is not None:
         for line in cleanup.splitlines():
@@ -833,7 +841,7 @@ def main():
 
     def consume_arg(*, amount: Optional[int] = None) -> str | list[str]:
         if amount is None:
-            return remaining_args.remove(0)
+            return remaining_args.pop(0)
         else:
             consumed = remaining_args[:amount]
             del remaining_args[:amount]
@@ -844,6 +852,7 @@ def main():
             return remaining_args[1]
         except IndexError:
             print(f"Expected an argument to {flag_name} flag", file=sys.stderr)
+            sys.exit(1)
 
     mode_type = None
     in_files = []

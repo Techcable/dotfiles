@@ -4,7 +4,7 @@ import operator
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, overload
+from typing import TYPE_CHECKING, ClassVar, Iterable, Iterator, assert_type, overload
 
 from . import PlatformPath
 
@@ -12,24 +12,23 @@ __all__ = ("PythonVersion", "PythonInterpreter")
 
 
 class PythonVersion(tuple[int, ...]):
-    if TYPE_CHECKING:
+    @overload
+    def __new__(cls, s: str, /) -> PythonVersion:
+        ...
 
-        @overload
-        def __init__(self, s: str) -> None:
-            pass
-
-        @overload
-        def __init__(self, *args: int) -> None:
-            pass
+    @overload
+    def __new__(cls, *args: int) -> PythonVersion:
+        ...
 
     def __new__(cls, *args) -> PythonVersion:
         match args:
             case [str(val)]:
-                return super().__new__(cls, map(int, val.split(".")))
+                assert "." in val
+                return tuple.__new__(cls, map(int, val.split(".")))
             case tuple(_):
                 assert all(isinstance(val, int) for val in args)
-                assert len(args) >= 1
-                return super().__new__(cls, args)
+                assert len(args) >= 2
+                return tuple.__new__(cls, args)
             case _:
                 raise TypeError(type(args))
 
@@ -38,6 +37,10 @@ class PythonVersion(tuple[int, ...]):
 
     def __str__(self) -> str:
         return ".".join(map(str, self))
+
+    @property
+    def major_version(self) -> int:
+        return self[0]
 
 
 @dataclass(frozen=True)

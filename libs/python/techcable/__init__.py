@@ -1,52 +1,101 @@
 """My utility libraries..."""
+from __future__ import annotations
+
 import importlib
 import inspect
 import os
 import sys
 from collections.abc import Sequence
+from dataclasses import is_dataclass
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Final, Optional, TypeVar, final
+from typing import (
+    TYPE_CHECKING,
+    Callable,
+    ClassVar,
+    Final,
+    Iterator,
+    Literal,
+    Optional,
+    TypeAlias,
+    TypeVar,
+    final,
+)
 
 if TYPE_CHECKING:
-    # new in 3.11
     import types
+    from itertools import chain
+
+    # new in 3.11
     from typing import dataclass_transform
 else:
+    chain = None
 
     def dataclass_transform(**kwargs):
         return lambda x: x
 
 
-__all__ = ("PlatformPath", "PlatformError", "define_order", "MISSING")
+__all__ = (
+    "PlatformPath",
+    "PlatformError",
+    "define_order",
+    "MISSING",
+    "Missing",
+    "MissingOrNone",
+)
+
+if TYPE_CHECKING:
+    # TYPE_CHECKING needs Enum so that we can use typing.Literal
+    _MissingBase = Enum
+else:
+    _MissingBase = object
 
 
 @final
-class _Missing:
+class Missing(_MissingBase):
+    """The type of the singleton `techcable.MISSING` value`"""
+
+    if TYPE_CHECKING:
+        VALUE = None
+    else:
+        VALUE: ClassVar[Missing]
+        """An alias for techcable.MISSING"""
+
+    def __new__(cls):
+        global MISSING
+        raise TypeError("Unable to create new instanes of {MISSING}")
+
     def __repr__(self):
         return "techcable.MISSING"
 
     def __str__(self):
         return f"{self!r} (marker value)"
 
+    def __bool__(self) -> Literal[False]:
+        return False
 
-MISSING: Final[object] = _Missing()
+
+if not TYPE_CHECKING:
+    Missing.VALUE = object.__new__(Missing)
+
+# Need typing.Literal so we can have `val is not MISSING`
+MISSING: Final[Literal[Missing.VALUE]] = Missing.VALUE
 """Marker value for missing values"""
 
 
+# TODO: Move to seperate module
 class PlatformPath(Enum):
     HOMEBREW_PREFIX = ("darwin", "HOMEBREW_PREFIX")
 
     def __init__(self, platform: str | None, env_var: str):
-        super().__init__(self.name)
+        super().__init__()
         self.required_platform = platform
         self._env_var = env_var
 
     def try_resolve(self) -> Path | None:
-        try:
-            return self._cached_value
-        except AttributeError:
-            pass
+        val = self._cached_value
+        if val is not MISSING:
+            return val
         try:
             return self.resolve()
         except (PlatformError, FileNotFoundError):
@@ -55,7 +104,7 @@ class PlatformPath(Enum):
 
     def resolve(self) -> Path:
         if getattr(self, "_cached_value", None) is not None:
-            return self._cached_value
+            return self._cached_value  # type: ignore
         if (
             self.required_platform is not None
             and self.required_platform != sys.platform
@@ -69,7 +118,8 @@ class PlatformPath(Enum):
             raise PlatformError(
                 "Missing expected environment variable {self._env.var} for {self}"
             )
-        path = self._cached_value = Path(res)
+        path = Path(res)
+        self._cached_value = path  # type: ignore
         return path
 
     def exists(self) -> bool:
@@ -79,7 +129,9 @@ class PlatformPath(Enum):
         return self.try_resolve() is not None
 
     def __str__(self):
-        return f"{self.name}({self._try_resolve()})"
+        return f"{self.name}({self.try_resolve()})"
+
+    _cached_value: Path | Missing | None
 
 
 class PlatformError(OSError):
@@ -91,26 +143,22 @@ T = TypeVar("T")
 
 @dataclass_transform(order_default=True, eq_default=True)
 def define_order(
-    tp: type[T], *, unsafe_eq: bool = False, keys: Sequence[str]
-) -> type[T]:
-    if is_dataclass(tp):
-        raise TypeError("Must invoke @define_order *before* @dataclass")
-    if tp.__eq__ != object.__eq__ and safe_eq:
-        raise TypeError(
-            f"Custom equals method `{tp.__name__}.__eq__` is unsafe! (Specify `unsafe_eq` to ignore this)"
-        )
+    *, unsafe_eq: bool = False, keys: Sequence[str]
+) -> Callable[[type[T]], type[T]]:
+    global chain
+    if not TYPE_CHECKING and chain is None:
+        chain = importlib.import_module("itertools").chain
     keys = tuple(dict.fromkeys(keys).keys())  # ensure unique
-    match len(key):
+    single_key: str | None
+    match len(keys):
         case 0:
             raise TypeError("Need at least one key!")
         case 1:
             single_key = keys[0]
             assert single_key, "Key name cannot be empty"
         case _:
-            assert all(key in keys), "Key names cannot be empty"
+            assert all(keys), "Key names cannot be empty"
             single_key = None
-
-    type_const = tp.__name__
 
     def blanks(amount: int) -> tuple[str, ...]:
         assert amount > 0
@@ -122,28 +170,44 @@ def define_order(
         if relaxed is None:
             relaxed = strict
         assert not op_name.startswith("__")
-        yield f"def {op_name}(self, other) -> bool:",
-        yield f"  if not isinstance(other, {type_const}):",
-        yield "     return NotImplemented",
+        yield f"def {op_name}(self, other) -> bool:"
+        yield f"  if not isinstance(other, TargetType):"
+        yield "     return NotImplemented"
         yield "  return ("
         for key in keys:
             indent = "  " * 3
             if key != keys[-1]:
                 # not last
-                yield f"{indent}self.{key} {op_text_relaxed} other.{key} {logic_op}"
+                yield f"{indent}self.{key} {relaxed} other.{key} {logic_op}"
             else:
                 # last
-                yield f"{indent}self.{key} {op_text_strict} other.{key}"
+                yield f"{indent}self.{key} {strict} other.{key}"
         yield "  )"
         yield from blanks(2)
-        yield f"{type_const}.__{op_name}__ = {op_name}"
+        yield f"TargetType.__{op_name}__ = {op_name}"
 
-    res = [
-        *gen_operator("eq", strict="==", relaxed=None),
-        *gen_operator("ne", strict="!=", relaxed=None, logic_op="or"),
-        *gen_operator("lt", strict="<", relaxed="<="),
-        *gen_operator("le", strict="<=", relaxed=None),
-        *gen_operator("gt", strict=">", relaxed=">="),
-        *gen_operator("ge", strict=">=", relaxed=None),
-    ]
-    exec("\n".join(res), globals=__builtins__, locals={type_const: tp})
+    modifying_text = "\n".join(
+        chain(
+            gen_operator("eq", strict="==", relaxed=None),
+            gen_operator("ne", strict="!=", relaxed=None, logic_op="or"),
+            gen_operator("lt", strict="<", relaxed="<="),
+            gen_operator("le", strict="<=", relaxed=None),
+            gen_operator("gt", strict=">", relaxed=">="),
+            gen_operator("ge", strict=">=", relaxed=None),
+        )
+    )
+
+    def transform(tp: type[T]) -> type[T]:
+        if is_dataclass(tp):
+            raise TypeError("Must invoke @define_order *before* @dataclass")
+        if tp.__eq__ != object.__eq__ and not unsafe_eq:
+            raise TypeError(
+                f"Custom equals method `{tp.__name__}.__eq__` is unsafe! (Specify `unsafe_eq` to ignore this)"
+            )
+
+        # Modifies type in-place
+        exec(modifying_text, {"TargetType": tp}, None)
+
+        return tp
+
+    return transform

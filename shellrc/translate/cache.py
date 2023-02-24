@@ -26,7 +26,9 @@ if TYPE_CHECKING:
     from hashlib import _Hash as Hasher
     from os import PathLike
 
-    from typing_extensions import Self
+    from typing_extensions import Self, override
+else:
+    override = lambda x: x
 
 
 try:
@@ -235,9 +237,10 @@ class RehashSimple(RehashCondition):
         assert self.kind in {RehashKind.ALWAYS, RehashKind.NEVER}
 
     @classmethod
+    @override
     def load_db(
         cls, db: sqlite3.Connection, kind: RehashKind, cached_value_id: int
-    ) -> Self:
+    ) -> RehashSimple:
         return RehashSimple(kind=kind)
 
     def write_db_details(self, db: sqlite3.Connection, cached_value_id: int):

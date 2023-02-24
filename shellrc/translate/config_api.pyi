@@ -62,4 +62,5 @@ __all__ = [
     "alias",
     "run_in_background_helper",
     "extend_path",
+    "extend_python_path",
 ]
