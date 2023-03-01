@@ -1,10 +1,6 @@
 export MYPYPATH := "libs/python:."
 mypy:
-    @echo "Type checking primary code"
-    # TODO: Support typechecking test code
-    mypy -p shellrc.translate -p techcable --exclude '/*_test.py'
-    @echo "Type checking shell configs"
-    mypy shellrc/*.py
+    mypy
 
 format: (_format_py "shellrc" "scripts" "libs/python")
 
