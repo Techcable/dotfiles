@@ -4,7 +4,7 @@ import operator
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar, Iterable, Iterator, assert_type, overload
+from typing import TYPE_CHECKING, ClassVar, Iterable, Iterator, overload
 
 from . import PlatformPath
 

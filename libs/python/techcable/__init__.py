@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from itertools import chain
 
     # new in 3.11
-    from typing import dataclass_transform
+    from typing_extensions import dataclass_transform
 else:
     chain = None
 
