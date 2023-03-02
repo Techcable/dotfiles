@@ -10,3 +10,6 @@ _format_py +dirs:
 
 test: && mypy
     pytest libs/python/techcable shellrc/translate
+
+pyright:
+    pyright
