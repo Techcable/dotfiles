@@ -70,10 +70,21 @@ if os.getenv("TERM") == "xterm-kitty":
 
 alias("stat", "betterstat")
 
-# Prefer exa to ls
-if which("exa"):
-    alias("ls", "exa")
-    alias("lsa", "exa -a")
+# Prefer lsd to ls
+#
+# We used to use `exa`,
+# but that is now second priority
+if which("lsd"):
+    alias("ls", "lsd")
+    alias("lsa", "lsd -A")
+
+    # Shortcuts for seeing sizes
+    alias("lsds", "lsd -A --blocks size,name")
+    alias("lsdl", "lsd -A --long")
+elif which("exa"):
+    warning("Missing lsd (but has `exa` installed)")
+else:
+    warning("Cannot find lsd or exa")
 
 # Warn on usage of bpytop
 if real_bpytop := which("bpytop"):

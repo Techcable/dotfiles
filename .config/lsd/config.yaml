@@ -1,0 +1,3 @@
+icons:
+  # Icons are broken with kitty :/
+  when: never
