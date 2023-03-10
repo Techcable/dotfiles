@@ -1,0 +1,53 @@
+#!/usr/bin/env fish
+
+begin
+    set -l query_result $(cargo metadata --format-version 1 | jq '{workspace_members, total_packages: .packages|length}' -r)
+    set -l query_status $pipestatus[1]
+    if test $query_status -ne 0;
+        exit $query_status;
+    end
+    set -g workspace_members $(echo $query_result | jq -r ".workspace_members[]" | string match -r '\S+')
+    set -g workspace_member_count $(count $workspace_members)
+    set -g total_package_count $(echo $query_result | jq '.total_packages')
+end
+
+if test $workspace_member_count -lt 1;
+    echo "$(set_color --bold red)ERROR$(set_color --bold normal): Got $(count workspace-packages) packages in workspace, but need at least 1 $(set_color normal)" >&2;
+    exit 1;
+end
+
+
+function percent -d "Divides two numbers, formatting as a percentage"
+    argparse --min-args 2 --max-args 2 'prec=' 'n' -- $argv;
+    # --prec <digits>: specifies number of digits of precision
+    # -n : exclude trailing space
+    set -f top $argv[1]
+    set -f bottom $argv[2]
+    if set -q _flag_prec;
+        set -f prec $_flag_prec;
+    else
+        set -f prec 2
+    end
+    echo -s -n $(math -s $prec \( $top / $bottom \) \* 100) \%
+    # If we don't have the trailing space disabled (-n), then print newline
+    if not set -q _flag_n;
+        echo
+    end
+end
+
+
+echo "Total packages:     $total_package_count"
+echo "Workspace packages: $workspace_member_count [$workspace_member_count/$total_package_count, $(percent $workspace_member_count $total_package_count)]"
+echo
+begin
+    set -l idx 1
+    for work_pkg in $workspace_members;
+        echo -n "  [$idx/$workspace_member_count, $(percent $idx $workspace_member_count)] "
+        echo "Cleaning $work_pkg"
+        cargo clean --quiet -p $work_pkg; or exit;
+        set -l idx (math $idx + 1)
+    end
+end
+
+echo
+echo "Finished cleaning $workspace_member_count workspace packages out of $total_package_count total. Spared $(percent $(math $total_package_count - $workspace_member_count) $total_package_count)"
