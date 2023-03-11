@@ -20,7 +20,7 @@ class PythonVersion(tuple[int, ...]):
     def __new__(cls, *args: int) -> PythonVersion:
         ...
 
-    def __new__(cls, *args) -> PythonVersion:
+    def __new__(cls, *args):
         match args:
             case [str(val)]:
                 assert "." in val
