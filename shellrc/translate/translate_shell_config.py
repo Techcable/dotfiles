@@ -359,6 +359,14 @@ class Mode(metaclass=ABCMeta):
     def alias(self, name: str, value: ShellValue):
         self._assign(name, value, scope=_Scope.ALIAS, export=True)
 
+    _REQUIRE_VAR_EQUALS_ERRMSG: ClassVar[
+        str
+    ] = "Unexpected value for {varname}: `{actual_value}`"
+
+    @abstractmethod
+    def require_var_equals(self, name: str, value: ShellValue):
+        """Requires that the specified variable has a specific value"""
+
     def run_in_background_helper(self, args: list[str]):
         """A hack to run in background via python"""
         assert args, "Need at least 1 command"
@@ -499,6 +507,16 @@ class ZshMode(Mode):
             self._block_level -= 1
             self._write(")")
 
+    def require_var_equals(self, name: str, value: ShellValue):
+        self._write(f'if test "${name}" != {self._quote(value)}; then')
+        with self.indent():
+            actual_value = "${" + name + "}"
+            errmsg = Mode._REQUIRE_VAR_EQUALS_ERRMSG.format(
+                varname=name, actual_value=actual_value
+            )
+            self._write(f'warning "{errmsg}"')
+        self._write("fi")
+
     def _extend_path_impl(
         self, value: str, var_name: Optional[str], *, order: PathOrderSpec
     ):
@@ -576,6 +594,18 @@ class XonshMode(Mode):
         if scope == _Scope.LOCAL and export:
             self._blocks[-1].local_vars.add(name)
         self._write(target, "=", self._quote(value))
+
+    def require_var_equals(self, name: str, value: ShellValue):
+        XonshMode._validate_python_name(name)
+        self._write()
+        self._write(f"if ${name} != {self._quote(value)}:")
+        with self.indent():
+            actual = f"${name}"
+            errmsg = Mode._REQUIRE_VAR_EQUALS_ERRMSG.format(
+                varname=name, actual_value=actual
+            )
+            self._write(f"warning({errmsg})")
+        self._write()
 
     @staticmethod
     def _validate_python_name(name: str):
@@ -674,6 +704,16 @@ class FishMode(Mode):
         elif scope != _Scope.LOCAL:
             raise NotImplementedError
         self._write("set", *flags, name, value)
+
+    def require_var_equals(self, name: str, value: ShellValue):
+        self._write(f'if test "${name}" != {self._quote(value)};')
+        with self.indent():
+            actual = f"${name}"
+            errmsg = Mode._REQUIRE_VAR_EQUALS_ERRMSG.format(
+                varname=name, actual_value=actual
+            )
+            self._write(f'warning "{errmsg}"')
+        self._write("end")
 
     @contextmanager
     def block(self):
