@@ -1,6 +1,32 @@
 = TODO
 Things that should be done.
 
+== Current Focus
+Isolate the version of dotfiles that is being
+developed on from the version used at runtime.
+
+Seperating dev environment from production is obviously important.
+
+I want to make the current git repo development, and runtime path to like `~/.dotfiles/src`.
+I plan for the the "rutime" dotfiles to be a shallow clone of a specific commit.
+From my tests, a shallow clone is around 500KiB versus 1.3MiB for the whole repo.
+This will help save space on smaller devices (Raspberry Pi, alpine VM, etc...)
+
+.Problem
+The problem with doing this right away is all the paths are currently hardcoded against `~/git/dotfiles`.
+Updating all these links across my various machines would be horrible.
+
+Solution: We need a `dotfiles link` command to verify files are properly linked.
+This will not only , but make it easier to add dotfiles files in the future.
+
+=== Temporary Workaround
+Use `~/git/dotfiles-dev.temp` for now.
+
+The `.temp` suffix isn't very helpful, but reminds us of the desire to improve.
+
+=== Other Major Projects (current)
+* Start to seperate code files from config (_branch_: `refactor/seperate-code-config`)
+
 == Future Improvements
 Ideas for improving the dotfiels system.
 
