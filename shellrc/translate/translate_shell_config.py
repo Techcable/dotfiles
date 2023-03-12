@@ -571,11 +571,16 @@ class XonshMode(Mode):
     def eval_text(self, text: str):
         self._write(f"execx({self._quote(text)})")
 
-    def source_file(self, f: Path):
+    def source_file(self, p: Path):
         # Not needed because xonsh currently has no helpers
         #
         # Once we do implement this, it should probably down to
         # a from `{f}` import *
+        #
+        # TODO: This is actually very hard because of namespacing
+        # We want seperate modules, but then what happens to results?
+        #
+        # Need a better system...
         raise NotImplementedError
 
     def _assign(self, name: str, value: ShellValue, *, scope: _Scope, export: bool):
