@@ -1,0 +1,4 @@
+[bootstrap]
+# Sets the $MACHINE_NAME used to initialize the rest of the system
+machine-name = "example-machine"
+

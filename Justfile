@@ -2,7 +2,7 @@ export MYPYPATH := "libs/python:."
 mypy:
     mypy
 
-format: (_format_py "shellrc" "scripts" "libs/python")
+format: (_format_py "shellrc" "scripts" "libs/python" "fire-pit")
 
 _format_py +dirs:
     black {{dirs}}

@@ -100,6 +100,13 @@ else:
 
 extend_python_path(DOTFILES_PATH / "libs/python")
 
+if (
+    legacy_config := Path("~/.shell-config.rc").expanduser()
+).exists() or legacy_config.is_symlink():
+    warning(
+        f"Legacy config file should not exist: ~/{legacy_config.relative_to(Path.home())}"
+    )
+
 # This is xonsh-specific (not even sure why it's here)
 #
 # We Prefix with 'py' to indicate we are in xonsh

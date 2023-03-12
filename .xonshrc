@@ -63,11 +63,22 @@ else:
 
 # Load extra path information from ~/.shell-config.py
 def load_extra_config():
-    import tempfile
+    import tempfile, shutil
     if dotfiles_path is None:
         warning("Unable to load configuration (missing DOTFILES)")
         return
-    config_files = [p"~/.shell-config.rc", dotfiles_path / "shellrc/common-config.py"]
+
+    if not shutil.which("taplo"):
+        warning("Missing required command `taplo`, can't load dotfiles")
+
+    bootstrap_config_file = p"$HOME/.dotfiles/bootstrap-config.toml"
+
+    if not bootstrap_config_file.is_file():
+        warning("Missing bootstrap config file, can't load dotfiles")
+
+    $MACHINE_NAME=$(taplo get --file-path @(bootstrap_config_file) ".bootstrap.machine-name").rstrip()
+
+    config_files = [dotfiles_path / f"machines/shellrc/{name}.py" for name in ("common", $MACHINE_NAME)]
     def extend_path(value, var="PATH", *, order=None):
         assert not var.startswith('$') and var.endswith('PATH'), f"Not a path variable: {var!r}"
         assert isinstance(value, str), f"Unexpected path value: {value!r}"

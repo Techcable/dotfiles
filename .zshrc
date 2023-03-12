@@ -85,6 +85,11 @@ function warning() {
     echo "${fg_bold[yellow]}WARNING:${reset_color} $1" >&2;
 }
 
+
+function error() {
+    echo "${fg_bold[red]}ERROR:${reset_color} $1" >&2;
+}
+
 # Add our own completions 
 #
 # NOTE: This must come BEFORE oh-my-zsh (which handles most completions)
@@ -193,11 +198,19 @@ local dotfiles="$HOME/git/dotfiles"
 
 if [[ ! -d "$dotfiles" ]]; then
     warning "Missing dotfiles, shell configuration will fail"
+elif ! which taplo >/dev/null 2>&1; then
+    warning "Missing required dependency `taplo`"
+    echo "  dotfiles will not be loaded"
 else
     export DOTFILES_PATH="$dotfiles";
+    local dotfiles_bootstrap_config="$HOME/.dotfiles/bootstrap-config.toml";
+    export MACHINE_NAME="$(taplo get --file-path $dotfiles_bootstrap_config ".bootstrap.machine-name")";
+    if test -z "$MACHINE_NAME"; then
+        warning "Unable to resolve machine name: $MACHINE_NAME";
+    fi
     local translation_script="$dotfiles/shellrc/translate/translate_shell_config.py";
     local translated_config_dir="$(mktemp -d)"
-    local original_configs=("$dotfiles/shellrc/common-config.py" ~/.shell-config.rc)
+    local original_configs=($dotfiles/machines/shellrc/{common,$MACHINE_NAME}.py)
     local translated_configs=()
     local args=(--mode zsh);
     for config in "${original_configs[@]}"; do
