@@ -17,6 +17,7 @@ call plug#begin('~/.vim/plugged')
 Plug 'bakpakin/janet.vim'
 Plug 'NoahTheDuke/vim-just'
 Plug 'dag/vim-fish'
+Plug 'HiPhish/jinja.vim'
 
 " Asynchronous Lint Engine
 Plug 'dense-analysis/ale'
