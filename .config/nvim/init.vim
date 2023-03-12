@@ -7,6 +7,13 @@ set smartindent
 
 call plug#begin('~/.vim/plugged')
 
+" WARNING: Plugins are not automatically installed
+"
+" They must be installed manually with :PlugInstall
+"
+" Run :PlugStatus to check install status
+" Run :PlugUpdate to update plugins
+
 Plug 'bakpakin/janet.vim'
 Plug 'NoahTheDuke/vim-just'
 Plug 'dag/vim-fish'
