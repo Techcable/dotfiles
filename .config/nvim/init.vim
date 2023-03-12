@@ -20,7 +20,8 @@ Plug 'dag/vim-fish'
 Plug 'HiPhish/jinja.vim'
 
 " Asynchronous Lint Engine
-Plug 'dense-analysis/ale'
+" TODO: This is too fancy for me right now
+" Plug 'dense-analysis/ale'
 
 call plug#end()
 
