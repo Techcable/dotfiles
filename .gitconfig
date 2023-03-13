@@ -30,7 +30,6 @@
     root = rev-parse --show-toplevel
     difft = difftool --tool=difftastic
     kdiff = difftool --tool=kitty
-    share = !git-share.py
 [difftool]
     prompt = false
     trustExitCode = true
