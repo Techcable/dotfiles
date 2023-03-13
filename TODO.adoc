@@ -26,6 +26,9 @@ The `.temp` suffix isn't very helpful, but reminds us of the desire to improve.
 
 === Other Major Projects (current)
 * Start to seperate code files from config (_branch_: `refactor/seperate-code-config`)
+* Add a helper command `dotfiles` (_branch_: `tool/dotfiles-cli`)
+  * Setup links with `link` subcommand
+  * Push from dev repo -> runtime repo
 
 == Future Improvements
 Ideas for improving the dotfiels system.
