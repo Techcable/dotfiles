@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+from dataclasses import dataclass
+from pathlib import Path
+from subprocess import PIPE, CalledProcessError, run
+
+import click
+
+assert Path(__file__).stem == "git-share"
+
+
+@dataclass
+class ShareCtx:
+    git_dir: Path
+    """Path to the .git files"""
+
+    @property
+    def alternates_file(self) -> Path:
+        return self.git_dir / "objects/info/alternates"
+
+
+@click.group(name="git share")
+@click.pass_context
+def share(ctx):
+    """
+    Helpers for shared repositories,
+    created by git clone --shared
+
+    This is not an official git command
+    """
+    try:
+        git_dir = Path(
+            run(
+                ["git", "rev-parse", "--git-dir"], check=True, stdout=PIPE, text=True
+            ).stdout.rstrip()
+        )
+    except CalledProcessError:
+        raise click.ClickException("Unable to find .git directory")
+
+    assert git_dir.is_dir()
+
+    ctx.obj = ShareCtx(git_dir=git_dir)
+
+
+@share.command()
+@click.pass_obj
+def status(ctx: ShareCtx):
+    """
+    Checks whether or not the repository is shared.
+
+    If it is shared, shows with whom.
+    """
+    alternates_file = ctx.alternates_file
+    try:
+        alternates = alternates_file.read_text().rstrip("\n").splitlines()
+    except FileNotFoundError:
+        print("No sharing detected: No alternates found")
+    else:
+        alt_count = len(alternates)
+        print(f"Sharing objects with {alt_count} alternates:")
+        for i, alt in enumerate(alternates):
+            print(f"  {i+1:<{len(str(alt_count))}} {alt}")
+
+
+@share.command()
+@click.pass_obj
+def detatch(ctx: ShareCtx):
+    """
+    Detatches a shared repo, downloading the needed files
+    and preventing further sharing
+    """
+    alternates_file = ctx.alternates_file
+    if not alternates_file.is_file():
+        raise click.ClickException("Repository is not being shared (check status?)")
+    # https://stackoverflow.com/q/2248228
+    click.secho("Repacking repo:", bold=True)
+    run(["git", "--git-dir", ctx.git_dir, "repack", "-a", "-d"], check=True)
+    click.secho("Deleting alternates", bold=True)
+    alternates_file.unlink()
+
+
+if __name__ == "__main__":
+    share()
