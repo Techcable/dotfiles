@@ -7,3 +7,8 @@ __pycache__
 # Jetbrains
 .fleet
 .idea
+
+# The global config ignores .editorconfig by default,
+# but we actually want to track it by default.
+!.editorconfig
+

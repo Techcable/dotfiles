@@ -1,0 +1,49 @@
+# Setup editor preferences across all my editors: https://EditorConfig.org
+#
+# neovim and most of the intellij platform have builtin support, but Sublime
+# needs a plugin
+#
+# TIP: Use editorconfig-checker to check your files for compliance
+#   src: https://github.com/editorconfig-checker/editorconfig-checker
+
+root = true
+
+# TODO: Since this is a global config, it applies whenever I edit
+# other people's projects too.
+#
+# This may cause problems if they have a different style.
+# As a result, I have added this file to my global .gitignore.
+#
+# If a project style differs, I just edit the config appropriately.
+#
+# In my project, these are similar to the settings I want by default.
+# Even in my own project, due to bad formatting of pre-existing code
+# I may need to relax some of these in certian situations...
+#
+# In particular I worry about `insert_final_newline`
+# and `trim_trailing_whitespace`.
+
+[*]
+# My standard style
+indent_style = space
+spaces = 4
+# Unix...
+end_of_line = lf
+# these both reduce diffs
+insert_final_newline = true
+trim_trailing_whitespace = true
+# UTF8 all the things
+charset = utf-8
+
+# I use 2 spaces instead of 4 when a file format
+# is focused on data and not code.
+#
+# These files tend to have significantly more indentation
+# than typical programming languages.
+[*.{html,xhtml,xml,yml,json,adoc,md}]
+spaces = 2
+
+# Lisp also has more indentation than usual,
+# so it should only use two spaces
+[*.{scm,janet,clj,el,lsip}]
+spaces = 2

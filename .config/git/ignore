@@ -3,6 +3,22 @@
 ## Only put personal OS/IDE files here                   ##
 ## Lang-specific caches should be in project .gitignore  ##
 
+# NOTE: While files in .gitignore are rarely committed,
+# this is really just a suggestion. Git works perfectly
+# fine if there are commited files (or ones in the index)
+# that are also in the gitignore.
+#
+# The gitignroe simply means that by default, git command
+# will ignore local modifications and `git add` will never
+# add any changes to the index.
+#
+# However, both of these behaviors can be overriden!
+#
+# To add ignored files, use `git add --force <file>`
+# Once added to the index, git will notice your changes
+# and treat them as if they were never ignored in the
+# first place.
+
 # Python
 # __pycache__
 #
@@ -13,3 +29,14 @@
 
 # Exclude Jetbrains IDE data
 /.idea/
+
+# Ignore EditorConfig by default (https://editorconfig.org)
+#
+# In projects that I don't own, my default settings may be
+# incompatible with the project style. Adding or modifying
+# the project-local editorconfnig file would be preferrable,
+# but isn't something I would want to contribute upstream.
+#
+# In projects that I do own, I can use `git add --force`
+# to add any changes to the config that I want.
+.editorconfig
