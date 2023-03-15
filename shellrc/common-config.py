@@ -64,6 +64,11 @@ if os.getenv("TERM") == "xterm-kitty":
     # Need to fix ssh for kitty
     alias("ssh", "kitty +kitten ssh")
 
+# Alias ranger -> r for easier access
+if which("ranger"):
+    alias("r", "ranger")
+else:
+    warning("The 'ranger' file manager is not installed")
 
 # NOTE: The `which` command doesn't update with path :/
 # which("betterstat"):
