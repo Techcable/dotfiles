@@ -1,0 +1,127 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import os
+import re
+import sys
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from io import BufferedIOBase
+    from typing import Any, Callable, ClassVar, Union
+
+    from typing_extensions import Self
+
+try:
+    import click
+    import rich
+except ImportError as e:
+    print(f"ERROR: Missing bootstrap dependency {e.name!r}", file=sys.stderror)
+    sys.exit(1)
+
+# TODO: Just move to `lark` parser....
+
+@dataclass(repr=False, eq=False)
+class ParseError(ValueError):
+    actual_text: str | None = None
+    location: str | None = None
+
+    def __init__(self, *args, actual: str | None = None, location: str | None ):
+        assert actual is None or isinstance(actual, str)
+        assert location is None or isinstance(location, str)
+        super().__init__(*args)
+        self.actual = actual
+        self.location = location
+
+
+@dataclass(slots=True, kw_only=True)
+class Requirement:
+    name: str
+    condition: str | None = None
+
+    _PATTERN: ClassVar[re.Pattern] = re.compile(r"^\s*\*\s*`?((?:\w+|\\[_])+)`?\s*(\([^\)]*\)?\s*$")
+
+    @classmethod
+    def parse(cls, s: str) -> Self:
+        m = cls._PATTERN.match(s)
+        if m is None:
+            raise ParseError(f"Invalid requirement line: {s!r}")
+        return Requirement(name=m[1], condition=m[2])
+
+@dataclass
+class RequirementsList:
+    minimal: list[Requirement] = field(default_factory=list)
+    standard: list[Requirement] = field(default_factory=list)
+
+    _EXPECTED_HEADER: ClassVar[str] = "# Requires"
+
+    _COMMENT_START: str = "<!--"
+    _COMMENT_END: str = "-->"
+
+
+    @classmethod
+    def parse_file(cls, f: Path | BufferedIOBase[str], *, file_name: str | None = None) -> Self:
+        if isinstance(f, Path):
+            with open(f, 'rt') as fs:
+                return RequirementsList.open(fs, file_name=file_name or f.name)
+        elif not hasattr(f, 'readlines'):
+            raise TypeError  # Expected 
+        # Requires
+        inside_comment = False
+        lines = f.readlines()
+        if not lines[0].startswith(cls.EXPECTED_HEADER):
+            raise ParseError("Missing expected header line", actual=lines[0])
+        line_idx = 1  # Right after the header line
+        remaining = lines[line_idx]
+        """The remaining text on the current line"""
+        current_line: Callable[[], str] = lambda: lines[line_idx]
+        offset_of_remaining: Callable[[], int] = lambda: len(current_line()) - len(remaining)
+
+        def take_match(matcher: str | re.Pattern) -> str | re.Match | None:
+            """Take the first match from the remaining line, or None if nothing matches."""
+            nonlocal remaining
+            if isinstance(matcher, str):
+                assert matcher
+                if (pos := remaining.find(matcher)) >= 0:
+                    remaining = remaining[pos+len(matcher):]
+                    return matcher  # The text we matched is the matcher itself
+                else:
+                    return None
+            elif isinstance(matcher, re.Pattern):
+                m = matcher.match(remaining)
+                if m is not None:
+                    end_indx = m.end(0)
+                    if end_index < 0:
+                        # Somehow "did not contribute to the match"??
+                        raise NotImplementedError
+                    remaining = remaining[m.end(0))
+                    return m
+                else:
+                    return None
+            else:
+                raise TypeError
+
+        def skip_comment() -> bool:
+            nonlocal line_idx
+            if take_match(cls._COMMENT_START) is not None:
+                start_line_idx, start_offset = line_idx, offset_of_remaining()
+                while not take_match(cls._COMMENT_END):
+                    line_idx += 1
+                    try:
+                        line = lines[line_idx]
+                    except IndexError:
+                        raise ParseError(f"Unable to find end of comment started on {line_idx-1}:{start_offset}")
+                return True
+            else:
+                return False
+
+        # TODO: Finish
+        # ~~Skip until the first~~
+        raise NotImplementedError
+
+# TODO: Why would I need this file?
+#
+# What resonable scinerio would I need a machine to parse REQUIRES.md?
+# Also why not just use lark parser?
+
