@@ -2,6 +2,6 @@
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from translate.config_api import *
+    from dotfiles.translate_shell.config_api import *
 
 export("MACHINE_NAME", "raspberrypi4-2022")

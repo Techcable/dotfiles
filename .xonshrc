@@ -108,7 +108,7 @@ def load_extra_config():
         'extend_path': (extend_path),
         'warning': warning
     }
-    translation_script = dotfiles_path / "shellrc/translate/translate_shell_config.py"
+    translation_script = dotfiles_path / "translate_shell_config"
     $DOTFILES_PATH=dotfiles_path
     with tempfile.TemporaryDirectory() as dir:
         translated_config_files = []
@@ -117,7 +117,7 @@ def load_extra_config():
             translated_config = Path(dir) / mod_name
             args.extend(("--module", mod_name, "--out", translated_config))
         # Run translation as subprocess to inherit updated $PATH variable
-        python3 @(translation_script) @(args)
+        @(translation_script) @(args)
     for translated_config_file in translated_config_files:
         with open(translated_config_file, 'rt') as f:
             translated_config = f.read()

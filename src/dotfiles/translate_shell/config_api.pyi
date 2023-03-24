@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from .translate_shell_config import (
+from .__main__ import (
     AppDir,
     ConfigException,
     Mode,

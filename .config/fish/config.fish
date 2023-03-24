@@ -96,7 +96,7 @@ function setup_extra_config
         set -f --append translated_config_files "$translated_config_dir/$(basename $rcmod)"
         set -f --append translate_args -m $rcmod --out $translated_config_files[-1]
     end
-    python3 "$DOTFILES_PATH/shellrc/translate/translate_shell_config.py" $translate_args;
+    $DOTFILES_PATH/translate_shell_config $translate_args;
     if test $status -ne 0;
         warning "Failed to translate configs: $translated_config_files";
         echo "Debug vars:">&2;

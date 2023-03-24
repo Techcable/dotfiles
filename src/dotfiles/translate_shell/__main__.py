@@ -49,6 +49,7 @@ SupportedColor: TypeAlias = Literal[
 if TYPE_CHECKING:
     from typing import TypedDict
 
+    # TODO: This is pointless now because we can't type kwargs...
     class FmtFlags(TypedDict, total=False):
         fg: bool
         foreground: bool
@@ -134,12 +135,15 @@ if (override_dotfiles_path := os.getenv("FORCE_OVERRIDE_DOTFILES_PATH")) is not 
     DOTFILES_PATH = Path(override_dotfiles_path)
     assert DOTFILES_PATH.is_dir(), f"Missing dir: {DOTFILES_PATH}"
 else:
-    assert (
-        Path(__file__).parents[0].name == "translate"
-        and Path(__file__).parents[1].name == "shellrc"
-    ), f"Unexpected __file__: {__file__}"
-    DOTFILES_PATH = Path(__file__).parents[2]
-assert (DOTFILES_PATH / "shellrc").is_dir(), "Missing $DOTFILES_PATH/shellrc directory"
+    assert [p.name for p in Path(__file__).parents[:3]] == [
+        "translate_shell",
+        "dotfiles",
+        "src",
+    ]
+    DOTFILES_PATH = Path(__file__).parents[3]
+assert (
+    DOTFILES_PATH / "src" / "dotfiles"
+).is_dir(), "Missing $DOTFILES_PATH/src/dotfiles directory"
 
 
 def which(command: str) -> Optional[Path]:
@@ -221,7 +225,7 @@ class Mode(metaclass=ABCMeta):
         return Mode.set_color("reset")
 
     @staticmethod
-    def set_color(color: Optional[AnsiColorName], **kwargs: FmtFlags) -> str:
+    def set_color(color: Optional[SupportedColor], **kwargs: bool) -> str:
         """
         Emits ANSI color codes to set the terminal color
 
@@ -710,7 +714,8 @@ class XonshMode(Mode):
 
 class FishMode(Mode):
     name: ClassVar = "fish"
-    helper_path: ClassVar = Path("shellrc/translate/fish_helpers.fish")
+    # TODO: This is a hack
+    helper_path: ClassVar = Path(__file__).parent / "fish_helpers.fish"
     cleanup_code: ClassVar = "clear_helper_funcs\nset --erase clear_helper_funcs"
 
     def eval_text(self, text: str):

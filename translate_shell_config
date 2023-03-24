@@ -1,0 +1,5 @@
+#!/bin/sh
+
+detected_dotfiles="$(dirname "$(realpath $0)")"
+
+PYTHONPATH="$PYTHONPATH:$detected_dotfiles/src" exec python3 -m dotfiles.translate_shell "$@"

@@ -2,11 +2,11 @@
 import os
 import sys
 from pathlib import Path
-from subprocess import PIPE, run
+from subprocess import PIPE, CalledProcessError, run
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from translate.config_api import *
+    from dotfiles.translate_shell.config_api import *
 
 try:
     assert DOTFILES_PATH == Path(os.environ["DOTFILES_PATH"])

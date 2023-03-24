@@ -9,12 +9,13 @@ from subprocess import PIPE, CalledProcessError, run
 from typing import TYPE_CHECKING, ClassVar, Iterator, Optional, Union
 
 from techcable.pyinterp import PythonInterpreter
-from translate.cache import Cache, CachedValue, RehashFilesChanged
+
+from dotfiles.translate_shell.cache import Cache, CachedValue, RehashFilesChanged
 
 if TYPE_CHECKING:
     from typing import overload
 
-    from translate.config_api import *
+    from dotfiles.translate_shell.config_api import *
 
 HOMEBREW_ROOT = Path("/opt/homebrew")
 

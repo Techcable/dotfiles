@@ -208,7 +208,6 @@ else
     if test -z "$MACHINE_NAME"; then
         warning "Unable to resolve machine name: $MACHINE_NAME";
     fi
-    local translation_script="$dotfiles/shellrc/translate/translate_shell_config.py";
     local translated_config_dir="$(mktemp -d)"
     local translated_configs=()
     local args=(--mode zsh --mod-path "$dotfiles/machines/shellrc");
@@ -217,7 +216,7 @@ else
         translated_configs+=("$translated_config_dir/$config_mod")
         args+=(--out "${translated_configs[-1]}")
     done
-    python3 "$translation_script" "${args[@]}"
+    $dotfiles/translate_shell_config "${args[@]}"
     for translated in "${translated_configs[@]}"; do
         source "$translated"
     done

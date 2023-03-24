@@ -1,3 +1,20 @@
+[project]
+name = "techcable.dotfiles"
+authors = [{ name = "Techcable" }]
+description = "My dotfiles"
+requires-python = ">=3.10"
+dynamic = ["version"]
+
+[project.scripts]
+translate_shell = "dotfiles.translate_shell.__main__:main"
+
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [tool.pyright]
 include = ["shellrc", "libs/python"]
 pythonVersion = "3.10"
