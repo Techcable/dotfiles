@@ -5,7 +5,6 @@ import functools
 import os
 import re
 import runpy
-import shlex
 import sys
 import textwrap
 import warnings
@@ -23,17 +22,44 @@ from typing import (
     TYPE_CHECKING,
     Any,
     ClassVar,
-    Final,
     Iterator,
     Literal,
     Optional,
-    Type,
     TypeAlias,
     Union,
     final,
 )
+from typing import get_args as get_type_args
+from typing import get_origin as get_type_origin
 
-FmtInfo: TypeAlias = dict[str, bool | str]
+SupportedColor: TypeAlias = Literal[
+    # Matches _ANSI_COLOR_NAMES
+    "black",
+    "red",
+    "green",
+    "yellow",
+    "blue",
+    "magenta",
+    "cyan",
+    "white",
+    # Special marker value
+    "reset",
+]
+
+if TYPE_CHECKING:
+    from typing import TypedDict
+
+    class FmtFlags(TypedDict, total=False):
+        fg: bool
+        foreground: bool
+        bg: bool
+        background: bool
+        bold: bool
+        italics: bool
+        underline: bool
+
+    class FmtInfo(TypedDict, total=False):
+        color: SupportedColor
 
 
 @functools.total_ordering  # TODO: Switch to my wrapper instead
@@ -99,6 +125,9 @@ _ANSI_COLOR_NAMES = (
     "cyan",
     "white",
 )
+
+assert get_type_origin(SupportedColor) == Literal
+assert get_type_args(SupportedColor) == (*_ANSI_COLOR_NAMES, "reset")
 
 if (override_dotfiles_path := os.getenv("FORCE_OVERRIDE_DOTFILES_PATH")) is not None:
     # Provide a mechanism to bypass usage of `__file__` because that ocassionally breaks
@@ -192,7 +221,7 @@ class Mode(metaclass=ABCMeta):
         return Mode.set_color("reset")
 
     @staticmethod
-    def set_color(color: Optional[str], **kwargs) -> str:
+    def set_color(color: Optional[AnsiColorName], **kwargs: FmtFlags) -> str:
         """
         Emits ANSI color codes to set the terminal color
 
@@ -206,14 +235,14 @@ class Mode(metaclass=ABCMeta):
         bg, background - Sets the background color
         """
 
-        def check_flag(*names, default=False) -> bool:
+        def check_flag(*names: str, default=False) -> bool:
             for name in names:
                 if name not in kwargs:
                     continue
                 val = kwargs[name]
                 if type(val) is not bool:
                     raise TypeError(f"for {name!r}: {val!r}")
-                return val
+                return val  # type: ignore
             return default
 
         # https://talyian.github.io/ansicolors/
@@ -245,7 +274,7 @@ class Mode(metaclass=ABCMeta):
             parts.append(4)
         if parts is None:
             raise ValueError("No formatting specified!")
-        return f"\x1b[" + ";".join(map(str, parts)) + "m"
+        return "\x1b[" + ";".join(map(str, parts)) + "m"
 
     @final
     def exec_cmd(self, command: str, *args: ShellValue):
@@ -929,16 +958,18 @@ def main():
                 consume_arg(amount=2)
             case "--module" | "-m":
                 in_modules.append(mod_name := require_arg("--module"))
-                if '/' in mod_name:
+                if "/" in mod_name:
                     print(
-                        ''.join((
-                            Mode.set_color("fellow"),
-                            "WARNING",
-                            Mode.reset_color(),
-                            ":",
-                        )),
+                        "".join(
+                            (
+                                Mode.set_color("fellow"),
+                                "WARNING",
+                                Mode.reset_color(),
+                                ":",
+                            )
+                        ),
                         f"Unexpected character `/` in module name: {mod_name!r}",
-                        file=sys.stderr
+                        file=sys.stderr,
                     )
                 consume_arg(amount=2)
             case "--out" | "-o":

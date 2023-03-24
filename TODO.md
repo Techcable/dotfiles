@@ -4,6 +4,7 @@ Things that should be done.
 ## Easy
 * Give warning when using `mamba` python (see deleted conda `changeps1` option)
 * Refactor code to seperate from config
+* Enable `ruff` linter to automatically run
 
 ## Medium
 * Introduce config files and start to move some functionality away from scripts
