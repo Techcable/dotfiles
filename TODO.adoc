@@ -36,6 +36,7 @@ Ideas for improving the dotfiels system.
 .Easy
 * Give warning when using `mamba` python (see deleted conda `changeps1` option)
 * Refactor code to seperate from config
+* Enable `ruff` linter to automatically run
 * Warn on redundancy in `$PATH`. At least on mac, some paths are already present in `/etc/paths.d`
 
 .Medium

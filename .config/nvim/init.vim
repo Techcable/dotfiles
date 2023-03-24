@@ -23,5 +23,8 @@ Plug 'HiPhish/jinja.vim'
 " TODO: This is too fancy for me right now
 " Plug 'dense-analysis/ale'
 
+" Configure ALE lint engine
+let g:ale_linters = {'python': ['black', 'ipython', 'mypy', 'ruff']}
+
 call plug#end()
 

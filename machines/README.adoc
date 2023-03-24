@@ -1,0 +1,5 @@
+= machines
+Machine-specific configuration
+
+.Directories
+* shellrc - Contains shell startup code. Equivalent to `.profile` or `.zshrc`, but shell-independent

@@ -38,6 +38,7 @@ alias = _MODE_IMPL.alias
 run_in_background_helper = _MODE_IMPL.run_in_background_helper
 extend_path = _MODE_IMPL.extend_path
 extend_python_path = _MODE_IMPL.extend_python_path
+require_var_equals = _MODE_IMPL.require_var_equals
 
 __all__ = [
     # exposed types
@@ -52,6 +53,7 @@ __all__ = [
     "PLATFORM",
     "which",
     "reset_color",
+    "require_var_equals",
     "set_color",
     "eval_text",
     "source_file",

@@ -63,11 +63,22 @@ else:
 
 # Load extra path information from ~/.shell-config.py
 def load_extra_config():
-    import tempfile
+    import tempfile, shutil
     if dotfiles_path is None:
         warning("Unable to load configuration (missing DOTFILES)")
         return
-    config_files = [p"~/.shell-config.rc", dotfiles_path / "shellrc/common-config.py"]
+
+    if not shutil.which("taplo"):
+        warning("Missing required command `taplo`, can't load dotfiles")
+
+    bootstrap_config_file = p"$HOME/.dotfiles/bootstrap-config.toml"
+
+    if not bootstrap_config_file.is_file():
+        warning("Missing bootstrap config file, can't load dotfiles")
+
+    $MACHINE_NAME=$(taplo get --file-path @(bootstrap_config_file) ".bootstrap.machine-name").rstrip()
+
+    config_names = ["common", $MACHINE_NAME.replace('-', '_')]
     def extend_path(value, var="PATH", *, order=None):
         assert not var.startswith('$') and var.endswith('PATH'), f"Not a path variable: {var!r}"
         assert isinstance(value, str), f"Unexpected path value: {value!r}"
@@ -101,10 +112,10 @@ def load_extra_config():
     $DOTFILES_PATH=dotfiles_path
     with tempfile.TemporaryDirectory() as dir:
         translated_config_files = []
-        args = ["--mode", "xonsh"]
-        for config in config_files:
-            translated_config = Path(dir) / config.name
-            args.extend(("--in", config, "--out", translated_config))
+        args = ["--mode", "xonsh", "--mod-path", "machines/shellrc"]
+        for mod_name in config_names:
+            translated_config = Path(dir) / mod_name
+            args.extend(("--module", mod_name, "--out", translated_config))
         # Run translation as subprocess to inherit updated $PATH variable
         python3 @(translation_script) @(args)
     for translated_config_file in translated_config_files:

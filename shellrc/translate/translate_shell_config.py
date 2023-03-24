@@ -5,7 +5,6 @@ import functools
 import os
 import re
 import runpy
-import shlex
 import sys
 import textwrap
 import warnings
@@ -23,17 +22,44 @@ from typing import (
     TYPE_CHECKING,
     Any,
     ClassVar,
-    Final,
     Iterator,
     Literal,
     Optional,
-    Type,
     TypeAlias,
     Union,
     final,
 )
+from typing import get_args as get_type_args
+from typing import get_origin as get_type_origin
 
-FmtInfo: TypeAlias = dict[str, bool | str]
+SupportedColor: TypeAlias = Literal[
+    # Matches _ANSI_COLOR_NAMES
+    "black",
+    "red",
+    "green",
+    "yellow",
+    "blue",
+    "magenta",
+    "cyan",
+    "white",
+    # Special marker value
+    "reset",
+]
+
+if TYPE_CHECKING:
+    from typing import TypedDict
+
+    class FmtFlags(TypedDict, total=False):
+        fg: bool
+        foreground: bool
+        bg: bool
+        background: bool
+        bold: bool
+        italics: bool
+        underline: bool
+
+    class FmtInfo(TypedDict, total=False):
+        color: SupportedColor
 
 
 @functools.total_ordering  # TODO: Switch to my wrapper instead
@@ -99,6 +125,9 @@ _ANSI_COLOR_NAMES = (
     "cyan",
     "white",
 )
+
+assert get_type_origin(SupportedColor) == Literal
+assert get_type_args(SupportedColor) == (*_ANSI_COLOR_NAMES, "reset")
 
 if (override_dotfiles_path := os.getenv("FORCE_OVERRIDE_DOTFILES_PATH")) is not None:
     # Provide a mechanism to bypass usage of `__file__` because that ocassionally breaks
@@ -186,12 +215,13 @@ class Mode(metaclass=ABCMeta):
     def _write(self, *args: object):
         self._output.append(self._indent + " ".join(map(str, args)))
 
-    def reset_color(self) -> str:
+    @staticmethod
+    def reset_color() -> str:
         """A command to reset the ANSI color codes. Equivalent to set_color('reset')"""
-        return self.set_color("reset")
+        return Mode.set_color("reset")
 
-    # TODO: Make this static
-    def set_color(self, color: Optional[str], **kwargs):
+    @staticmethod
+    def set_color(color: Optional[AnsiColorName], **kwargs: FmtFlags) -> str:
         """
         Emits ANSI color codes to set the terminal color
 
@@ -205,14 +235,14 @@ class Mode(metaclass=ABCMeta):
         bg, background - Sets the background color
         """
 
-        def check_flag(*names, default=False) -> bool:
+        def check_flag(*names: str, default=False) -> bool:
             for name in names:
                 if name not in kwargs:
                     continue
                 val = kwargs[name]
                 if type(val) is not bool:
                     raise TypeError(f"for {name!r}: {val!r}")
-                return val
+                return val  # type: ignore
             return default
 
         # https://talyian.github.io/ansicolors/
@@ -244,7 +274,7 @@ class Mode(metaclass=ABCMeta):
             parts.append(4)
         if parts is None:
             raise ValueError("No formatting specified!")
-        return f"\x1b[" + ";".join(map(str, parts)) + "m"
+        return "\x1b[" + ";".join(map(str, parts)) + "m"
 
     @final
     def exec_cmd(self, command: str, *args: ShellValue):
@@ -358,6 +388,14 @@ class Mode(metaclass=ABCMeta):
     @final
     def alias(self, name: str, value: ShellValue):
         self._assign(name, value, scope=_Scope.ALIAS, export=True)
+
+    _REQUIRE_VAR_EQUALS_ERRMSG: ClassVar[
+        str
+    ] = "Unexpected value for {varname}: `{actual_value}`"
+
+    @abstractmethod
+    def require_var_equals(self, name: str, value: ShellValue):
+        """Requires that the specified variable has a specific value"""
 
     def run_in_background_helper(self, args: list[str]):
         """A hack to run in background via python"""
@@ -499,6 +537,16 @@ class ZshMode(Mode):
             self._block_level -= 1
             self._write(")")
 
+    def require_var_equals(self, name: str, value: ShellValue):
+        self._write(f'if test "${name}" != {self._quote(value)}; then')
+        with self.indent():
+            actual_value = "${" + name + "}"
+            errmsg = Mode._REQUIRE_VAR_EQUALS_ERRMSG.format(
+                varname=name, actual_value=actual_value
+            )
+            self._write(f'warning "{errmsg}"')
+        self._write("fi")
+
     def _extend_path_impl(
         self, value: str, var_name: Optional[str], *, order: PathOrderSpec
     ):
@@ -553,11 +601,16 @@ class XonshMode(Mode):
     def eval_text(self, text: str):
         self._write(f"execx({self._quote(text)})")
 
-    def source_file(self, f: Path):
+    def source_file(self, p: Path):
         # Not needed because xonsh currently has no helpers
         #
         # Once we do implement this, it should probably down to
         # a from `{f}` import *
+        #
+        # TODO: This is actually very hard because of namespacing
+        # We want seperate modules, but then what happens to results?
+        #
+        # Need a better system...
         raise NotImplementedError
 
     def _assign(self, name: str, value: ShellValue, *, scope: _Scope, export: bool):
@@ -576,6 +629,18 @@ class XonshMode(Mode):
         if scope == _Scope.LOCAL and export:
             self._blocks[-1].local_vars.add(name)
         self._write(target, "=", self._quote(value))
+
+    def require_var_equals(self, name: str, value: ShellValue):
+        XonshMode._validate_python_name(name)
+        self._write()
+        self._write(f"if ${name} != {self._quote(value)}:")
+        with self.indent():
+            actual = f"${name}"
+            errmsg = Mode._REQUIRE_VAR_EQUALS_ERRMSG.format(
+                varname=name, actual_value=actual
+            )
+            self._write(f"warning({errmsg})")
+        self._write()
 
     @staticmethod
     def _validate_python_name(name: str):
@@ -674,6 +739,16 @@ class FishMode(Mode):
         elif scope != _Scope.LOCAL:
             raise NotImplementedError
         self._write("set", *flags, name, value)
+
+    def require_var_equals(self, name: str, value: ShellValue):
+        self._write(f'if test "${name}" != {self._quote(value)};')
+        with self.indent():
+            actual = f"${name}"
+            errmsg = Mode._REQUIRE_VAR_EQUALS_ERRMSG.format(
+                varname=name, actual_value=actual
+            )
+            self._write(f'warning "{errmsg}"')
+        self._write("end")
 
     @contextmanager
     def block(self):
@@ -790,8 +865,7 @@ for name, mode in _VALID_MODES.items():
     assert mode.name == name, mode.name
 
 
-def run_mode(mode: Mode, config_file: Path) -> list[str]:
-    config_file = config_file.resolve()
+def run_mode(mode: Mode, module_name: str) -> list[str]:
     assert not mode._output, "Already have output for mode"
     if (helper := mode.helper_path) is not None:
         mode.source_file(DOTFILES_PATH / helper)
@@ -817,10 +891,10 @@ def run_mode(mode: Mode, config_file: Path) -> list[str]:
         if (shellrc_path := str(DOTFILES_PATH / "shellrc")) not in sys.path:
             sys.path.append(shellrc_path)
         with mode.with_state() as state:
-            runpy.run_path(
-                str(config_file),
+            runpy.run_module(
+                module_name,
                 init_globals=context,
-                run_name=config_file.stem.replace("-", "_"),
+                alter_sys=True,
             )
             # If python paths were added inside script,
             # extend them to outer context
@@ -855,7 +929,7 @@ def main():
             sys.exit(1)
 
     mode_type = None
-    in_files = []
+    in_modules = []
     out_files = []
     while remaining_args and (flag := remaining_args[0]).startswith("-"):
         match flag:
@@ -874,8 +948,29 @@ def main():
                     sys.exit(1)
                 else:
                     consume_arg(amount=2)
-            case "--in" | "-i":
-                in_files.append(Path(require_arg("--in")))
+            case "--mod-path":
+                mod_path = Path(require_arg("--mod-path"))
+                if not mod_path.is_dir():
+                    print(f"ERROR: Missing module path: {mod_path}", file=sys.stderr)
+                    sys.exit(1)
+                if str(mod_path) not in sys.path:
+                    sys.path.append(str(mod_path))
+                consume_arg(amount=2)
+            case "--module" | "-m":
+                in_modules.append(mod_name := require_arg("--module"))
+                if "/" in mod_name:
+                    print(
+                        "".join(
+                            (
+                                Mode.set_color("fellow"),
+                                "WARNING",
+                                Mode.reset_color(),
+                                ":",
+                            )
+                        ),
+                        f"Unexpected character `/` in module name: {mod_name!r}",
+                        file=sys.stderr,
+                    )
                 consume_arg(amount=2)
             case "--out" | "-o":
                 out_files.append(Path(require_arg("--out")))
@@ -884,22 +979,22 @@ def main():
                 print(f"Unexpected flag: {flag!r}", file=sys.stderr)
                 sys.exit(1)
 
-    if len(in_files) == 0:
-        print("ERROR: Got no input files", file=sys.stderr)
+    if len(in_modules) == 0:
+        print("ERROR: Got no input modules", file=sys.stderr)
         sys.exit(1)
 
-    if len(in_files) == 1 and len(out_files) == 0:
+    if len(in_modules) == 1 and len(out_files) == 0:
         # With only one in file (and no explicit output), write to stdout
         out_files.append(sys.stdout)
 
-    if len(in_files) != len(out_files):
+    if len(in_modules) != len(out_files):
         print(
-            f"Expected {len(out_files)} outputs for {len(in_files)} inputs",
+            f"Expected {len(out_files)} outputs for {len(in_modules)} inputs",
             file=sys.stderr,
         )
         sys.exit(1)
 
-    for in_file, out_file in zip(in_files, out_files, strict=True):
+    for in_mod, out_file in zip(in_modules, out_files, strict=True):
         # Avoid contextlib due to potential for longer import times
         with ExitStack() as stack:
             if isinstance(out_file, Path):
@@ -907,7 +1002,7 @@ def main():
             else:
                 out_file_handle = out_file
             mode = mode_type()  # Construct mode object
-            for line in run_mode(mode, in_file):
+            for line in run_mode(mode, in_mod):
                 print(line, file=out_file_handle)
 
 
