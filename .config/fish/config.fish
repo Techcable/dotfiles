@@ -89,7 +89,7 @@ function setup_extra_config
         end
         set --global --export MACHINE_NAME $machine_name
     end
-    set -f shellrc_files "$DOTFILES_PATH/machines/shellrc/common.py" "$DOTFILES_PATH/machines/shellrc/$MACHINE_NAME.py"
+    set -f shellrc_files "$DOTFILES_PATH/machines/shellrc/common.py" "$DOTFILES_PATH/machines/shellrc/$(string replace --all '-' '_' -- $MACHINE_NAME).py"
     set -f translated_config_dir (mktemp -d -t dotfiles)
     set -f translate_args --mode fish
     for rcfile in $shellrc_files

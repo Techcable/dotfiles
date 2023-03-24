@@ -210,7 +210,7 @@ else
     fi
     local translation_script="$dotfiles/shellrc/translate/translate_shell_config.py";
     local translated_config_dir="$(mktemp -d)"
-    local original_configs=($dotfiles/machines/shellrc/{common,$MACHINE_NAME}.py)
+    local original_configs=($dotfiles/machines/shellrc/{common,${MACHINE_NAME:gs/-/_/}}.py)
     local translated_configs=()
     local args=(--mode zsh);
     for config in "${original_configs[@]}"; do

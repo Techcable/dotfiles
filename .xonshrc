@@ -78,7 +78,7 @@ def load_extra_config():
 
     $MACHINE_NAME=$(taplo get --file-path @(bootstrap_config_file) ".bootstrap.machine-name").rstrip()
 
-    config_files = [dotfiles_path / f"machines/shellrc/{name}.py" for name in ("common", $MACHINE_NAME)]
+    config_files = [dotfiles_path / f"machines/shellrc/{name}.py" for name in ("common", $MACHINE_NAME.replace('-', '_'))]
     def extend_path(value, var="PATH", *, order=None):
         assert not var.startswith('$') and var.endswith('PATH'), f"Not a path variable: {var!r}"
         assert isinstance(value, str), f"Unexpected path value: {value!r}"
