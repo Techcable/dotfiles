@@ -14,5 +14,8 @@ Plug 'dag/vim-fish'
 " Asynchronous Lint Engine
 Plug 'dense-analysis/ale'
 
+" Configure ALE lint engine
+let g:ale_linters = {'python': ['black', 'ipython', 'mypy', 'ruff']}
+
 call plug#end()
 
