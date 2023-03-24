@@ -44,3 +44,4 @@ Ideas for improving the dotfiels system.
 
 .Hard
 * Rewrite scripts in either a DSL, Lua, or Janet
+  * Look into https://dhall-lang.org/[Dhall] as a combined config/scripting language.
