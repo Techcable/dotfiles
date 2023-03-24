@@ -210,16 +210,11 @@ else
     fi
     local translation_script="$dotfiles/shellrc/translate/translate_shell_config.py";
     local translated_config_dir="$(mktemp -d)"
-    local original_configs=($dotfiles/machines/shellrc/{common,${MACHINE_NAME:gs/-/_/}}.py)
     local translated_configs=()
-    local args=(--mode zsh);
-    for config in "${original_configs[@]}"; do
-        if [[ ! -f "$config" ]]; then
-            warning "Missing configuration file: $config"
-            continue
-        fi
-        args+=(--in $config)
-        translated_configs+=("$translated_config_dir/$(basename $config)")
+    local args=(--mode zsh --mod-path "$dotfiles/machines/shellrc");
+    for config_mod in "common" "${MACHINE_NAME:gs/-/_/}"; do
+        args+=(--module $config_mod)
+        translated_configs+=("$translated_config_dir/$config_mod")
         args+=(--out "${translated_configs[-1]}")
     done
     python3 "$translation_script" "${args[@]}"

@@ -89,16 +89,12 @@ function setup_extra_config
         end
         set --global --export MACHINE_NAME $machine_name
     end
-    set -f shellrc_files "$DOTFILES_PATH/machines/shellrc/common.py" "$DOTFILES_PATH/machines/shellrc/$(string replace --all '-' '_' -- $MACHINE_NAME).py"
+    set -f shellrc_modules "common" "$(string replace --all '-' '_' -- $MACHINE_NAME)"
     set -f translated_config_dir (mktemp -d -t dotfiles)
-    set -f translate_args --mode fish
-    for rcfile in $shellrc_files
-        if ! test -f $rcfile
-            warning "Missing required config file: $rcfile"
-            return 1
-        end
-        set -f --append translated_config_files "$translated_config_dir/$(basename $rcfile)"
-        set -f --append translate_args --in $rcfile --out $translated_config_files[-1]
+    set -f translate_args --mode fish --mod-path "$DOTFILES_PATH/machines/shellrc"
+    for rcmod in $shellrc_modules
+        set -f --append translated_config_files "$translated_config_dir/$(basename $rcmod)"
+        set -f --append translate_args -m $rcmod --out $translated_config_files[-1]
     end
     python3 "$DOTFILES_PATH/shellrc/translate/translate_shell_config.py" $translate_args;
     if test $status -ne 0;

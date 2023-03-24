@@ -186,12 +186,13 @@ class Mode(metaclass=ABCMeta):
     def _write(self, *args: object):
         self._output.append(self._indent + " ".join(map(str, args)))
 
-    def reset_color(self) -> str:
+    @staticmethod
+    def reset_color() -> str:
         """A command to reset the ANSI color codes. Equivalent to set_color('reset')"""
-        return self.set_color("reset")
+        return Mode.set_color("reset")
 
-    # TODO: Make this static
-    def set_color(self, color: Optional[str], **kwargs):
+    @staticmethod
+    def set_color(color: Optional[str], **kwargs) -> str:
         """
         Emits ANSI color codes to set the terminal color
 
@@ -835,8 +836,7 @@ for name, mode in _VALID_MODES.items():
     assert mode.name == name, mode.name
 
 
-def run_mode(mode: Mode, config_file: Path) -> list[str]:
-    config_file = config_file.resolve()
+def run_mode(mode: Mode, module_name: str) -> list[str]:
     assert not mode._output, "Already have output for mode"
     if (helper := mode.helper_path) is not None:
         mode.source_file(DOTFILES_PATH / helper)
@@ -862,10 +862,10 @@ def run_mode(mode: Mode, config_file: Path) -> list[str]:
         if (shellrc_path := str(DOTFILES_PATH / "shellrc")) not in sys.path:
             sys.path.append(shellrc_path)
         with mode.with_state() as state:
-            runpy.run_path(
-                str(config_file),
+            runpy.run_module(
+                module_name,
                 init_globals=context,
-                run_name=config_file.stem.replace("-", "_"),
+                alter_sys=True,
             )
             # If python paths were added inside script,
             # extend them to outer context
@@ -900,7 +900,7 @@ def main():
             sys.exit(1)
 
     mode_type = None
-    in_files = []
+    in_modules = []
     out_files = []
     while remaining_args and (flag := remaining_args[0]).startswith("-"):
         match flag:
@@ -919,8 +919,27 @@ def main():
                     sys.exit(1)
                 else:
                     consume_arg(amount=2)
-            case "--in" | "-i":
-                in_files.append(Path(require_arg("--in")))
+            case "--mod-path":
+                mod_path = Path(require_arg("--mod-path"))
+                if not mod_path.is_dir():
+                    print(f"ERROR: Missing module path: {mod_path}", file=sys.stderr)
+                    sys.exit(1)
+                if str(mod_path) not in sys.path:
+                    sys.path.append(str(mod_path))
+                consume_arg(amount=2)
+            case "--module" | "-m":
+                in_modules.append(mod_name := require_arg("--module"))
+                if '/' in mod_name:
+                    print(
+                        ''.join((
+                            Mode.set_color("fellow"),
+                            "WARNING",
+                            Mode.reset_color(),
+                            ":",
+                        )),
+                        f"Unexpected character `/` in module name: {mod_name!r}",
+                        file=sys.stderr
+                    )
                 consume_arg(amount=2)
             case "--out" | "-o":
                 out_files.append(Path(require_arg("--out")))
@@ -929,22 +948,22 @@ def main():
                 print(f"Unexpected flag: {flag!r}", file=sys.stderr)
                 sys.exit(1)
 
-    if len(in_files) == 0:
-        print("ERROR: Got no input files", file=sys.stderr)
+    if len(in_modules) == 0:
+        print("ERROR: Got no input modules", file=sys.stderr)
         sys.exit(1)
 
-    if len(in_files) == 1 and len(out_files) == 0:
+    if len(in_modules) == 1 and len(out_files) == 0:
         # With only one in file (and no explicit output), write to stdout
         out_files.append(sys.stdout)
 
-    if len(in_files) != len(out_files):
+    if len(in_modules) != len(out_files):
         print(
-            f"Expected {len(out_files)} outputs for {len(in_files)} inputs",
+            f"Expected {len(out_files)} outputs for {len(in_modules)} inputs",
             file=sys.stderr,
         )
         sys.exit(1)
 
-    for in_file, out_file in zip(in_files, out_files, strict=True):
+    for in_mod, out_file in zip(in_modules, out_files, strict=True):
         # Avoid contextlib due to potential for longer import times
         with ExitStack() as stack:
             if isinstance(out_file, Path):
@@ -952,7 +971,7 @@ def main():
             else:
                 out_file_handle = out_file
             mode = mode_type()  # Construct mode object
-            for line in run_mode(mode, in_file):
+            for line in run_mode(mode, in_mod):
                 print(line, file=out_file_handle)
 
 
