@@ -3,19 +3,17 @@ from __future__ import annotations
 
 import operator
 import re
-from dataclasses import dataclass
 from pathlib import Path
-from subprocess import PIPE, CalledProcessError, run
-from typing import TYPE_CHECKING, ClassVar, Iterator, Optional, Union
+from typing import TYPE_CHECKING
 
 from techcable.pyinterp import PythonInterpreter
 
 from dotfiles.translate_shell.cache import Cache
 
-from .support.macapp import setup_app_alias
+from .support.macapp import AddSupportBins, AppAction, AppInfo
 
 if TYPE_CHECKING:
-    from typing import overload
+    from typing import Optional, Union
 
     from dotfiles.translate_shell.config_api import *
 
@@ -45,12 +43,34 @@ if haxe_std_path.is_dir():
 else:
     warning(f"Expected haxe stdlib: {haxe_std_path}")
 
-# Keybase path
-extend_path("/Applications/Keybase.app/Contents/SharedSupport/bin")
 
-for app_name in ["Keybase", "Sublime Text", "Texifier"]:
-    setup_app_alias(app_name, mode=_MODE_IMPL, cache=CACHE)
+APPS: dict[str, AppAction] = {
+    "Keybase": AddSupportBins(expected_bins=("keybase",)),
+    "Sublime Text": AddSupportBins(expected_bins=("subl",)),
+    "Texifier": AppAction.SETUP_ALIAS,
+}
+assert list(APPS.keys()) == sorted(APPS.keys()), "App keys should be sorted"
 
+# TODO: Sublime Text and Keybase seem to already have added themselves
+# to the path, making this code redundant.
+#
+# Sublime Text made a symlink from Sublime Text.app/.../subl => /usr/bin/subl
+# Keybase added an entry to /etc/paths.d
+
+
+def _analyse_all_apps():
+    for app_name, actions in APPS.items():
+        app_info = AppInfo.analyse(app_name, cache=CACHE, mode=_MODE_IMPL)
+        if isinstance(actions, AppAction):
+            action_list = [actions]
+        else:
+            raise TypeError
+        for action in action_list:
+            action.run(app_info)
+
+
+_analyse_all_apps()
+del _analyse_all_apps
 
 # pipx
 extend_path("~/.local/bin")  # path for pipx
