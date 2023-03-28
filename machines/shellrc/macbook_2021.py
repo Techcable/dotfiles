@@ -46,6 +46,7 @@ else:
 
 APPS: dict[str, AppAction] = {
     "Keybase": AddSupportBins(expected_bins=("keybase",)),
+    "Sublime Merge": AddSupportBins(expected_bins=("smerge",)),
     "Sublime Text": AddSupportBins(expected_bins=("subl",)),
     "Texifier": AppAction.SETUP_ALIAS,
 }
