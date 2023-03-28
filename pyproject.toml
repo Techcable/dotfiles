@@ -15,8 +15,24 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["src"]
 
-[tool.pyright]
-include = ["shellrc", "libs/python"]
-pythonVersion = "3.10"
-typeCheckingMode = "strict"
+[tool.ruff]
+line-length = 120
+src = ["src", "machines", "libs/python"]
+select = [
+    "F",
+    "E",
+]
+exclude = [
+    # ruff doesn't seem to check these right
+    "*.pyi"
+]
 
+[tool.ruff.per-file-ignores]
+"machines/shellrc/*.py" = [
+    # Permit `from {name} import *` in machine shellrc files
+    "F403",
+    # Permit undefined locals. When using star imports, ruff can't
+    # figure out defined names -_-
+    "F405",
+    "F821",
+]

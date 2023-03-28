@@ -4,7 +4,7 @@ import operator
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar, Iterable, Iterator, overload
+from typing import ClassVar, Iterator, overload
 
 from . import PlatformPath
 
@@ -72,8 +72,7 @@ class PythonInterpreter:
     def homebrew_interpreters() -> Iterator[PythonInterpreter]:
         """Detect (homebrew) python interpreters"""
         if sys.platform != "darwin":
-            raise OsError(f"Not on macos! plaltform={sys.platform}")
-            raise OSError("Unable to detect homebrew root!a")
+            raise OSError(f"Not on macos! plaltform={sys.platform}")
         name_prefix = PythonInterpreter.HOMEBREW_NAME_PREFIX
         for python_home in (PlatformPath.HOMEBREW_PREFIX.resolve() / "opt").glob(
             "python@3.*"

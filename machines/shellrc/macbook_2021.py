@@ -1,7 +1,6 @@
 # Configuration for my 2021 Macbook Pro
 from __future__ import annotations
 
-import operator
 import re
 from pathlib import Path
 from typing import TYPE_CHECKING

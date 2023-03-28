@@ -1,6 +1,5 @@
 """Default configuration shared across all machines"""
 import os
-import sys
 from pathlib import Path
 from subprocess import PIPE, CalledProcessError, run
 from typing import TYPE_CHECKING

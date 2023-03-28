@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import importlib
-import inspect
 import os
 import sys
 from collections.abc import Sequence
@@ -16,14 +15,11 @@ from typing import (
     Final,
     Iterator,
     Literal,
-    Optional,
-    TypeAlias,
     TypeVar,
     final,
 )
 
 if TYPE_CHECKING:
-    import types
     from itertools import chain
 
     # new in 3.11
@@ -116,7 +112,7 @@ class PlatformPath(Enum):
         res = os.getenv(self._env_var)
         if res is None:
             raise PlatformError(
-                "Missing expected environment variable {self._env.var} for {self}"
+                f"Missing expected environment variable {self._env_var} for {self}"
             )
         path = Path(res)
         self._cached_value = path  # type: ignore
@@ -171,7 +167,7 @@ def define_order(
             relaxed = strict
         assert not op_name.startswith("__")
         yield f"def {op_name}(self, other) -> bool:"
-        yield f"  if not isinstance(other, TargetType):"
+        yield "  if not isinstance(other, TargetType):"
         yield "     return NotImplemented"
         yield "  return ("
         for key in keys:

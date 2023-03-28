@@ -8,7 +8,7 @@ import re
 import sqlite3
 from abc import ABCMeta, abstractmethod
 from dataclasses import KW_ONLY, dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
 from typing import (
@@ -28,7 +28,9 @@ if TYPE_CHECKING:
 
     from typing_extensions import Self, override
 else:
-    override = lambda x: x
+    # NOTE: Hack used to emulate typing.override
+    def override(x):
+        return x
 
 
 try:
