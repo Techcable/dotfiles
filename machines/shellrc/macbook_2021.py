@@ -10,7 +10,9 @@ from typing import TYPE_CHECKING, ClassVar, Iterator, Optional, Union
 
 from techcable.pyinterp import PythonInterpreter
 
-from dotfiles.translate_shell.cache import Cache, CachedValue, RehashFilesChanged
+from dotfiles.translate_shell.cache import Cache
+
+from .support.macapp import setup_app_alias
 
 if TYPE_CHECKING:
     from typing import overload
@@ -46,51 +48,8 @@ else:
 # Keybase path
 extend_path("/Applications/Keybase.app/Contents/SharedSupport/bin")
 
-
-def setup_app_alias(app_name: str):
-    app_root = Path(f"/Applications/{app_name}.app")
-    if not app_root.is_dir():
-        warning(
-            f"Unable to find application {app_name}: Missing directory {app_root!r}"
-        )
-
-    # NOTE: Invoking a subprocess here is super slow
-    # We cache it to speed up startup.
-    def load_executable_name():
-        info_file = app_root / "Contents/Info.plist"
-        try:
-            value = run(
-                ["defaults", "read", str(info_file), "CFBundleExecutable"],
-                check=True,
-                stdout=PIPE,
-                encoding="utf8",
-            ).stdout.rstrip()
-        except CalledProcessError:
-            warning(f"Unable to detect executable name for {app_root!r}")
-            raise ConfigException
-        return CachedValue(
-            value=value, rehash=RehashFilesChanged.for_files([info_file])
-        )
-
-    executable_name = CACHE.get_or_load(
-        f"executable_name[{app_name}]", load_executable_name
-    )
-
-    support_bin_dir = app_root / "Contents/SharedSupport/bin"
-    main_bin_path = app_root / "Contents/MacOS" / executable_name
-    if not main_bin_path.is_file():
-        warning(f"Missing binary path for {app_name}: {main_bin_path!r}")
-    elif support_bin_dir.is_dir():
-        extend_path(support_bin_dir)
-    else:
-        alias(
-            executable_name.lower().replace("_", "-").replace(" ", "-"),
-            run_in_background_helper([str(main_bin_path)]),
-        )
-
-
 for app_name in ["Keybase", "Sublime Text", "Texifier"]:
-    setup_app_alias(app_name)
+    setup_app_alias(app_name, mode=_MODE_IMPL, cache=CACHE)
 
 
 # pipx

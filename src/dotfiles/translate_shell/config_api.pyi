@@ -41,6 +41,8 @@ extend_python_path = _MODE_IMPL.extend_python_path
 require_var_equals = _MODE_IMPL.require_var_equals
 
 __all__ = [
+    # HACK
+    "_MODE_IMPL",
     # exposed types
     "AppDir",
     "ConfigException",

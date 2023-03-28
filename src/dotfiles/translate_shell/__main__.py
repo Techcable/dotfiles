@@ -886,6 +886,8 @@ def run_mode(mode: Mode, module_name: str) -> list[str]:
         "AppDir": AppDir,
         "UnsupportedPlatformError": UnsupportedPlatformError,
         "which": which,
+        # TODO: This is a hack needed for support.macapp
+        "_MODE_IMPL": mode,
     }
     for attr_name in dir(Mode):
         if attr_name.startswith("_") or attr_name in Mode.AUTOEXPORT_EXCLUDE:
