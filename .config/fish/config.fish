@@ -91,10 +91,10 @@ function setup_extra_config
     end
     set -f shellrc_modules "common" "$(string replace --all '-' '_' -- $MACHINE_NAME)"
     set -f translated_config_dir (mktemp -d -t dotfiles)
-    set -f translate_args --mode fish --mod-path "$DOTFILES_PATH/machines/shellrc"
+    set -f translate_args --mode fish --mod-path "$DOTFILES_PATH/machines"
     for rcmod in $shellrc_modules
         set -f --append translated_config_files "$translated_config_dir/$(basename $rcmod)"
-        set -f --append translate_args -m $rcmod --out $translated_config_files[-1]
+        set -f --append translate_args -m shellrc.$rcmod --out $translated_config_files[-1]
     end
     $DOTFILES_PATH/translate_shell_config $translate_args;
     if test $status -ne 0;

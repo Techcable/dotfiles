@@ -210,9 +210,9 @@ else
     fi
     local translated_config_dir="$(mktemp -d)"
     local translated_configs=()
-    local args=(--mode zsh --mod-path "$dotfiles/machines/shellrc");
+    local args=(--mode zsh --mod-path "$dotfiles/machines");
     for config_mod in "common" "${MACHINE_NAME:gs/-/_/}"; do
-        args+=(--module $config_mod)
+        args+=(--module shellrc.$config_mod)
         translated_configs+=("$translated_config_dir/$config_mod")
         args+=(--out "${translated_configs[-1]}")
     done

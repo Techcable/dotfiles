@@ -893,8 +893,6 @@ def run_mode(mode: Mode, module_name: str) -> list[str]:
         context[attr_name] = getattr(mode, attr_name)
     # stdout is only for translation output, not messages
     with redirect_stdout(sys.stderr):
-        if (shellrc_path := str(DOTFILES_PATH / "shellrc")) not in sys.path:
-            sys.path.append(shellrc_path)
         with mode.with_state() as state:
             runpy.run_module(
                 module_name,
