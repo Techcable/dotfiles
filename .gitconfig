@@ -30,6 +30,7 @@
     root = rev-parse --show-toplevel
     difft = difftool --tool=difftastic
     kdiff = difftool --tool=kitty
+	diffs = diff --staged
 [difftool]
     prompt = false
     trustExitCode = true
