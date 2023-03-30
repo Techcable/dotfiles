@@ -1,0 +1,8 @@
+# RFC #2798 -- Use sparse index, which is both faster and lighter
+#
+# Tracking issue: - https://github.com/rust-lang/cargo/issues/9069
+# Stabilized in Rust 1.68
+#
+# This will become the default in Rust 1.70
+[registries.crates-io]
+protocol = 'sparse'
