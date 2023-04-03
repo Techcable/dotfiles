@@ -4,7 +4,7 @@ lint: mypy format-check ruff
 
 mypy:
     # Type Checking
-    mypy
+    mypy --enable-incomplete-feature=Unpack
 
 format: _format_py
 format-check: (_format_py "--check")

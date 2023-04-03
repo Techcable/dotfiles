@@ -32,36 +32,6 @@ from typing import (
 from typing import get_args as get_type_args
 from typing import get_origin as get_type_origin
 
-SupportedColor: TypeAlias = Literal[
-    # Matches _ANSI_COLOR_NAMES
-    "black",
-    "red",
-    "green",
-    "yellow",
-    "blue",
-    "magenta",
-    "cyan",
-    "white",
-    # Special marker value
-    "reset",
-]
-
-if TYPE_CHECKING:
-    from typing import TypedDict
-
-    # TODO: This is pointless now because we can't type kwargs...
-    class FmtFlags(TypedDict, total=False):
-        fg: bool
-        foreground: bool
-        bg: bool
-        background: bool
-        bold: bool
-        italics: bool
-        underline: bool
-
-    class FmtInfo(TypedDict, total=False):
-        color: SupportedColor
-
 
 @functools.total_ordering  # TODO: Switch to my wrapper instead
 class LogLevel(Enum):
@@ -225,60 +195,8 @@ class Mode(metaclass=ABCMeta):
         return Mode.set_color("reset")
 
     @staticmethod
-    def set_color(color: Optional[SupportedColor], **kwargs: bool) -> str:
-        """
-        Emits ANSI color codes to set the terminal color
-
-        Tries to be consistent with click.style
-        and fish set_style
-
-        Valid keyword arguments optio:
-        bold - Sets bold color
-        [...] - others
-        fg, foreground - Sets the foreground color (implied by deafault)
-        bg, background - Sets the background color
-        """
-
-        def check_flag(*names: str, default=False) -> bool:
-            for name in names:
-                if name not in kwargs:
-                    continue
-                val = kwargs[name]
-                if type(val) is not bool:
-                    raise TypeError(f"for {name!r}: {val!r}")
-                return val  # type: ignore
-            return default
-
-        # https://talyian.github.io/ansicolors/
-        # https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_(Select_Graphic_Rendition)_parameters
-        parts = []
-        foreground = True  # on by default
-        if check_flag("bg", "background"):
-            foreground = False
-        if check_flag("fg", "foreground"):
-            assert foreground, "Background flag is incompatible with foreground"
-        # Handle color
-        if color is None:
-            pass
-        elif "reset" == color:
-            assert len(kwargs) == 0, "All other flags are incompatible with `reset`"
-            parts.append(0)
-        else:
-            try:
-                offset = _ANSI_COLOR_NAMES.index(color)
-            except ValueError:
-                raise ValueError(f"Unknown color name: {color!r}") from None
-            parts.append((30 if foreground else 40) + offset)
-        # misc attributes
-        if check_flag("bold"):
-            parts.append(1)
-        if check_flag("italics"):
-            parts.append(3)
-        if check_flag("underline"):
-            parts.append(4)
-        if parts is None:
-            raise ValueError("No formatting specified!")
-        return "\x1b[" + ";".join(map(str, parts)) + "m"
+    def set_color(color: Optional[SupportedColor], **kwargs: Unpack[FmtFlags]) -> str:
+        raise NotImplementedError
 
     @final
     def exec_cmd(self, command: str, *args: ShellValue):
@@ -913,10 +831,16 @@ def run_mode(mode: Mode, module_name: str) -> list[str]:
         for line in cleanup.splitlines():
             mode._write(line)
     return mode._output
+a
+def error(msg: str) -> NoReturn:
+    enable_color: bool = sys.stderr.isatty()
+    prefix: str = Mode.set_color("red", bold=True) if enable_color else ""
+    suffix: str = Mode.reset_color() if enable_color else ""
+    print(f"{prefix}ERROR:{suffix}", msg, file=sys.stderr)
+    sys.exit(1)
 
-
-def main():
-    remaining_args = sys.argv[1:]
+def main(initial_args: list[str]) -> None:
+    remaining_args: list[str] = initial_args.copy()
 
     def consume_arg(*, amount: Optional[int] = None) -> str | list[str]:
         if amount is None:
@@ -930,8 +854,7 @@ def main():
         try:
             return remaining_args[1]
         except IndexError:
-            print(f"Expected an argument to {flag_name} flag", file=sys.stderr)
-            sys.exit(1)
+            error(f"Expected an argument to {flag_name} flag")
 
     mode_type = None
     in_modules = []
@@ -943,21 +866,18 @@ def main():
                 break  # Done processing flags
             case "--mode":
                 if mode_type is not None:
-                    print("Cannot specify --mode twice", file=sys.stderr)
-                    sys.exit(1)
+                    error("Cannot specify --mode twice")
                 mode_name = require_arg("--mode")
                 try:
                     mode_type = _VALID_MODES[mode_name]
                 except KeyError:
-                    print(f"Invalid mode: {mode_name}", file=sys.stderr)
-                    sys.exit(1)
+                    error(f"Invalid mode: {mode_name}")
                 else:
                     consume_arg(amount=2)
             case "--mod-path":
                 mod_path = Path(require_arg("--mod-path"))
                 if not mod_path.is_dir():
-                    print(f"ERROR: Missing module path: {mod_path}", file=sys.stderr)
-                    sys.exit(1)
+                    error(f"ERROR: Missing module path: {mod_path}")
                 if str(mod_path) not in sys.path:
                     sys.path.append(str(mod_path))
                 consume_arg(amount=2)
@@ -967,7 +887,7 @@ def main():
                     print(
                         "".join(
                             (
-                                Mode.set_color("fellow"),
+                                Mode.set_color("yellow"),
                                 "WARNING",
                                 Mode.reset_color(),
                                 ":",
@@ -1012,4 +932,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])

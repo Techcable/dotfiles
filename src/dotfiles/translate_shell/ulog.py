@@ -1,0 +1,1 @@
+"""Implements a 'micro-logger'"""
