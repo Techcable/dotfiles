@@ -34,6 +34,9 @@ The `.temp` suffix isn't very helpful, but reminds us of the desire to improve.
 Ideas for improving the dotfiels system.
 
 .Easy
+* Move more bootstrap logic to python
+  ** Re-enable tempfile naming (disabled in hack-commit `8d569a8bf`)
+  ** Use template name (disabled)
 * Give warning when using `mamba` python (see deleted conda `changeps1` option)
 * Refactor code to seperate from config
 * Enable `ruff` linter to automatically run
