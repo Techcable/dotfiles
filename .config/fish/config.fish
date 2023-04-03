@@ -90,7 +90,8 @@ function setup_extra_config
         set --global --export MACHINE_NAME $machine_name
     end
     set -f shellrc_modules "common" "$(string replace --all '-' '_' -- $MACHINE_NAME)"
-    set -f translated_config_dir (mktemp -d -t dotfiles)
+    # TODO: Was `mktemp -d -t dotfiles`, but this broke on Asahi Linux
+    set -f translated_config_dir (mktemp -d)
     set -f translate_args --mode fish --mod-path "$DOTFILES_PATH/machines"
     for rcmod in $shellrc_modules
         set -f --append translated_config_files "$translated_config_dir/$(basename $rcmod)"
