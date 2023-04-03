@@ -16,5 +16,17 @@ set cp ideaput
 set showmode "MODE:"
 " Smart join command, perfomed using IntelliJ magic
 :set ideajoin
-" Usse "easymotion"
+
+" Use IdeaVim-EasyMotion: https://github.com/AlexPl292/IdeaVim-EasyMotion
 set easymotion
+
+" Use IdeaVim-Sneak: https://plugins.jetbrains.com/plugin/15348-ideavim-sneak
+" Port of vim-sneak: https://github.com/justinmk/vim-sneak
+set sneak
+
+" Use IdeaVim-QuickScope: https://plugins.jetbrains.com/plugin/19417-ideavim-quickscope
+" Port of quick-scope: https://github.com/unblevable/quick-scope
+"
+" Must come after `set sneak`
+set quickscope
+
