@@ -30,3 +30,7 @@ set sneak
 " Must come after `set sneak`
 set quickscope
 
+" Use Which-Key plugin: https://plugins.jetbrains.com/plugin/15976-which-key
+" Port of vim-which-key: https://github.com/liuchengxu/vim-which-key
+set which-key
+
