@@ -8,20 +8,9 @@ from collections.abc import Sequence
 from dataclasses import is_dataclass
 from enum import Enum
 from pathlib import Path
-from typing import (
-    TYPE_CHECKING,
-    Callable,
-    ClassVar,
-    Final,
-    Iterator,
-    Literal,
-    TypeVar,
-    final,
-)
+from typing import TYPE_CHECKING, Callable, Iterator, TypeVar
 
 if TYPE_CHECKING:
-    from itertools import chain
-
     # new in 3.11
     from typing_extensions import dataclass_transform
 else:
@@ -37,46 +26,13 @@ __all__ = (
     "define_order",
     "MISSING",
     "Missing",
-    "MissingOrNone",
 )
 
-if TYPE_CHECKING:
-    # TYPE_CHECKING needs Enum so that we can use typing.Literal
-    _MissingBase = Enum
-else:
-    _MissingBase = object
+if __debug__:
+    from . import _missing
 
-
-@final
-class Missing(_MissingBase):
-    """The type of the singleton `techcable.MISSING` value`"""
-
-    if TYPE_CHECKING:
-        VALUE = None
-    else:
-        VALUE: ClassVar[Missing]
-        """An alias for techcable.MISSING"""
-
-    def __new__(cls):
-        global MISSING
-        raise TypeError("Unable to create new instanes of {MISSING}")
-
-    def __repr__(self):
-        return "techcable.MISSING"
-
-    def __str__(self):
-        return f"{self!r} (marker value)"
-
-    def __bool__(self) -> Literal[False]:
-        return False
-
-
-if not TYPE_CHECKING:
-    Missing.VALUE = object.__new__(Missing)
-
-# Need typing.Literal so we can have `val is not MISSING`
-MISSING: Final[Literal[Missing.VALUE]] = Missing.VALUE
-"""Marker value for missing values"""
+    assert _missing.__all__ == ("MISSING", "Missing")
+from ._missing import MISSING, Missing
 
 
 # TODO: Move to seperate module

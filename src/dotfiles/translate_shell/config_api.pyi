@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
+from typing import Final
 
 from .__main__ import (
+    AliasWrapsSetting,
     AppDir,
     ConfigException,
     Mode,
@@ -17,6 +18,8 @@ SHELL_BACKEND: str
 DOTFILES_PATH: Path
 PLATFORM: Platform
 _MODE_IMPL: Mode
+ALIAS_WRAPS_UPDATED: Final[AliasWrapsSetting]
+ALIAS_WRAPS_ORIGINAL: Final[AliasWrapsSetting]
 
 reset_color = _MODE_IMPL.reset_color
 set_color = _MODE_IMPL.set_color
@@ -41,8 +44,6 @@ extend_python_path = _MODE_IMPL.extend_python_path
 require_var_equals = _MODE_IMPL.require_var_equals
 
 __all__ = [
-    # HACK
-    "_MODE_IMPL",
     # exposed types
     "AppDir",
     "ConfigException",
@@ -52,6 +53,8 @@ __all__ = [
     # our public API
     "SHELL_BACKEND",
     "DOTFILES_PATH",
+    "ALIAS_WRAPS_UPDATED",
+    "ALIAS_WRAPS_ORIGINAL",
     "PLATFORM",
     "which",
     "reset_color",

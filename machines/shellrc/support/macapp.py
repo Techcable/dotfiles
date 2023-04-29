@@ -78,6 +78,7 @@ class AppInfo:
         self._mode.alias(
             self.executable_name.lower().replace("_", "-").replace(" ", "-"),
             self._mode.run_in_background_helper([str(self.main_bin_path)]),
+            wraps=None,
         )
 
     if TYPE_CHECKING:

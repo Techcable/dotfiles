@@ -193,8 +193,8 @@ detect_keg("llvm", order=PathOrderSpec.APPEND_SYSTEM)
 #
 # See here: https://discussions.apple.com/thread/309193 for suggestion
 # Also "Rosetta stone for Unixes"
-alias("ldd", "echo 'Using otool -L' && otool -L")
+alias("ldd", "echo 'Using otool -L' && otool -L", wraps="otool -L")
 
 if which("pacaptr") is not None:
-    # alias pacaptr
-    alias("pacman", "pacaptr")
+    # alias pacman=pacaptr
+    alias("pacman", "pacaptr", wraps=ALIAS_WRAPS_UPDATED)

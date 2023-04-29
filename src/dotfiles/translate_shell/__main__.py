@@ -22,6 +22,7 @@ from typing import (
     TYPE_CHECKING,
     Any,
     ClassVar,
+    Final,
     Iterator,
     Literal,
     Optional,
@@ -31,6 +32,15 @@ from typing import (
 )
 from typing import get_args as get_type_args
 from typing import get_origin as get_type_origin
+
+# TODO: Once requiring 3.11 we can remove this
+if TYPE_CHECKING:
+    from typing_extensions import assert_never
+else:
+
+    def assert_never(val):
+        raise AssertionError
+
 
 SupportedColor: TypeAlias = Literal[
     # Matches _ANSI_COLOR_NAMES
@@ -114,7 +124,25 @@ class VarAccess:
         return f"${self.name}"
 
 
-ShellValue = Union[Path, str, int, VarAccess, list["ShellValue"]]
+# TODO: why is list[ShellValue] permitted here?
+StaticShellValue: TypeAlias = Path | str | int | list["StaticShellValue"]
+ShellValue: TypeAlias = StaticShellValue | VarAccess | list["ShellValue"]
+
+
+def resolve_static_shell_value(value: ShellValue) -> str:
+    match value:
+        case Path() | str(_) | int(_):
+            return str(value)
+        case VarAccess():
+            raise TypeError(f"Cannot resolve a variable access statically: {value!r}")
+        case list(_) as elements:
+            return " ".join(resolve_static_shell_value(val) for val in elements)
+        case _ as unreachable:
+            if TYPE_CHECKING:
+                assert_never(unreachable)
+            else:
+                raise TypeError(f"Expected a ShellValue: {unreachable!r}")
+
 
 _ANSI_COLOR_NAMES = (
     "black",
@@ -190,6 +218,21 @@ class _Scope(Enum):
 @dataclass
 class ModeState:
     added_python_paths: list[Path] = field(default_factory=list)
+
+
+class _AliasSpecialWraps(Enum):
+    UPDATED = "updated"
+    """Set to the updated command name"""
+    ORIGINAL = "original"
+    """Set to the original command name"""
+
+
+AliasWrapsSetting: TypeAlias = str | _AliasSpecialWraps | None
+"""
+When defining a command alias, sets the "wraps" property.
+
+Used primarily for the fish shell.
+"""
 
 
 class Mode(metaclass=ABCMeta):
@@ -389,8 +432,18 @@ class Mode(metaclass=ABCMeta):
     def export(self, name: str, value: ShellValue):
         self._assign(name, value, scope=_Scope.EXPORT, export=True)
 
-    @final
-    def alias(self, name: str, value: ShellValue):
+    ALIAS_WRAPS_UPDATED: Final[AliasWrapsSetting] = _AliasSpecialWraps.UPDATED
+    ALIAS_WRAPS_ORIGINAL: Final[AliasWrapsSetting] = _AliasSpecialWraps.ORIGINAL
+
+    def alias(
+        self,
+        name: str,
+        value: ShellValue,
+        *,
+        wraps: AliasWrapsSetting,
+        desc: str | None = None,
+    ):
+        _ = wraps, desc  # By default, just ignored
         self._assign(name, value, scope=_Scope.ALIAS, export=True)
 
     _REQUIRE_VAR_EQUALS_ERRMSG: ClassVar[
@@ -483,7 +536,7 @@ class Mode(metaclass=ABCMeta):
     #
     # This is in addition to those starting with _
     AUTOEXPORT_EXCLUDE: ClassVar[set[str]] = {
-        "EXCLUDED_NAMES",
+        "AUTOEXPORT_EXCLUDE",
         "require_state",
         "with_state",
     }
@@ -734,8 +787,7 @@ class FishMode(Mode):
                 assert self._block_level > 0
                 set_scope = "--local"
             case _Scope.ALIAS:
-                self._write(f"alias {name}={value}")
-                return  # break early
+                raise ValueError("Should not be reachable! (handled in assign)")
         if set_scope is None:
             raise AssertionError
         flags = [set_scope]
@@ -744,6 +796,62 @@ class FishMode(Mode):
         elif scope != _Scope.LOCAL:
             raise NotImplementedError
         self._write("set", *flags, name, value)
+
+    def alias(
+        self,
+        name: str,
+        value: ShellValue,
+        *,
+        wraps: AliasWrapsSetting,
+        desc: str | None = None,
+    ):
+        wraps_cmd: str | None
+        match wraps:
+            case None:
+                wraps_cmd = None
+            case _AliasSpecialWraps.ORIGINAL:
+                wraps_cmd = name
+            case _AliasSpecialWraps.UPDATED:
+                wraps_cmd = resolve_static_shell_value(value)
+            case str(specific_wraps_val):
+                wraps_cmd = specific_wraps_val
+            case _ as unreachable:
+                if TYPE_CHECKING:
+                    assert_never(unreachable)
+                raise TypeError
+        # infer a description
+        if desc is None:
+
+            def is_allowed_complexity(inferred_desc: str) -> bool:
+                for forbidden in ("\n", "&&"):
+                    if forbidden in inferred_desc:
+                        return False
+                return len(inferred_desc) < 40
+
+            inferred_descriptions: list[str] = []
+            if wraps_cmd is not None:
+                inferred_descriptions.append(f"alias {name} wraps {wraps_cmd}")
+            inferred_descriptions.append(f"alias {name}={self._quote(value)}")
+            for inferred_desc in inferred_descriptions:
+                if is_allowed_complexity(inferred_desc):
+                    desc = inferred_desc
+                    assert desc is not None
+            # the inferred descriptions were complex
+            if desc is None:
+                desc = f"alias for {name} (very complex definition)"
+        # flags to the `function` command
+        flags: list[str] = [f"--description {self._quote(desc)}"]
+        if wraps_cmd is not None:
+            flags.append(f"--wraps {self._quote(wraps_cmd)}")
+        # define the actual alias
+        definition_lines = [f"function {name}"]
+        indent = " " * 4
+        for flag in flags:
+            definition_lines[-1] += " \\"
+            definition_lines.append(indent * 2 + flag)
+        definition_lines.extend((f"{indent}{value} $argv", "end"))
+        for line in definition_lines:
+            self._write(line)
 
     def require_var_equals(self, name: str, value: ShellValue):
         self._write(f'if test "${name}" != {self._quote(value)};')

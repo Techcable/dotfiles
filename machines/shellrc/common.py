@@ -57,37 +57,38 @@ export("PIP_RUN_MODE", "persist")
 # TODO: Is this redundant with kitty's new shell integration?
 # https://sw.kovidgoyal.net/kitty/shell-integration/
 if os.getenv("TERM") == "xterm-kitty":
-    alias("icat", "kitty +kitten icat")
-    alias("diff", "kitty +kitten diff")
+    alias("icat", "kitty +kitten icat", wraps=ALIAS_WRAPS_UPDATED)
+    alias("diff", "kitty +kitten diff", wraps=ALIAS_WRAPS_UPDATED)
 
     # Need to fix ssh for kitty
-    alias("ssh", "kitty +kitten ssh")
+    alias("ssh", "kitty +kitten ssh", wraps=ALIAS_WRAPS_UPDATED)
 
 # Alias ranger -> r for easier access
 if which("ranger"):
-    alias("r", "ranger")
+    alias("r", "ranger", wraps=ALIAS_WRAPS_UPDATED)
 else:
     warning("The 'ranger' file manager is not installed")
 
 # NOTE: The `which` command doesn't update with path :/
 # which("betterstat"):
 
-alias("stat", "betterstat")
+# NOTE: Just use wraps=stat for now...
+alias("stat", "betterstat", wraps="stat")
 
 # Prefer lsd to ls
 #
 # We used to use `exa`,
 # but that is now second priority
 if which("lsd"):
-    alias("ls", "lsd")
-    alias("lsa", "lsd -A")
+    alias("ls", "lsd", wraps=ALIAS_WRAPS_UPDATED)
+    alias("lsa", "lsd -A", wraps=ALIAS_WRAPS_UPDATED)
 
     # Shortcuts for seeing sizes
-    alias("lsds", "lsd -A --blocks size,name")
-    alias("lsdl", "lsd -A --long")
+    alias("lsds", "lsd -A --blocks size,name", wraps=ALIAS_WRAPS_UPDATED)
+    alias("lsdl", "lsd -A --long", wraps=ALIAS_WRAPS_UPDATED)
 
     # Override tree command with `lsd --tree` (more consistent)
-    alias("tree", "lsd --tree")
+    alias("tree", "lsd --tree", wraps=ALIAS_WRAPS_UPDATED)
 elif which("exa"):
     warning("Missing lsd (but has `exa` installed)")
 else:
@@ -130,7 +131,7 @@ def fixup_stacked_git(*, ignore_missing_command: bool = False):
     elif not os.access(helper_path, mode=os.X_OK):
         warning(f"Helper script {helper_name!r} is not executable")
     else:
-        alias("stg", "_stg_hacky_fixup.sh")
+        alias("stg", "_stg_hacky_fixup.sh", wraps=ALIAS_WRAPS_ORIGINAL)
 
 
 fixup_stacked_git(ignore_missing_command=True)
@@ -143,6 +144,7 @@ if real_bpytop := which("bpytop"):
         alias(
             "bpytop",
             f'{real_bpytop}; echo "{set_color("yellow", bold=True)}NOTE{reset_color()}: Please consider using btop"',
+            wraps=ALIAS_WRAPS_ORIGINAL,
         )
     else:
         warning("bpytop is installed, but not btop")
