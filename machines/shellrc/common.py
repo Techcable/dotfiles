@@ -85,6 +85,9 @@ if which("lsd"):
     # Shortcuts for seeing sizes
     alias("lsds", "lsd -A --blocks size,name")
     alias("lsdl", "lsd -A --long")
+
+    # Override tree command with `lsd --tree` (more consistent)
+    alias("tree", "lsd --tree")
 elif which("exa"):
     warning("Missing lsd (but has `exa` installed)")
 else:
