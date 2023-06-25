@@ -61,7 +61,10 @@ if os.getenv("TERM") == "xterm-kitty":
     alias("diff", "kitty +kitten diff", wraps=ALIAS_WRAPS_UPDATED)
 
     # Need to fix ssh for kitty
-    alias("ssh", "kitty +kitten ssh", wraps=ALIAS_WRAPS_UPDATED)
+    #
+    # NOTE: Do *not* use kitty for regular ssh
+    #
+    alias("kitty-ssh", "kitty +kitten ssh", wraps=ALIAS_WRAPS_UPDATED)
 
 # Alias ranger -> r for easier access
 if which("ranger"):
