@@ -14,6 +14,9 @@ try:
 except KeyError:
     warning("Missing $DOTFILES_PATH environment variable")
 
+# Remove old sqlite cache
+Path(Path.home(), ".cache/techcable/dotfiles/cache.sqlite").unlink(missing_ok=True)
+
 # Rust binaries
 #
 # NOTE: This contains almost all the binaries in ~/.rustup/toolchain/<default toolchain>/bin
