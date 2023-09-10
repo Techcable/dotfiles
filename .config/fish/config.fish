@@ -1,6 +1,7 @@
-# NOTE: I really like this fish thing.
+# Fish is my primary shell for interactive use
 #
-# I should look into it in case xonsh falls flat :)
+# I have stopped using xonsh pretty much at all,
+# and only use zsh on my RamNode server.
 
 function debug
     return; # Skip debug
