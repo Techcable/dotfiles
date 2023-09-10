@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from dotfiles.translate_shell.config_api import *
 
+# NOTE: MUST STAY IN SYNC WITH `common.fish`
+
 try:
     assert DOTFILES_PATH == Path(os.environ["DOTFILES_PATH"])
 except KeyError:
