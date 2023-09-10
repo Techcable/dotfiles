@@ -2,6 +2,13 @@
 #
 # I should look into it in case xonsh falls flat :)
 
+function debug
+    set_color --bold green
+    echo -n "DEBUG: "
+    set_color normal
+    echo $argv
+end
+
 function warning
     set_color --bold yellow
     echo -n "WARNING: "
@@ -70,6 +77,8 @@ end
 
 set -gx DOTFILES_PATH $HOME/git/dotfiles
 
+source $DOTFILES_PATH/machines/shellrc/common.fish
+
 function setup_extra_config
     if ! test -d $DOTFILES_PATH
         warning "Unable to load configuration (missing dotfiles)"
@@ -89,7 +98,27 @@ function setup_extra_config
         end
         set --global --export MACHINE_NAME $machine_name
     end
-    set -f shellrc_modules "common" "$(string replace --all '-' '_' -- $MACHINE_NAME)"
+
+    # NOTE: Skip the 'common' shellrc module, unconditionally executed above
+    set -f shellrc_modules
+
+    begin
+        set --local machine_shellrc_name "$(string replace --all '-' '_' -- $MACHINE_NAME)"
+        set --local machine_shellrc_fish_config "$DOTFILES_PATH/machines/shellrc/$machine_shellrc_name.fish"
+        if test -f "$machine_shellrc_fish_config"
+            debug "Directly executing config: $machine_shellrc_fish_config"
+            source $machine_shellrc_fish_config; or return
+        else
+            debug "Using python module for $machine_shellrc_name"
+            set -fa shellrc_modules "$machine_shellrc_name"
+        end
+    end
+
+    if test $(count $shellrc_modules) -eq 0
+        debug "Skipping python translation step"
+        return 0
+    end
+
     # TODO: Was `mktemp -d -t dotfiles`, but this broke on Asahi Linux
     set -f translated_config_dir (mktemp -d)
     set -f translate_args --mode fish --mod-path "$DOTFILES_PATH/machines"
@@ -129,7 +158,7 @@ if status is-interactive
 
     # Search only for prefix, not whole word
     #
-    # Thanks to @faho for pointing this out on Gitter 
+    # Thanks to @faho for pointing this out on Gitter
     bind \e\[A history-prefix-search-backward
     bind \e\[B history-prefix-search-forward
 
