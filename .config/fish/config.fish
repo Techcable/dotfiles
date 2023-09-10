@@ -3,6 +3,7 @@
 # I should look into it in case xonsh falls flat :)
 
 function debug
+    return; # Skip debug
     set_color --bold green
     echo -n "DEBUG: "
     set_color normal
