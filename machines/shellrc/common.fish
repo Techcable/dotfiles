@@ -104,48 +104,6 @@ else
     warning "Cannot find lsd or exa"
 end
 
-# TODO: Figure out if this is actually necessary anymore
-#
-# I was having problems with the signature using the old
-# console-based pinentry instead of the fancy one from MacGPG
-#
-# Eventually, the broken GPG infected regular git as well.
-# Turns out there was a bad gpg agent and killing it fixed it.
-#
-# Maybe now GPG signing the STG commits won't cause bugs?
-# Although singing isn't really necessary, this hack is ugly.
-function _fixup_stacked_git
-    if not command --query "stg"
-        warning "Unable to find `stg` command (Stacked git)"
-        return 1
-    end
-    set --local stg_version $(stg --version)
-    if test $status -ne 0
-        warning "Failed to query `stg` version"
-        return 1
-    else if not echo $stg_version | grep --quiet --ignore-case --fixed-strings "stacked git"
-        warning "Expected `stg` to refer to Stacked Git"
-        return 1
-    end
-
-    # Override `stg` to refer to ./scripts/_stg_hacky_fixup.py
-    #
-    # This sets the needed git config variables
-    set --local helper_name "_stg_hacky_fixup.sh"
-    set --local helper_path "$DOTFILES_PATH/scripts/$helper_name"
-
-    if not test -x $helper_path
-        warning "Helper script $helper_name either not executable, or missing from `scripts`"
-    else
-        function stg --wraps "stg"
-            _stg_hacky_fixup.sh $argv
-        end
-    end
-end
-
-_fixup_stacked_git
-set --erase _fixup_stacked_git
-
 # Warn on usage of bpytop
 if command --query "bpytop"
     set --local real_bpytop $(command --search "bpytop")
