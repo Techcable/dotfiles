@@ -202,24 +202,7 @@ elif ! which taplo >/dev/null 2>&1; then
     warning "Missing required dependency `taplo`"
     echo "  dotfiles will not be loaded"
 else
-    export DOTFILES_PATH="$dotfiles";
-    local dotfiles_bootstrap_config="$HOME/.dotfiles/bootstrap-config.toml";
-    export MACHINE_NAME="$(taplo get --file-path $dotfiles_bootstrap_config ".bootstrap.machine-name")";
-    if test -z "$MACHINE_NAME"; then
-        warning "Unable to resolve machine name: $MACHINE_NAME";
-    fi
-    local translated_config_dir="$(mktemp -d)"
-    local translated_configs=()
-    local args=(--mode zsh --mod-path "$dotfiles/machines");
-    for config_mod in "common" "${MACHINE_NAME:gs/-/_/}"; do
-        args+=(--module shellrc.$config_mod)
-        translated_configs+=("$translated_config_dir/$config_mod")
-        args+=(--out "${translated_configs[-1]}")
-    done
-    $dotfiles/translate_shell_config "${args[@]}"
-    for translated in "${translated_configs[@]}"; do
-        source "$translated"
-    done
+    warning "Loading machine-specific config currently only supports fish (not zsh)"
 fi
 
 

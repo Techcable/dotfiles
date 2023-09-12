@@ -61,71 +61,7 @@ if (dotfiles_path := Path.home() / "git/dotfiles").is_dir():
 else:
     dotfiles_path = None
 
-# Load extra path information from ~/.shell-config.py
-def load_extra_config():
-    import tempfile, shutil
-    if dotfiles_path is None:
-        warning("Unable to load configuration (missing DOTFILES)")
-        return
-
-    if not shutil.which("taplo"):
-        warning("Missing required command `taplo`, can't load dotfiles")
-
-    bootstrap_config_file = p"$HOME/.dotfiles/bootstrap-config.toml"
-
-    if not bootstrap_config_file.is_file():
-        warning("Missing bootstrap config file, can't load dotfiles")
-
-    $MACHINE_NAME=$(taplo get --file-path @(bootstrap_config_file) ".bootstrap.machine-name").rstrip()
-
-    config_names = ["common", $MACHINE_NAME.replace('-', '_')]
-    def extend_path(value, var="PATH", *, order=None):
-        assert not var.startswith('$') and var.endswith('PATH'), f"Not a path variable: {var!r}"
-        assert isinstance(value, str), f"Unexpected path value: {value!r}"
-        if not Path(value).exists():
-            warning(f"Path doesn't exist {value!r} (ignoring)")
-            return
-        try:
-            path = __xonsh__.env[var]
-        except KeyError:
-            # Initialize new path variable
-            __xonsh__.env[var] = type($PATH)([value])
-            return # No need to check
-        if order is not None and order.endswith(system_suffix := "-system"):
-            todo(f"Implement distinction between regular and 'system' order: {order!r}")
-            order = order[:-len(system_suffix)]
-        if str(value) not in path and value not in path:
-            match order:
-                # NOTE: `append` is the default
-                case 'append' | None:
-                    path.append(value)
-                case 'prepend':
-                    path.insert(0, value)
-                case _:
-                    warning(f"Unknown order {order}")
-
-    extra_builtins={
-        'extend_path': (extend_path),
-        'warning': warning
-    }
-    translation_script = dotfiles_path / "translate_shell_config"
-    $DOTFILES_PATH=dotfiles_path
-    with tempfile.TemporaryDirectory() as dir:
-        translated_config_files = []
-        args = ["--mode", "xonsh", "--mod-path", "machines"]
-        for mod_name in config_names:
-            translated_config = Path(dir) / mod_name
-            args.extend(("--module", f"shellrc.{mod_name}", "--out", translated_config))
-        # Run translation as subprocess to inherit updated $PATH variable
-        @(translation_script) @(args)
-    for translated_config_file in translated_config_files:
-        with open(translated_config_file, 'rt') as f:
-            translated_config = f.read()
-        # Execute translated code
-        execx(translated_config,  mode='exec', locs={}, glbs=extra_builtins)
-
-load_extra_config()
-del load_extra_config  # should never need to use again
+warning("Loading machine-specific config currently only supports fish (not xonsh)")
 
 def get_by_key(data: dict, key: str, default=None):
     assert isinstance(key, str)
@@ -308,7 +244,7 @@ def should_skip_startup_message(msg_id: str) -> bool:
 # This is zero-cost since we use btrfs
 #
 # NOTE: This is now unnecessary due to cp version >=.
-# 
+#
 # NOTE: See also analogue in ~/.zshrc
 #
 # cp_version=tuple(map(int, $(cp --version | rg r'cp .* (\d+\.\d+)' -r '$1').strip().split('.')))
