@@ -16,9 +16,9 @@ end
 # Rust binaries
 #
 # NOTE: This contains almost all the binaries in ~/.rustup/toolchain/<default toolchain>/bin
-fish_add_path --global --append "~/.cargo/bin"
+fish_add_path --global --append ~/.cargo/bin
 # My private bin ($HOME/bin)
-fish_add_path --global "~/bin"
+fish_add_path --global ~/bin
 
 # add dotfiles scripts directory
 #
