@@ -79,69 +79,36 @@ end
 
 set -gx DOTFILES_PATH $HOME/git/dotfiles
 
-source $DOTFILES_PATH/machines/shellrc/common.fish
-
-function setup_extra_config
-    if ! test -d $DOTFILES_PATH
-        warning "Unable to load configuration (missing dotfiles)"
-        return 1;
+if not test -d "$DOTFILES_PATH"
+   warning "Unable to load configuration (missing dotfiles)"
+else
+    set --local shellrc_dir "$DOTFILES_PATH/machines/shellrc"
+    set --local common_config_file "$shellrc_dir/common.fish"
+    if test -f $common_config_file
+        source $common_config_file
+        or warning "Failed to evaluate common config: $common_config_file"
+    else
+        warning "Unable to find common config: `$common_config`"
     end
-    require_command "taplo"; or return;
-    set DOTFILES_BOOTSTRAP_CONFIG ~/.dotfiles/bootstrap-config.toml
-    if not test -f $DOTFILES_BOOTSTRAP_CONFIG
-        warning "Unable to find dotfiles bootstrap config: $(string replace $HOME '~' $DOTFILES_BOOTSTRAP_CONFIG)"
-        return 1;
-    end
-    begin
-        set -l machine_name $(taplo get --file-path $DOTFILES_BOOTSTRAP_CONFIG .bootstrap.machine-name)
-        if test \( $pipestatus[1] -ne 0 \) -o \( -z "$(string trim $machine_name)" \); then
-            warning "Unable to read \$MACHINE_NAME from the boostrap config"
-            return 1;
-        end
-        set --global --export MACHINE_NAME $machine_name
-    end
-
-    # NOTE: Skip the 'common' shellrc module, unconditionally executed above
-    set -f shellrc_modules
-
-    begin
-        set --local machine_shellrc_name "$(string replace --all '-' '_' -- $MACHINE_NAME)"
-        set --local machine_shellrc_fish_config "$DOTFILES_PATH/machines/shellrc/$machine_shellrc_name.fish"
-        if test -f "$machine_shellrc_fish_config"
-            debug "Directly executing config: $machine_shellrc_fish_config"
-            source $machine_shellrc_fish_config; or return
+    set --local bootstrap_config_file ~/.dotfiles/bootstrap-config.toml
+    if not test -f "$bootstrap_config_file"
+        warning "Unable to find dotfiles bootstrap config: $(string replace $HOME '~' $bootstrap_config_file)"
+    else
+        set -l machine_name $(taplo get --file-path $bootstrap_config_file .bootstrap.machine-name)
+        if test \( $pipestatus[1] -ne 0 \) -o \( -z "$(string trim $machine_name)" \);
+            warning "Unable to read \$machine_name from the boostrap config"
         else
-            debug "Using python module for $machine_shellrc_name"
-            set -fa shellrc_modules "$machine_shellrc_name"
+            set --local machine_shellrc_name "$(string replace --all '-' '_' -- $machine_name)"
+            set --local machine_shellrc_file "$shellrc_dir/$machine_shellrc_name.fish"
+            if test -f $machine_shellrc_file
+                source $machine_shellrc_file;
+                or warning "Failed to evaluate shellrc for $machine_name: $machine_shellrc_file"
+            else
+                warning "Unable to find config for $machine_shellrc_name"
+            end
         end
-    end
-
-    if test $(count $shellrc_modules) -eq 0
-        debug "Skipping python translation step"
-        return 0
-    end
-
-    # TODO: Was `mktemp -d -t dotfiles`, but this broke on Asahi Linux
-    set -f translated_config_dir (mktemp -d)
-    set -f translate_args --mode fish --mod-path "$DOTFILES_PATH/machines"
-    for rcmod in $shellrc_modules
-        set -f --append translated_config_files "$translated_config_dir/$(basename $rcmod)"
-        set -f --append translate_args -m shellrc.$rcmod --out $translated_config_files[-1]
-    end
-    $DOTFILES_PATH/translate_shell_config $translate_args;
-    if test $status -ne 0;
-        warning "Failed to translate configs: $translated_config_files";
-        echo "Debug vars:">&2;
-        echo "  \$translate_args: `$(string replace --all $translated_config_dir "\$translated_config_dir" -- $(string join ' ' -- $translate_args))`">&2;
-        echo "  \$translated_config_dir: $translated_config_dir"
-        return 1;
-    end
-    for translated in $translated_config_files
-        source $translated
     end
 end
-setup_extra_config
-functions --erase setup_extra_config
 
 begin
     # Add dotfile completions
