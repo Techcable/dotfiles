@@ -76,8 +76,6 @@ ZSH_THEME="robbyrussell" # Light
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(
   gitfast
-  # Programming Languages
-  rust
 )
 
 
@@ -90,7 +88,7 @@ function error() {
     echo "${fg_bold[red]}ERROR:${reset_color} $1" >&2;
 }
 
-# Add our own completions 
+# Add our own completions
 #
 # NOTE: This must come BEFORE oh-my-zsh (which handles most completions)
 export completion_root="$(dirname $(readlink ~/.zshrc))/completion"
