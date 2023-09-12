@@ -1,6 +1,6 @@
 # This is Git's per-user configuration file.
 [user]
-	email = git@techcable.net
+	email = Techcable@techcable.net
 	name = Techcable
 	signingkey = D7B98ADFF827CD17
 
