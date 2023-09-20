@@ -29,6 +29,16 @@ fish_add_path --global --append "$DOTFILES_PATH/scripts"
 # I like neovim
 set -gx EDITOR nvim
 
+# Prefer moar pager
+begin
+    set --local moar_url "https://github.com/walles/moar"
+    if command -q moar
+        set -gx PAGER "moar"
+    else
+        warning "Unable to find `moar` pager (GitHub: $moar_url)"
+    end
+end
+
 # See stackoverflow: https://stackoverflow.com/a/41054093
 set -gx GPG_TTY "$(tty)"
 
