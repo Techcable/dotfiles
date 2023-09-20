@@ -18,14 +18,46 @@ function error
 end
 
 begin
-    # Use homebrew Java for $JAVA_HOME
-    set --local homebrew_java "/Library/Java/JavaVirtualMachines/homebrew-openjdk"
-    set --local homebrew_java_home "$homebrew_java/Contents/Home"
-    if test -d "$homebrew_java_home"
-        set -gx JAVA_HOME $homebrew_java_home
-    else
-        warning "Unable to find homebrew installation of OpenJDK"
+    set --local homebrew_java    set --local homebrew_java_home "$homebrew_java/Contents/Home"
+    set --local fallback_java_home "/Library/Java/JavaVirtualMachines/zulu-21.jdk/Contents/Home"
+    function consider_jdk
+        argparse --min-args=1 --max-args=1 'required-version=' -- $argv
+        or return
+        set target_java $argv[1]
+        set target_java_home "$target_java/Contents/Home"
+        if not test -d "$target_java"
+            warning "Failed to find JDK: $target_java"
+            return 1
+        end
+        # NOTE: Invoking `java -version` can be _slow_ (~18ms)
+        if set -q _flag_required_version
+            set --local required_version $_flag_required_version
+            set --local --export JAVA_HOME $target_java_home
+            java -version 2>&1 | head -1 | string match --quiet --regex 'version ["](?<detected_major_version>\d+).*["]'
+            if test $pipestatus[-1] -ne 0
+                warning "Failed to detect java version (version pattern doesn't match)"
+                return 2
+            end
+            if test $detected_major_version -ne $required_version
+                warning "Skipping JDK $(basename $target_java), because actual version $detected_major_version != required version $required_version"
+                return 1
+            end
+        end
+        # Good enough for us :)
+        set --export --global JAVA_HOME $target_java
+        return 0
     end
+    # Detect the desired JDK implementation
+    #
+    # TODO: Use proper JDK version detection
+    for jdk in /Library/Java/JavaVirtualMachines/{homebrew-openjdk,zulu-21.jdk}
+        # Require JDK 21
+        consider_jdk --required-version 21 $jdk
+        if test $status -eq 0
+            break
+        end
+    end
+    set --erase consider_jdk
 end
 
 begin
