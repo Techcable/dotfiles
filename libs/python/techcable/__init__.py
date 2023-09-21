@@ -11,6 +11,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Callable, Iterator, TypeVar
 
 if TYPE_CHECKING:
+    from itertools import chain
+
     # new in 3.11
     from typing_extensions import dataclass_transform
 else:
