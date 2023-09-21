@@ -287,7 +287,7 @@ class Mode(metaclass=ABCMeta):
                 if name not in kwargs:
                     continue
                 val = kwargs[name]
-                if type(val) is not bool:
+                if not isinstance(val, bool):
                     raise TypeError(f"for {name!r}: {val!r}")
                 return val  # type: ignore
             return default
