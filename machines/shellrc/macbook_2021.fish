@@ -51,8 +51,7 @@ begin
     #
     # TODO: Use proper JDK version detection
     for jdk in /Library/Java/JavaVirtualMachines/{homebrew-openjdk,zulu-21.jdk}
-        # Require JDK 21
-        consider_jdk --required-version 21 $jdk
+        consider_jdk $jdk
         if test $status -eq 0
             break
         end
