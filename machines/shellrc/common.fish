@@ -50,7 +50,7 @@ if not string match --quiet "server" $MACHINE_NAME
     else
         set user_data "$HOME/.local/share"
     end
-    set --local jetbrains_app_dir "$user_data/Jetbrains/Toolbox/scripts"
+    set --local jetbrains_app_dir "$user_data/JetBrains/Toolbox/scripts"
     if test -d "$jetbrains_app_dir"
         fish_add_path --global --append $jetbrains_app_dir
     else
