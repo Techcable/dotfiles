@@ -19,7 +19,7 @@
 	ff = only
 
 [init]
-    defaultBranch = master
+	defaultBranch = master
 
 [filter "lfs"]
 	process = git-lfs filter-process
