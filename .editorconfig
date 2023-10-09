@@ -47,3 +47,8 @@ spaces = 2
 # so it should only use two spaces
 [*.{scm,janet,clj,el,lsip}]
 spaces = 2
+
+# As far as I can tell, Nix files usually use two spaces.
+[*.nix]
+spaces = 2
+
