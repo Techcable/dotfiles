@@ -44,7 +44,7 @@ begin
             end
         end
         # Good enough for us :)
-        set --export --global JAVA_HOME $target_java
+        set --export --global JAVA_HOME $target_java_home
         return 0
     end
     # Detect the desired JDK implementation
