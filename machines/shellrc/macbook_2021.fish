@@ -8,7 +8,7 @@ set -gx MACHINE_NAME_SHORT macbook
 #
 # TODO: When using OpenIn, this shows a popup menu
 # which may be undesirable.
-set -gx BROWSER "usr/bin/open"
+set -gx BROWSER "/usr/bin/open"
 
 function warning
     echo "$(set_color --bold yellow)WARNING:$(set_color reset)" $argv >&2;
