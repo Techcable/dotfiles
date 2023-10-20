@@ -13,6 +13,10 @@
     # It also doesn't offer an octave kernel :(
     octaveFull
 
+    # alternate pagers
+    moar
+    ov
+
     #
     # compilers
     #
