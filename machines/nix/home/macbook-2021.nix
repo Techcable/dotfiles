@@ -19,8 +19,5 @@
 
     # WebAssembly binary toolkit
     wabt
-
-    # lightweight c compiler
-    tinycc
   ];
 }
