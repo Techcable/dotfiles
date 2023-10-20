@@ -12,5 +12,12 @@
     # Unfortunately https://github.com/tweag/jupyenv doesn't work with macs yet
     # It also doesn't offer an octave kernel :(
     octaveFull
+
+    #
+    # compilers
+    #
+
+    # WebAssembly binary toolkit
+    wabt
   ];
 }
