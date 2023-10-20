@@ -29,13 +29,14 @@ fish_add_path --global --append "$DOTFILES_PATH/scripts"
 # I like neovim
 set -gx EDITOR nvim
 
-# Prefer moar pager
+# Prefer ov pager
 begin
     set --local moar_url "https://github.com/walles/moar"
-    if command -q moar
-        set -gx PAGER "moar"
+    set --local ov_url "https://noborus.github.io/ov/"
+    if command -q ov
+        set -gx PAGER "ov"
     else
-        warning "Unable to find `moar` pager (GitHub: $moar_url)"
+        warning "Unable to find `ov` pager (GitHub: $ov_url)"
     end
 end
 
