@@ -33,11 +33,11 @@ set -gx EDITOR nvim
 begin
     set --local moar_url "https://github.com/walles/moar"
     set --local ov_url "https://noborus.github.io/ov/"
-    if command -q less-ov
-        # NOTE: Use `less-ov`, to get less-compatible keybindings
-        set -gx PAGER "less-ov"
+    if command -q ov-less
+        # NOTE: Use `ov-less`, to get less-compatible keybindings
+        set -gx PAGER "ov-less"
     else
-        warning "Unable to find `less-ov` command for `ov` pager (GitHub: $ov_url)"
+        warning "Unable to find `ov-less` command for `ov` pager (GitHub: $ov_url)"
     end
 end
 
