@@ -203,6 +203,15 @@ extend_path --name='$GOBIN directory' -- "$HOME/go/bin"
 # Scala installation managed by "coursier". See here: https://get-coursier.io/docs/cli-overview
 extend_path --name="corsier" "$HOME/Library/Application Support/Coursier/bin"
 
+begin
+    set --local actual_matlab_path $(command --search matlab)
+    if test $actual_matlab_path != "$HOME/bin/matlab"
+        warning "Expected matlab to be in ~/bin, but got `$actual_matlab_path`"
+    elif not test -L $actual_matlab_path
+        warning "Expected matlab to be a symbolic link: $actual_matlab_path"
+    end
+end
+
 # Custom $PKG_CONFIG_PATH (to find libraries)
 
 # Homebrew pkg-config path must be explicitly put first, in order to override any future kegs
