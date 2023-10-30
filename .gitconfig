@@ -32,8 +32,10 @@
     kdiff = difftool --tool=kitty
 	diffs = diff --staged
 [difftool]
-    prompt = false
+	prompt = false
     trustExitCode = true
+[mergetool]
+	prompt = false
 [difftool "kitty"]
     cmd = kitty +kitten diff $LOCAL $REMOTE
 [difftool "kitty.gui"]
@@ -42,4 +44,17 @@
     cmd = difft "$LOCAL" "$REMOTE"
 # Stacked git: https://stacked-git.github.io/
 [stgit]
-	gpgsign = false
+    gpgsign = false
+# nbdime: diff for jupyter notebooks
+#
+# Must be enabled per-repo in the .gitattributes
+# See docs: https://nbdime.readthedaocs.io/en/latest/
+[diff "jupyternotebook"]
+	command = git-nbdiffdriver diff
+[merge "jupyternotebook"]
+	driver = git-nbmergedriver merge %O %A %B %L %P
+	name = jupyter notebook merge driver
+[difftool "nbdime"]
+	cmd = git-nbdifftool diff \"$LOCAL\" \"$REMOTE\" \"$BASE\"
+[mergetool "nbdime"]
+	cmd = git-nbmergetool merge \"$BASE\" \"$LOCAL\" \"$REMOTE\" \"$MERGED\"
