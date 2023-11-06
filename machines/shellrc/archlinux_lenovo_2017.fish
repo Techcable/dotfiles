@@ -1,8 +1,7 @@
 # Configuration for my 2017 Arch Linux Lenovo Laptop
 
-
-set -gx MACHINE_NAME macbook-2021
-set -gx MACHINE_NAME_SHORT macbook
+set -gx MACHINE_NAME archlinux-lenovo-2017
+set -gx MACHINE_NAME_SHORT archtop
 set -gx MACHINE_PREFIX_COLOR $(set_color --bold "cyan")
 
 set -gx BROWSER "/usr/bin/firefox"
