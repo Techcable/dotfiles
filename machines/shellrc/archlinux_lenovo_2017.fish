@@ -25,7 +25,7 @@ fish_add_path "$HOME/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin"
 function b2 -d='Override boost-b2, alias for backblaze-b2' --wraps="backblaze-b2"
     if not set --query _backblaze_b2_command_gave_warning
         set --local b2_cmd_package $(pacman -Qoq $(command --search b2))
-        iftest "$b2_package" = "boost"
+        if test "$b2_package" = "boost"
             warning "This alias overrides `b2` command to be for backblaze (backblaze-b2). On arch, the default `b2` is for boost."
             echo "  $(set_color green)NOTE:$(set_color normal)  Use either `boost-b2` or `command b2` to access boost's b2 command."
         else
