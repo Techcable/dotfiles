@@ -18,6 +18,34 @@ fish_add_path "$HOME/.gem/ruby/2.5.0/bin"
 # TODO: Remove this and rely on ~/.cargo bin (See commit ee1052b64946896)
 fish_add_path "$HOME/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin"
 
+# On Arch, the boost package uses the `b2` command,
+# so backblaze is stuck with backblaze-b2
+#
+# Give informative reminders about this
+#
+# TODO: Consider aliasing b2=backblaze-b2 directly,
+# making boost a secondary command (boost-b2 or something)
+function b2 -d='Alias for boost b2' --wraps="b2"
+    if not set --query _backblaze_b2_command_gave_warning
+        set --local b2_cmd_package $(pacman -Qoq $(command --search b2))
+        if test "$b2_package" = "boost"
+            warning "The `b2` command is for boost. Use $(set_color --bold)backblaze-b2$(set_color normal) for backblaze."
+        else
+            warning "The `b2` command is not for boost, but for $b2_package. Please update the shell config code."
+        end
+        set --global _backblaze_b2_command_gave_warning "yes"
+    end
+    command b2 $argv
+end
+
+function backblaze-b2 -d='Alias for backblaze b2' --wraps="backblaze-b2"
+    set --local actual_command_package $(pacman -Qoq $(command --search backblaze-b2))
+    if test actual_command_package != "backblaze-b2"
+        warning "Expected command to be for backblaze-b2 package, but it is not (actually $actual_command_package)"
+    end
+    command backblaze-b2 $argv
+end
+
 # aurutils
 set -gx AUR_DEST "$HOME/git/aur"
 set -gx AUR_PAGER "ranger"
