@@ -60,8 +60,12 @@ begin
                     command ov --config $ov_less_config $argv
                 end
                 set -gx PAGER "ov --config $ov_less_config"
+            else
+                warning "Unable to find ov-less.yaml config for `ov` package. Using regular `ov` command for pager"
+                set -gx PAGER "ov"
+            end
         else
-            echo "Unable to find `ov-less` command. Using regular `ov` command for pager"
+            warning "Unable to find `ov-less` command. Using regular `ov` command for pager"
             set -gx PAGER "ov"
         end
     else
