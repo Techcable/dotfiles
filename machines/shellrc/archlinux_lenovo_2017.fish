@@ -21,30 +21,24 @@ fish_add_path "$HOME/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin"
 # On Arch, the boost package uses the `b2` command,
 # so backblaze is stuck with backblaze-b2
 #
-# Give informative reminders about this
-#
-# TODO: Consider aliasing b2=backblaze-b2 directly,
-# making boost a secondary command (boost-b2 or something)
-function b2 -d='Alias for boost b2' --wraps="b2"
+# Give informative reminders about this (first time only)
+function b2 -d='Override boost-b2, alias for backblaze-b2' --wraps="backblaze-b2"
     if not set --query _backblaze_b2_command_gave_warning
         set --local b2_cmd_package $(pacman -Qoq $(command --search b2))
-        if test "$b2_package" = "boost"
-            warning "The `b2` command is for boost. Use $(set_color --bold)backblaze-b2$(set_color normal) for backblaze."
+        iftest "$b2_package" = "boost"
+            warning "This alias overrides `b2` command to be for backblaze (backblaze-b2). On arch, the default `b2` is for boost."
+            echo "  $(set_color green)NOTE:$(set_color normal)  Use either `boost-b2` or `command b2` to access boost's b2 command."
         else
             warning "The `b2` command is not for boost, but for $b2_package. Please update the shell config code."
         end
         set --global _backblaze_b2_command_gave_warning "yes"
     end
-    command b2 $argv
-end
-
-function backblaze-b2 -d='Alias for backblaze b2' --wraps="backblaze-b2"
-    set --local actual_command_package $(pacman -Qoq $(command --search backblaze-b2))
-    if test actual_command_package != "backblaze-b2"
-        warning "Expected command to be for backblaze-b2 package, but it is not (actually $actual_command_package)"
-    end
     command backblaze-b2 $argv
 end
+
+# Alias boost-b2 to the /usr/bin/b2 command,
+# since b2 is now used for backblaze (see above)
+alias boost-b2='command b2'
 
 # aurutils
 set -gx AUR_DEST "$HOME/git/aur"
