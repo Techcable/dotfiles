@@ -1,5 +1,6 @@
 # NOTE: Must stay in sync with common.py
 
+
 # NOTE: Intentionally skipped
 # assert DOTFILES_PATH == Path(os.environ["DOTFILES_PATH"])
 
@@ -33,11 +34,38 @@ set -gx EDITOR nvim
 begin
     set --local moar_url "https://github.com/walles/moar"
     set --local ov_url "https://noborus.github.io/ov/"
-    if command -q ov-less
+    if command -q ov
         # NOTE: Use `ov-less`, to get less-compatible keybindings
-        set -gx PAGER "ov-less"
+        if command -q ov-less
+            # As of this writing, the ov-less command is not included in the AUR pacakge for `ov`.
+            # To work around this, we write a small wrapper function to emulate it.
+            #
+            # However, if we find an ov-less on a system with pacman,
+            # we question the need for the wrapper function.
+            #
+            # TODO: Just use the nix package and avoid this nonsense.
+            if command -q pacman
+                warning "Found ov-less command on system with pacman. Still need wrapper function to emulate it?"
+            end
+            set -gx PAGER "ov-less"
+        else if command -q pacman; and pacman -Qq ov >/dev/null 2>&1
+            # On archlinux (i.e. a distro with pacman), search for an ov-less config
+            #
+            # Then, use it to emulate an ov-less command.
+            set --local ov_less_config $(pacman -Ql ov | string match -gr 'ov (.*/ov-less.yaml)$')
+            if test -f "$ov_less_config"
+                # Use the config file to emulate ov-less (present on mac & nix package, not in Arch)
+                function ov-less --inherit-variable ov_less_config --wraps "ov" \
+                    --description "The ov pager, conigured with less keybindings"
+                    command ov --config $ov_less_config $argv
+                end
+                set -gx PAGER "ov --config $ov_less_config"
+        else
+            echo "Unable to find `ov-less` command. Using regular `ov` command for pager"
+            set -gx PAGER "ov"
+        end
     else
-        warning "Unable to find `ov-less` command for `ov` pager (GitHub: $ov_url)"
+        warning "Unable to find `ov` pager command (GitHub: $ov_url)"
     end
 end
 
