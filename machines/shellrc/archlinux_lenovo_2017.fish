@@ -27,7 +27,7 @@ function b2 -d='Override boost-b2, alias for backblaze-b2' --wraps="backblaze-b2
         set --local b2_cmd_package $(pacman -Qoq $(command --search b2))
         if test "$b2_cmd_package" = "boost"
             warning "This alias overrides `b2` command to be for backblaze (backblaze-b2). On arch, the default `b2` is for boost."
-            echo "  $(set_color green)NOTE:$(set_color normal)  Use either `boost-b2` or `command b2` to access boost's b2 command."
+            echo "  $(set_color green)NOTE:$(set_color normal)  Use either `boost-b2` or `command b2` to access boost's b2 command." >&2
         else
             warning "The `b2` command is not for boost, but for $b2_package. Please update the shell config code."
         end
