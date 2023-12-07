@@ -18,11 +18,15 @@
     ov
 
     #
-    # compilers
+    # compilers & interpreters
     #
 
     # WebAssembly binary toolkit
     wabt
+
+    # janet
+    janet
+    jpm # janet package manager
 
     # LaTeX configuration
     #
