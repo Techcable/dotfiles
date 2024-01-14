@@ -301,3 +301,6 @@ end
 if command --query "pacaptr"
     alias pacman=pacaptr
 end
+
+# opam configuration
+source /Users/nicholas/.opam/opam-init/init.fish > /dev/null 2> /dev/null; or true
