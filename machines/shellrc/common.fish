@@ -14,6 +14,21 @@ elif not test -d $DOTFILES_PATH
     warning "Unable to find dotfiles directory: `$DOTFILES_PATH`"
 end
 
+# Detect if desktop
+if not string match --quiet "server" $MACHINE_NAME
+    set --global MACHINE_DESKTOP 1
+end
+
+# Detect platform (equivalent to python sys.platform)
+#
+# Faster than uname due to caching
+if string match --ignore-case --quiet -- "Darwin" $(uname)
+    set --global MACHINE_PLATFORM "darwin"
+else
+    # If not MacOS, assume linux
+    set --global MACHINE_PLATFORM "linux"
+end
+
 # Rust binaries
 #
 # NOTE: This contains almost all the binaries in ~/.rustup/toolchain/<default toolchain>/bin
@@ -77,9 +92,9 @@ end
 set -gx GPG_TTY "$(tty)"
 
 # Add jetbrains user_config (if platform is not a desktop)
-if not string match --quiet "server" $MACHINE_NAME
+if set --query MACHINE_DESKTOP
     set --local user_data
-    if string match --ignore-case --quiet -- "Darwin" $(uname)
+    if test $MACHINE_PLATFORM = "darwin"
         set user_data "$HOME/Library/Application Support"
     else
         set user_data "$HOME/.local/share"
