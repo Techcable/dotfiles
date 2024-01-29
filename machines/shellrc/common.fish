@@ -168,7 +168,12 @@ if set --query MACHINE_DESKTOP
     if not command --query op
         warning "Missing 1Password CLI on desktop ($MACHINE_NAME)"
     else
-        set -xg RCLONE_PASSWORD_COMMAND "op "
+        # Use 1Password to store rclone config passwords
+        #
+        # Currently in bitwarden as well
+        set -gx RCLONE_PASSWORD_COMMAND "op read \"op://Robot/rclone-config $MACHINE_NAME/password\""
+    end
+end
 
 # Prefer lsd to ls
 #
