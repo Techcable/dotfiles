@@ -47,14 +47,3 @@ set -gx AUR_PAGER "ranger"
 set -gx AUR_CONFIRM_PAGER 1
 # this is magic...
 set -gx AUR_SYNC_USE_NINJA 1
-
-# Use of rbw for password manager: https://git.tozt.net/rbw/about/
-#
-# TODO: Find better password manager for programtic access.
-# I don't like giving out my master password when prompted at the CLI.
-
-# Use rbw to load rclone password.
-#
-# NOTE: The docs for --password-command wants literal `"` to escape args
-set -gx RCLONE_PASSWORD_COMMAND 'rbw get --field "Password" "Rclone archlinux-lenovo-2017 config"'
-
