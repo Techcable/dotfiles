@@ -125,7 +125,7 @@ if set --query MACHINE_DESKTOP
     else
         warning "could not find jetbrains script directory `$jetbrains_app_dir`"
     end
- end
+end
 
 # Have pip-run cache its created environments
 #
@@ -162,6 +162,13 @@ if command --query betterstat
 else
     warning "Missing `betterstat` command"
 end
+
+# On desktop machines, setup 1Password for secrets
+if set --query MACHINE_DESKTOP
+    if not command --query op
+        warning "Missing 1Password CLI on desktop ($MACHINE_NAME)"
+    else
+        set -xg RCLONE_PASSWORD_COMMAND "op "
 
 # Prefer lsd to ls
 #
