@@ -27,6 +27,26 @@ if string match --ignore-case --quiet -- "Darwin" $(uname)
 else
     # If not MacOS, assume linux
     set --global MACHINE_PLATFORM "linux"
+
+    begin
+        # Detect distro via lsb_release
+        set --local supported_distros "Arch"
+        # Using string match on the file directly is orders
+        # of magnitude faster than invoking lsb_release
+        set --local detected_distro $(string match -rg 'DISTRIB_ID="?([^"]+)"?' < /etc/lsb-release)
+        if not contains $detected_distro $supported_distros
+            set detected_distro $(lsb_release --id --short)
+            if test $status -ne 0
+                warning "Failed to detect distro with `lsb_release`"
+                set detected_distro "unknown"
+            else if not contains $detected_distro $supported_distro
+                warning "Unsupported distro: $detected_distro"
+            end
+        end
+        set --global MACHINE_DISTRO $(string lower $detected_distro)
+
+    end
+
 end
 
 # Rust binaries
