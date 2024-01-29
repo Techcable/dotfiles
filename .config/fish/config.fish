@@ -82,6 +82,19 @@ set -gx DOTFILES_PATH $HOME/git/dotfiles
 if not test -d "$DOTFILES_PATH"
    warning "Unable to load configuration (missing dotfiles)"
 else
+    set --local bootstrap_config_file ~/.dotfiles/bootstrap-config.toml
+    if not test -f "$bootstrap_config_file"
+        warning "Unable to find dotfiles bootstrap config: $(string replace $HOME '~' $bootstrap_config_file)"
+    else
+        set -l bootstrap_machine_name $(taplo get --file-path $bootstrap_config_file .bootstrap.machine-name)
+        if test \( $pipestatus[1] -ne 0 \) -o \( -z "$(string trim $bootstrap_machine_name)" \);
+            warning "Unable to read \$MACHINE_NAME from the boostrap config"
+            set --erase bootstrap_machine_name
+        else
+            # Set until machine-specific config does otherwise
+            set -gx MACHINE_NAME $bootstrap_machine_name
+        end
+    end
     set --local shellrc_dir "$DOTFILES_PATH/machines/shellrc"
     set --local common_config_file "$shellrc_dir/common.fish"
     if test -f $common_config_file
@@ -90,22 +103,19 @@ else
     else
         warning "Unable to find common config: `$common_config`"
     end
-    set --local bootstrap_config_file ~/.dotfiles/bootstrap-config.toml
-    if not test -f "$bootstrap_config_file"
-        warning "Unable to find dotfiles bootstrap config: $(string replace $HOME '~' $bootstrap_config_file)"
-    else
-        set -l machine_name $(taplo get --file-path $bootstrap_config_file .bootstrap.machine-name)
-        if test \( $pipestatus[1] -ne 0 \) -o \( -z "$(string trim $machine_name)" \);
-            warning "Unable to read \$machine_name from the boostrap config"
+    # Run machine-specific config
+    if set --query bootstrap_machine_name
+        set --local machine_shellrc_name "$(string replace --all '-' '_' -- $MACHINE_NAME)"
+        set --local machine_shellrc_file "$shellrc_dir/$machine_shellrc_name.fish"
+        if test -f $machine_shellrc_file
+            source $machine_shellrc_file;
+            or warning "Failed to evaluate shellrc for $MACHINE_NAME: $machine_shellrc_file"
         else
-            set --local machine_shellrc_name "$(string replace --all '-' '_' -- $machine_name)"
-            set --local machine_shellrc_file "$shellrc_dir/$machine_shellrc_name.fish"
-            if test -f $machine_shellrc_file
-                source $machine_shellrc_file;
-                or warning "Failed to evaluate shellrc for $machine_name: $machine_shellrc_file"
-            else
-                warning "Unable to find config for $machine_shellrc_name"
-            end
+            warning "Unable to find config for $machine_shellrc_name"
+        end
+        if test "$MACHINE_NAME" != "$bootstrap_machine_name"
+            warning "Machine name set by machine shellrc ($MACHINE_NAME) " \
+                "doesn't match bootstrap name ($bootstrap_machine_name)"
         end
     end
 end
