@@ -18,25 +18,7 @@ function warning
     echo $argv
 end
 
-# Setup macports
-#
-# We want our PATH to be after homebrew (lower priority),
-# so we need to add it first
-if test (uname) = "Darwin"
-    set -gx MACPORTS_PREFIX "/opt/local"
-    if not test -d "$MACPORTS_PREFIX";
-        warning "Failed to find macports prefix ($MACPORTS_PREFIX)"
-        set --erase MACPORTS_PREFIX
-    end
-    # See also: /opt/local/share/macports/setupenv.bash
-    fish_add_path --prepend --global --path PATH  "$MACPORTS_PREFIX/"{bin,sbin}
-    set --path -p MANPATH "$share/man"
-    # Disabled $DISPLAY because I want to avoid xorg
-
-    #if test -z "$DISPLAY";
-    #    export DISPLAY=":0.0"
-    #end
-end
+# Removed: Setup macports
 
 # Setup homebrew
 #

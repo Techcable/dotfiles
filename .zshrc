@@ -162,20 +162,7 @@ function extend_path() {
     fi
 }
 
-# I want the macports path to come *after* homebrew
-#
-# therfore we must run the init *before*
-# macports must come before homebrew
-if [[ $(uname) = "Darwin" ]]; then
-    export MACPORTS_PREFIX="/opt/local"
-    if [[ -d "$MACPORTS_PREFIX" && -d "$MACPORTS_PREFIX/bin" ]]; then
-        extend_path "$MACPORTS_PREFIX/bin" "PATH" "prepend"
-        extend_path "$MACPORTS_PREFIX/sbin" "PATH" "prepend"
-    else
-        unset MACPORTS_PREFIX
-        warning "Failed to find macports!"
-    fi
-fi
+# Removed: Setup macports
 
 # init homebrew
 if [ $(uname) = "Darwin" ]; then
