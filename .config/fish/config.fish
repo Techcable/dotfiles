@@ -65,10 +65,11 @@ if not test -d "$DOTFILES_PATH"
    warning "Unable to load configuration (missing dotfiles)"
 else
     set --local bootstrap_config_file ~/.dotfiles/bootstrap-config.toml
+    set --local bootstrap_machine_name
     if not test -f "$bootstrap_config_file"
         warning "Unable to find dotfiles bootstrap config: $(string replace $HOME '~' $bootstrap_config_file)"
     else
-        set -l bootstrap_machine_name $(taplo get --file-path $bootstrap_config_file .bootstrap.machine-name)
+        set bootstrap_machine_name $(taplo get --file-path $bootstrap_config_file .bootstrap.machine-name)
         if test \( $pipestatus[1] -ne 0 \) -o \( -z "$(string trim $bootstrap_machine_name)" \);
             warning "Unable to read \$MACHINE_NAME from the boostrap config"
             set --erase bootstrap_machine_name
