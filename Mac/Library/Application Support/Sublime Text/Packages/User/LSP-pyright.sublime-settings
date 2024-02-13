@@ -2,6 +2,6 @@
 {
   "settings": {
     // Use homebrew Python (TODO: Hacky)
-    "python.pythonPath": "/opt/homebrew/Frameworks/Python.framework/Versions/3.10/bin/python3"
+    "python.pythonPath": "/opt/homebrew/Frameworks/Python.framework/Versions/Current/bin/python3"
   }
 }
