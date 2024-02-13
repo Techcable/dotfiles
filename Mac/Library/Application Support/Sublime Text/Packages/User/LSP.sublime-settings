@@ -1,0 +1,19 @@
+// Settings in here override those in "LSP/LSP.sublime-settings"
+//
+// NOTE: Sublime Text seems to have extremely relaxed JSON config parsing,
+// including allowing comments and trailing commas
+// I suggest using json5 to parse it (although that is even more relaxed)
+{
+  "clients": {
+    "zig": {
+      "command": [
+        "/Users/nicholas/bin/zls"
+      ],
+      "enabled": true,
+      "selector": "source.zig"
+    },
+    "clangd": {
+      "enabled": true
+    }
+  }
+}

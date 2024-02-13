@@ -1,0 +1,7 @@
+// Settings in here override those in "LSP-pyright/LSP-pyright.sublime-settings"
+{
+  "settings": {
+    // Use homebrew Python (TODO: Hacky)
+    "python.pythonPath": "/opt/homebrew/Frameworks/Python.framework/Versions/3.10/bin/python3"
+  }
+}
