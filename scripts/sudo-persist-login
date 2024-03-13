@@ -1,0 +1,37 @@
+#!/usr/bin/env fish
+
+argparse --max-args 0 'worker' 'h/help' -- $argv; or return
+
+if set -q _flag_help;
+    echo 'usage: sudo-persist-login'
+    echo ''
+    echo 'Executes `sudo --validate` in a background job to avoid needing'
+    echo 'to repeatedly type in a password'
+end
+
+function background_work
+    while true
+        sudo --validate --non-interactive;
+        set -l sudo_status $status
+        if test $sudo_status -ne 0
+            echo "ERROR[$(status basename) --worker]: Failed to run background sudo" >&2;
+            exit $sudo_status
+        end
+        sleep 30s;
+    end
+end
+
+if set -q _flag_worker;
+    background_work;
+    return  # Implicitly returns last status
+else
+    echo '$ sudo --validate'
+    sudo --validate; or return
+    echo "\$ $(status basename) --worker &"
+    fish $(status filename) --worker &
+    set --global worker_pid $(jobs --last --pid)
+    echo "<spawned worker, PID: $worker_pid>"
+end
+
+
+
