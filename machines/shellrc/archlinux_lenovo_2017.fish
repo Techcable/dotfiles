@@ -36,6 +36,10 @@ function b2 -d='Override boost-b2, alias for backblaze-b2' --wraps="backblaze-b2
     command backblaze-b2 $argv
 end
 
+# aliases for copy/paste to clipboard, mirroring macbook pbcopy/pbpaste commands
+alias pbcopy='xclip -selection clipboard'
+alias pbpaste='xclip -selection clipboard -o'
+
 # Alias boost-b2 to the /usr/bin/b2 command,
 # since b2 is now used for backblaze (see above)
 alias boost-b2='command b2'
