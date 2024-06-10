@@ -26,6 +26,7 @@
     difft = difftool --tool=difftastic
     kdiff = difftool --tool=kitty
 	diffs = diff --staged
+	unstage = git restore --staged
 [difftool]
 	prompt = false
     trustExitCode = true
