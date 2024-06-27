@@ -1,0 +1,9 @@
+# bacon prefs.toml global config
+#
+# docs: https://dystroy.org/bacon/config/
+
+# default to clippy
+#
+# TODO: This doesn't seem to work.
+# However, there is a default keybinding for `c` to run clippy
+default_job = "clippy"
