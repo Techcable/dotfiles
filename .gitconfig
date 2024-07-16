@@ -10,6 +10,19 @@
 [core]
 	editor = nvim
 	excludesFile = ~/.config/git/ignore
+    # This is done to improve performance of `git status`
+    #
+    # Enabling `core.untrackedCache` would also help significantly.
+    # This is part of a set of options enabled by feature.manyFiles.
+    # The time for `git status` with a warm fsmonitor cache goes from
+    # 1s with core.fsmonitor alone to 100ms with feature.manyFiles option.
+    #
+    # The only downside to `core.untrackedCache` is it relies on accurate mtime,
+    # which I am not willing to assume on every system I own
+    # given the importance of git's correctness.
+    #
+    # As such, I only enable `feature.manyFiles` on a repo-by-repo basis,
+    # instead of globaly.
     fsmonitor = true
 
 [tag]
