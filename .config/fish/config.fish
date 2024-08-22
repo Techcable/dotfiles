@@ -145,3 +145,8 @@ if test -f "/Users/nicholas/lib/mambaforge/etc/fish/conf.d/mamba.fish"
 end
 # <<< conda initialize <<<
 
+# Initialize bookmark-cd, alias as `b`
+if command -q bookmark-cd
+    bookmark-cd init | source
+    alias b=bcd
+end
