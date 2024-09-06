@@ -1,0 +1,1 @@
+/opt/homebrew/share/fish/vendor_completions.d/stgit.fish
