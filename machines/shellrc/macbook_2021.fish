@@ -203,11 +203,15 @@ extend_path --name='$GOBIN directory' -- "$HOME/go/bin"
 # Scala installation managed by "coursier". See here: https://get-coursier.io/docs/cli-overview
 extend_path --name="corsier" "$HOME/Library/Application Support/Coursier/bin"
 
+# Verify matlab command points to ~/bin/matlab, which in turn needs to be a symbolic link
+# TODO: Is this even useful?
 begin
     set --local actual_matlab_path $(command --search matlab)
-    if test $actual_matlab_path != "$HOME/bin/matlab"
+    if test $status -ne 0
+        # matlab not found
+    else if test "$actual_matlab_path" != "$HOME/bin/matlab"
         warning "Expected matlab to be in ~/bin, but got `$actual_matlab_path`"
-    elif not test -L $actual_matlab_path
+    else if not test -L $actual_matlab_path
         warning "Expected matlab to be a symbolic link: $actual_matlab_path"
     end
 end
