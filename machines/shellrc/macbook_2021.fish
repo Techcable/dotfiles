@@ -233,6 +233,11 @@ extend_path --name='senpai irc client man pages' --variable=MANPATH "/opt/senpai
 extend_path --name='MacGPG2 /bin dir' "/usr/local/MacGPG2/bin"
 extend_path --name='MACGPG manpages' --variable=MANPATH "/usr/local/MacGPG2/share/man"
 
+# MacPorts path (comes after homebrew)
+extend_path --name 'macports bin' -- "/opt/local/bin"
+extend_path --name 'macports bin' -- "/opt/local/sbin"
+extend_path --name "macports manpages" -- "/opt/local/share/man"
+
 begin
     set --local current_janet_version $(detect_homebrew_info --mode=precise_version "/opt/homebrew/bin/janet")
     if test $status -ne 0
