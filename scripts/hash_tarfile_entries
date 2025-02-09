@@ -39,10 +39,23 @@ if not test -f $tar_file
 end
 
 set --local resolved_script $(path resolve $(status filename))
-if test $(count $argv) -eq 0;
-    warning "No entries listed, nothing to do"
-else if test \( $(count $argv) -eq 1 \)
-    set single_file $argv[1]
+
+set target_entries $argv
+
+if test $(count $target_entries) -eq 0;
+    # hash all the entries
+    set target_entries $(bsdtar -tf $tar_file)
+    set --local tar_list_status $status
+    if test $tar_list_status -ne 0
+        error "Unable to list entries in $tar_file";
+        exit $tar_list_status
+    end
+end
+
+if test $(count $target_entries) -eq 0
+    # nothing to do
+else if test $(count $target_entries) -eq 1
+    set single_file $target_entries[1]
     function do_extract;
         # needs to be a function for early exist
         bsdtar --to-stdout -xf $tar_file $single_file 2>| grep -v 'Error exit delayed from previous errors' >&2;
@@ -59,6 +72,7 @@ else if test \( $(count $argv) -eq 1 \)
     end
     echo -s "$hash" '  ' $single_file;
 else
-    parallel --will-cite fish $resolved_script --hash $chksm_cmd --file "$tar_file" -- ::: $argv;
+    # TODO: I dont think parallelism maks much sense here, because reading from a tarfile is inherently sequential.
+    parallel --will-cite fish $resolved_script --hash $chksm_cmd --file "$tar_file" -- ::: $target_entries;
     or return
 end
