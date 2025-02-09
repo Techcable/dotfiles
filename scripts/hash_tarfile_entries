@@ -1,0 +1,64 @@
+#!/usr/bin/env fish
+# A nice little script to hash the contents of tarfiles
+# Works in parallel using GNU parallel
+argparse --name=hash_tarfile_entry 'h/hash=' 'f/file=' -- $argv
+
+function error
+    echo "$(set_color --bold red)ERROR:$(set_color normal)" $argv >&2;
+end
+function warning
+    echo "$(set_color yellow)WARNING:$(set_color normal)" $argv >&2;
+end
+
+if not set -q _flag_hash
+    error "Must specify --hash format to use (--hash/-h)"
+    exit 1
+end
+if not set -q _flag_file
+    error "Must specify a tarfile to read (use --file, -f option)"
+    exit 1
+end
+set tar_file $_flag_file
+for potential_chksm_cmd in "$_flag_hash"{,su}
+    if command -q "$potential_chksm_cmd";
+        set -g chksm_cmd $potential_chksm_cmd
+        break;
+    end
+end
+if not set -q chksm_cmd;
+    error "Unable to find checksum command for `--hash=$_flag_hash`";
+    exit 1;
+end
+if not string match --quiet --regex  '^\w+\s+/dev/null$' $($chksm_cmd /dev/null);
+    error "Checksum command `$chksm_cmd` has unexpected output";
+    exit 1
+end
+if not test -f $tar_file
+    error "Tar file not found: `$tar_file`";
+    exit 1;
+end
+
+set --local resolved_script $(path resolve $(status filename))
+if test $(count $argv) -eq 0;
+    warning "No entries listed, nothing to do"
+else if test \( $(count $argv) -eq 1 \)
+    set single_file $argv[1]
+    function do_extract;
+        # needs to be a function for early exist
+        bsdtar --to-stdout -xf $tar_file $single_file 2>| grep -v 'Error exit delayed from previous errors' >&2;
+        if test $pipestatus[1] -ne 0;
+            exit $pipestatus[1];
+        end
+    end
+    # NOTE: Need to pipe errors to /dev/null in case bsdtar errors
+    # otherwise b3sum gives error `failed printing to stdout: Broken pipe (os error 32)`
+    # TODO: This uses lots of memory. Consider using temporary files
+    set --local hash $(do_extract | $chksm_cmd 2>/dev/null | grep --only-matching -E '^\w+');
+    if test $status -ne 0;
+        exit $status
+    end
+    echo -s "$hash" '  ' $single_file;
+else
+    parallel --will-cite fish $resolved_script --hash $chksm_cmd --file "$tar_file" -- ::: $argv;
+    or return
+end
