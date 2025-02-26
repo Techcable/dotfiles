@@ -50,9 +50,8 @@ begin
     # Detect the desired JDK implementation
     #
     # TODO: Use proper JDK version detection
-    # HACK: Prefer Java 17 to homebrew java 23, to keep sbt happy
-    # TODO: Set java for sbt/cousier independently of other commands.
-    for jdk in /Library/Java/JavaVirtualMachines/{temurin-11.jdk,homebrew-openjdk}
+    # HACK: Pin to Java 21, because java.io.IO braeks fpinscala repo
+    for jdk in /Library/Java/JavaVirtualMachines/{temurin-21.jdk,homebrew-openjdk}
         consider_jdk $jdk
         if test $status -eq 0
             break
