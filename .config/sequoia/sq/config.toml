@@ -1,0 +1,23 @@
+# we inherit all default 'policy',
+# which controls what algorithms are trusted
+
+[encrypt]
+# encrypt for either Techcable or personal
+for-self = ["461EC66E284C8E7681789F12091A03B91D7FCE68", "A423DF7FB3359C7D133F78EF8F49C1624032CF2D"]
+# while it might be nice use the more modern RFC9580,
+# this has been rejected by GnuPG (see https://librepgp.org/)
+profile = "rfc4880"
+
+[sign]
+# sign only with Techcable
+signer-self = ["461EC66E284C8E7681789F12091A03B91D7FCE68"]
+
+[pki.vouch]
+# sign localy with Techcable
+certifier-self = "461EC66E284C8E7681789F12091A03B91D7FCE68"
+expiration = "10y"
+
+[network]
+# default, but removed fleetstreetops.org and added pgpkeys.eu
+keyservers = ["hkps://keys.openpgp.org", "hkps://mail-api.proton.me", "hkps://keys.mailvelope.com", "hkps://keyserver.ubuntu.com", "hkps://pgpkeys.eu"]
+
