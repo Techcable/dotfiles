@@ -137,6 +137,11 @@ if status is-interactive
     alias m math
 end
 
+# Setup locale info for biff <https://github.com/BurntSushi/biff>
+# Appears to be able to detect the timezone on its own
+set -gx BIFF_LOCALE en-US
+
+
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!
 if test -f /Users/nicholas/lib/mambaforge/bin/conda
