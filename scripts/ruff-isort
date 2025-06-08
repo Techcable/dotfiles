@@ -1,0 +1,28 @@
+#!/usr/bin/env fish
+# Sorts imports using `ruff`
+#
+# Ignores isort config files, respects ruff config files
+# Unfortunately, ruff has some differences from `isort`: https://docs.astral.sh/ruff/faq/#how-does-ruffs-import-sorting-compare-to-isort
+argparse 'q/quiet' 'diff' 'c/check' 'profile=' 'isolated' -- $argv;
+or exit;
+
+if set -q _flag_profile and test $_flag_profile != "black"
+    echo "ERROR: Only `--profile=black` is supported" >&2;
+    exit 1;
+end
+
+set ruff_flags
+if set -q _flag_quiet
+    set -a ruff_flags "--quiet"
+end
+if not set -q _flag_check
+    set -a ruff_flags "--fix"
+end
+if set -q _flag_isolated
+    set -a ruff_flags "--isolated"
+end
+if set -q _flag_diff
+    set -a ruff_flags "--diff"
+end
+
+ruff check $ruff_flags --select='I' $flag
