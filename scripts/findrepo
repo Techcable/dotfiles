@@ -1,0 +1,105 @@
+#!/usr/bin/env python3
+import argparse
+import os
+import re
+import sys
+from pathlib import Path
+
+
+def is_git_dir(git_dir: Path, /) -> bool:
+    """Check if the specified directory is a valid .git directory"""
+    # From my tests, git 2.49.0 does not recognize a .git directory
+    # unless all of the following are present (even if empty): HEAD, objects, refs
+    # Furthermore the `HEAD` file has to be valid (can not be empty or nonsense)
+    #
+    # See also: https://git-scm.com/docs/gitrepository-layout
+    return (git_dir / "HEAD").is_file() and (git_dir / "objects").is_dir() and (git_dir / "refs").is_dir()
+
+
+def is_hg_repo(root_dir: Path, /) -> bool:
+    """
+    Check if the specified directory is a valid Mercurial repository.
+
+    This may not detect some older repositories.
+    """
+    # TODO: This only supports newer repos using 'store' format
+    # See here: https://wiki.mercurial-scm.org/FileFormats
+    return (root_dir / ".hg/store").is_dir()
+
+
+def is_vcs_repo(pth: Path, /) -> bool:
+    """
+    Determine if the specified directory is the root of a version control repo
+
+    Currently supports git and hg
+    """
+    return is_git_dir(pth / ".git") or is_git_dir(pth) or is_hg_repo(pth)
+
+
+def main(raw_args: list[str] | None = None, /) -> None:
+    # CLI mirrors that of `fd` command
+    parser = argparse.ArgumentParser(
+        prog="findrepo",
+        description="Finds VCS (git) repositories",
+    )
+    parser.add_argument("names", nargs="*", help="The repository to search for")
+    # TODO: Support these arguments?
+    # parser.add_argument(
+    #     "-r", "--recursive", action="store_true", help="Search for repositories inside other repositories"
+    # )
+    # parser.add_argument(
+    #     "-H", "--hidden", action="store_true", help="Ignore hidden directories (those starting with `.`)"
+    # )
+    # parser.add_argument(
+    #     "-I",
+    #     "--no-ignore",
+    #     action="store_true",
+    #     help="Include results from directories ignored by `.gitignore`/`.ignore`",
+    # )
+    # parser.add_argument(
+    #     "-u",
+    #     "--unrestricted",
+    #     action="store_true",
+    #     help="Include all directories, even hidden and ignored ones. Equivalent to `--hidden --no-ignore`",
+    # )
+    parser.add_argument("-C", "--root", type=Path, default=Path("."), help="The root directory to search from")
+    parser.add_argument("-L", "--follow", action="store_true", help="Follow system links")
+    parser.add_argument("--relative-path", action="store_true", help="Prints relative instead of absolute paths")
+    args = parser.parse_args(raw_args)
+    if args.names:
+        # use regex to match names.
+        #
+        # Surprisingly, there little performance difference compared to
+        # checking all possibilities in a loop.
+        # On my macbook, it takes ~420ms to search ~/git either way
+        match_pattern = re.compile("|".join(map(re.escape, args.names)), flags=re.IGNORECASE)
+    else:
+        # no names specified - everything matches
+        match_pattern = None
+
+    def is_match(pth: Path, /) -> bool:
+        nonlocal match_pattern, args
+        if match_pattern is None:
+            # everything matches
+            return True
+        else:
+            return match_pattern.search(pth.name) is not None
+
+    for root, dirs, files in args.root.walk():
+        for entry_name in dirs.copy():
+            entry = root / entry_name
+            if is_vcs_repo(entry):
+                dirs.remove(entry_name)
+                if is_match(entry):
+                    if args.relative_path:
+                        entry = entry.relative_to(args.root)
+                    if match_pattern and sys.stdout.isatty() and not os.getenv("NO_COLOR"):
+                        # color matches like ripgrep does
+                        colored_name = match_pattern.sub(lambda m: f"\x1b[1;31m{m[0]}\x1b[0m", entry.name)
+                        print(entry.with_name(colored_name))
+                    else:
+                        print(entry)
+
+
+if __name__ == "__main__":
+    main()
