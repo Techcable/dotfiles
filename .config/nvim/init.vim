@@ -19,6 +19,10 @@ Plug 'NoahTheDuke/vim-just'
 Plug 'dag/vim-fish'
 Plug 'HiPhish/jinja.vim'
 
+" Allows easily commenting out lines of text
+" See `:help Comment-nvim` for details and keybindings
+Plug 'numToStr/Comment.nvim'
+
 " Asynchronous Lint Engine
 " TODO: This is too fancy for me right now
 " Plug 'dense-analysis/ale'
@@ -28,3 +32,8 @@ let g:ale_linters = {'python': ['black', 'ipython', 'mypy', 'ruff']}
 
 call plug#end()
 
+" setup Comment.vim default keybindings
+"
+" TODO: How to invoke this functionality via a command?
+" I don't want to use keybindings
+lua require('Comment').setup()
