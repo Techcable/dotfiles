@@ -142,16 +142,8 @@ end
 set -gx BIFF_LOCALE en-US
 
 
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-if test -f /Users/nicholas/lib/mambaforge/bin/conda
-    eval /Users/nicholas/lib/mambaforge/bin/conda "shell.fish" "hook" $argv | source
-end
-
-if test -f "/Users/nicholas/lib/mambaforge/etc/fish/conf.d/mamba.fish"
-    source "/Users/nicholas/lib/mambaforge/etc/fish/conf.d/mamba.fish"
-end
-# <<< conda initialize <<<
+# Do not initialize `conda` - takes ~172 ms
+# /Users/nicholas/lib/mambaforge/bin/conda "shell.fish" "hook" $argv | source
 
 # Initialize bookmark-cd, alias as `b`
 if command -q bookmark-cd
