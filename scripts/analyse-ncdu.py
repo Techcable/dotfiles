@@ -62,9 +62,7 @@ class Output(metaclass=ABCMeta):
             assert isinstance(raw_root, dict), repr(raw_root)
             root_path = self.handle_raw_entry(parent, raw_root, is_dir=True)
             for child_data in data_iter:
-                self.handle_raw_entry(
-                    root_path, child_data, is_dir=isinstance(child_data, list)
-                )
+                self.handle_raw_entry(root_path, child_data, is_dir=isinstance(child_data, list))
             return root_path
         elif isinstance(data, dict):
             # format: https://dev.yorhel.nl/ncdu/jsonfmt
@@ -110,9 +108,7 @@ class PlainOutput(Output):
 
     def __init__(self, stream, value_field: Optional[EntryField]):
         super(PlainOutput, self).__init__(stream)
-        assert value_field is None or isinstance(value_field, EntryField), repr(
-            value_field
-        )
+        assert value_field is None or isinstance(value_field, EntryField), repr(value_field)
         self.value_field = value_field
 
     def write_entry(self, entry: Entry):
@@ -138,9 +134,7 @@ class CSVOutput(Output):
     def write_entry(self, entry: Entry):
         if not self.entry_filter(entry):
             return
-        self.writer.writerow(
-            [str(getattr(entry, field.field_name)) for field in self.fields]
-        )
+        self.writer.writerow([str(getattr(entry, field.field_name)) for field in self.fields])
 
 
 @click.command()
@@ -151,9 +145,7 @@ class CSVOutput(Output):
     type=click.Path(exists=True, file_okay=True, path_type=Path),
     help="The input ncdu database to read",
 )
-@click.option(
-    "--include-sizes", "--sizes", is_flag=True, help="Include the sizes in the output"
-)
+@click.option("--include-sizes", "--sizes", is_flag=True, help="Include the sizes in the output")
 @click.option("--ignore-dirs", is_flag=True, help="Ignore directories")
 @click.option(
     "output_format",
@@ -177,9 +169,7 @@ def analyse_ncdu(input_file, include_sizes, output_format, output_file, ignore_d
         data = json.load(f)
     match output_format:
         case "plain":
-            output = PlainOutput(
-                output_file, EntryField.SIZE if include_sizes else None
-            )
+            output = PlainOutput(output_file, EntryField.SIZE if include_sizes else None)
         case "csv":
             fields = [EntryField.PATH]
             if include_sizes:

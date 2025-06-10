@@ -14,9 +14,7 @@ elif sys.platform == "linux":
     OPEN_COMMAND = os.getenv("BROWSER", "xdg-open")
 else:
     # TODO: Should we use the builtin browser module or something?
-    raise NotImplementedError(
-        f"Unknown platform (how would I open things?): {sys.platform}"
-    )
+    raise NotImplementedError(f"Unknown platform (how would I open things?): {sys.platform}")
 
 # Default file formats based on extensions
 #
@@ -32,9 +30,7 @@ DEFAULT_FILE_FORMATS = {}
     help="Pass the --standalone flag to pandoc (ie. include CSS styling)",
     default=True,
 )
-@click.option(
-    "--quiet", "-q", is_flag=True, help="Suppress pandoc outputs (mainly warnings)"
-)
+@click.option("--quiet", "-q", is_flag=True, help="Suppress pandoc outputs (mainly warnings)")
 @click.option(
     "--format",
     "-f",
@@ -42,9 +38,7 @@ DEFAULT_FILE_FORMATS = {}
     help="The format to pass to pandoc, by default inferred from the filename",
 )
 @click.argument("input_file", type=click.Path(path_type=Path))
-def panrender(
-    input_file, input_format=None, verbose=False, quiet=False, standalone=True
-):
+def panrender(input_file, input_format=None, verbose=False, quiet=False, standalone=True):
     """A simple wrapper around `pandoc` that renders the input as HTML,
     then opens it in the default browser.
 

@@ -13,12 +13,10 @@ __all__ = ("PythonVersion", "PythonInterpreter")
 
 class PythonVersion(tuple[int, ...]):
     @overload
-    def __new__(cls, s: str, /) -> PythonVersion:
-        ...
+    def __new__(cls, s: str, /) -> PythonVersion: ...
 
     @overload
-    def __new__(cls, *args: int) -> PythonVersion:
-        ...
+    def __new__(cls, *args: int) -> PythonVersion: ...
 
     def __new__(cls, *args):
         match args:
@@ -74,17 +72,13 @@ class PythonInterpreter:
         if sys.platform != "darwin":
             raise OSError(f"Not on macos! plaltform={sys.platform}")
         name_prefix = PythonInterpreter.HOMEBREW_NAME_PREFIX
-        for python_home in (PlatformPath.HOMEBREW_PREFIX.resolve() / "opt").glob(
-            "python@3.*"
-        ):
+        for python_home in (PlatformPath.HOMEBREW_PREFIX.resolve() / "opt").glob("python@3.*"):
             assert (python_home / "bin").is_dir()
             name = python_home.name
             assert name != name_prefix, "Should only return specifics!"
             assert name.startswith(name_prefix)
             ver = PythonVersion(name.removeprefix(name_prefix))
-            yield PythonInterpreter(
-                brew_name=python_home.name, version=ver, home=python_home
-            )
+            yield PythonInterpreter(brew_name=python_home.name, version=ver, home=python_home)
 
     @staticmethod
     def latest_homebrew_interpreter() -> PythonInterpreter:

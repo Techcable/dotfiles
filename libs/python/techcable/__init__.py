@@ -1,4 +1,5 @@
 """My utility libraries..."""
+
 from __future__ import annotations
 
 import importlib
@@ -59,19 +60,12 @@ class PlatformPath(Enum):
     def resolve(self) -> Path:
         if getattr(self, "_cached_value", None) is not None:
             return self._cached_value  # type: ignore
-        if (
-            self.required_platform is not None
-            and self.required_platform != sys.platform
-        ):
-            raise PlatformError(
-                f"Expected platform {self.required_platform}, but got {sys.platform}"
-            )
+        if self.required_platform is not None and self.required_platform != sys.platform:
+            raise PlatformError(f"Expected platform {self.required_platform}, but got {sys.platform}")
         assert self._env_var is not None
         res = os.getenv(self._env_var)
         if res is None:
-            raise PlatformError(
-                f"Missing expected environment variable {self._env_var} for {self}"
-            )
+            raise PlatformError(f"Missing expected environment variable {self._env_var} for {self}")
         path = Path(res)
         self._cached_value = path  # type: ignore
         return path
@@ -96,9 +90,7 @@ T = TypeVar("T")
 
 
 @dataclass_transform(order_default=True, eq_default=True)
-def define_order(
-    *, unsafe_eq: bool = False, keys: Sequence[str]
-) -> Callable[[type[T]], type[T]]:
+def define_order(*, unsafe_eq: bool = False, keys: Sequence[str]) -> Callable[[type[T]], type[T]]:
     global chain
     if not TYPE_CHECKING and chain is None:
         chain = importlib.import_module("itertools").chain
@@ -118,9 +110,7 @@ def define_order(
         assert amount > 0
         return ("",) * amount
 
-    def gen_operator(
-        op_name: str, *, strict: str, relaxed: str | None, logic_op: str = "and"
-    ) -> Iterator[str]:
+    def gen_operator(op_name: str, *, strict: str, relaxed: str | None, logic_op: str = "and") -> Iterator[str]:
         if relaxed is None:
             relaxed = strict
         assert not op_name.startswith("__")

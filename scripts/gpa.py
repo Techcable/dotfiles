@@ -1,4 +1,5 @@
 """A script to calculate your GPA"""
+
 from __future__ import annotations
 
 from decimal import Decimal
@@ -32,9 +33,7 @@ class Grade(IntEnum):
 
 
 def gpa(a: int, b: int, c: int = 0, d: int = 0, f: int = 0) -> Decimal:
-    credits_by_grade: dict[Grade, int] = {
-        Grade(4 - idx): val for idx, val in enumerate((a, b, c, d, f))
-    }
+    credits_by_grade: dict[Grade, int] = {Grade(4 - idx): val for idx, val in enumerate((a, b, c, d, f))}
     earned_points, total_hours = 0, 0
     for grade, hours in credits_by_grade.items():
         earned_points += hours * grade

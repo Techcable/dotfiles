@@ -109,9 +109,7 @@ class VarAccess:
     name: str
 
     def __eq__(self, other):
-        return (
-            self.name == other.name if isinstance(other, VarAccess) else NotImplemented
-        )
+        return self.name == other.name if isinstance(other, VarAccess) else NotImplemented
 
     def __init__(self, name: str):
         self.name = name
@@ -169,9 +167,7 @@ else:
         "src",
     ]
     DOTFILES_PATH = Path(__file__).parents[3]
-assert (
-    DOTFILES_PATH / "src" / "dotfiles"
-).is_dir(), "Missing $DOTFILES_PATH/src/dotfiles directory"
+assert (DOTFILES_PATH / "src" / "dotfiles").is_dir(), "Missing $DOTFILES_PATH/src/dotfiles directory"
 
 
 def which(command: str) -> Optional[Path]:
@@ -364,9 +360,7 @@ class Mode(metaclass=ABCMeta):
             except KeyError:
                 # Avoid circular errors
                 self._log_level_enabled = enabled_level = LogLevel.DEFAULT_LEVEL
-                self.warning(
-                    f"Unknown log level name: {enabled_level_name!r} (env var ${LogLevel.ENV_VAR_NAME})"
-                )
+                self.warning(f"Unknown log level name: {enabled_level_name!r} (env var ${LogLevel.ENV_VAR_NAME})")
             self._log_level_enabled = enabled_level
         assert enabled_level is not None
         if level < enabled_level:
@@ -446,9 +440,7 @@ class Mode(metaclass=ABCMeta):
         _ = wraps, desc  # By default, just ignored
         self._assign(name, value, scope=_Scope.ALIAS, export=True)
 
-    _REQUIRE_VAR_EQUALS_ERRMSG: ClassVar[
-        str
-    ] = "Unexpected value for {varname}: `{actual_value}`"
+    _REQUIRE_VAR_EQUALS_ERRMSG: ClassVar[str] = "Unexpected value for {varname}: `{actual_value}`"
 
     @abstractmethod
     def require_var_equals(self, name: str, value: ShellValue):
@@ -504,9 +496,7 @@ class Mode(metaclass=ABCMeta):
         self._extend_path_impl(str(value), var_name, order=order)
 
     @abstractmethod
-    def _extend_path_impl(
-        self, value: str, var_name: Optional[str], *, order: PathOrderSpec
-    ):
+    def _extend_path_impl(self, value: str, var_name: Optional[str], *, order: PathOrderSpec):
         pass
 
     @abstractmethod
@@ -548,9 +538,7 @@ _ZSH_SIMPLE_QUOTE_PATTERN = re.compile(r"([\w_\-\/]+)")
 _FISH_SIMPLE_QUOTE_PATTERN = _ZSH_SIMPLE_QUOTE_PATTERN
 
 
-def escape_quoted(
-    value: str, *, quote_char: str, bad_chars: set[str], simple_pattern: re.Pattern
-) -> str:
+def escape_quoted(value: str, *, quote_char: str, bad_chars: set[str], simple_pattern: re.Pattern) -> str:
     assert "\\" in bad_chars
     assert quote_char in ("'", '"')
     if simple_pattern.fullmatch(value) is not None:
@@ -598,15 +586,11 @@ class ZshMode(Mode):
         self._write(f'if test "${name}" != {self._quote(value)}; then')
         with self.indent():
             actual_value = "${" + name + "}"
-            errmsg = Mode._REQUIRE_VAR_EQUALS_ERRMSG.format(
-                varname=name, actual_value=actual_value
-            )
+            errmsg = Mode._REQUIRE_VAR_EQUALS_ERRMSG.format(varname=name, actual_value=actual_value)
             self._write(f'warning "{errmsg}"')
         self._write("fi")
 
-    def _extend_path_impl(
-        self, value: str, var_name: Optional[str], *, order: PathOrderSpec
-    ):
+    def _extend_path_impl(self, value: str, var_name: Optional[str], *, order: PathOrderSpec):
         # Assume extend_path function is provided by zsh
         match order:
             case PathOrderSpec.DEFAULT:
@@ -693,9 +677,7 @@ class XonshMode(Mode):
         self._write(f"if ${name} != {self._quote(value)}:")
         with self.indent():
             actual = f"${name}"
-            errmsg = Mode._REQUIRE_VAR_EQUALS_ERRMSG.format(
-                varname=name, actual_value=actual
-            )
+            errmsg = Mode._REQUIRE_VAR_EQUALS_ERRMSG.format(varname=name, actual_value=actual)
             self._write(f"warning({errmsg})")
         self._write()
 
@@ -737,9 +719,7 @@ class XonshMode(Mode):
             self._write("del _block")
             self._write()
 
-    def _extend_path_impl(
-        self, value: Union[str, Path], var_name: Optional[str], *, order
-    ):
+    def _extend_path_impl(self, value: Union[str, Path], var_name: Optional[str], *, order):
         # Assume extend_path function is provided by xonsh
         res = ["extend_path("]
         res.append(self._quote(value))
@@ -857,9 +837,7 @@ class FishMode(Mode):
         self._write(f'if test "${name}" != {self._quote(value)};')
         with self.indent():
             actual = f"${name}"
-            errmsg = Mode._REQUIRE_VAR_EQUALS_ERRMSG.format(
-                varname=name, actual_value=actual
-            )
+            errmsg = Mode._REQUIRE_VAR_EQUALS_ERRMSG.format(varname=name, actual_value=actual)
             self._write(f'warning "{errmsg}"')
         self._write("end")
 
@@ -874,9 +852,7 @@ class FishMode(Mode):
             self._block_level -= 1
             self._write("end")
 
-    def _extend_path_impl(
-        self, value: Union[str, Path], var_name: Optional[str], *, order: PathOrderSpec
-    ):
+    def _extend_path_impl(self, value: Union[str, Path], var_name: Optional[str], *, order: PathOrderSpec):
         self._write(
             f"add_path_any --variable {var_name or 'PATH'} {order.fish_flag}",
             self._quote(value),
