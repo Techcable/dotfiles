@@ -2,32 +2,40 @@
 name = "techcable.dotfiles"
 authors = [{ name = "Techcable" }]
 description = "My dotfiles"
-requires-python = ">=3.10"
-dynamic = ["version"]
+requires-python = ">=3.12"
+classifiers = [
+    # for internal use only
+    "Private :: Do Not Upload",
+]
+# No meaningful version
+version = "0.1.0.dev0"
+
+[dependency-groups]
+mypy = ["mypy~=1.0", {include-group = "typing"}]
+typing = []
+dev = [{include-group = "mypy"}]
 
 [project.scripts]
 translate_shell = "dotfiles.translate_shell.__main__:main"
 
 [build-system]
-requires = ["setuptools", "setuptools-scm"]
+requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
-
-[tool.setuptools.packages.find]
-where = ["src"]
 
 [tool.ruff]
 line-length = 120
 src = ["src", "machines", "libs/python"]
-select = [
+exclude = [
+    "fire-pit",
+]
+
+[tool.ruff.lint]
+extend-select = [
     "F",
     "E",
 ]
-exclude = [
-    # ruff doesn't seem to check these right
-    "*.pyi"
-]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "machines/shellrc/*.py" = [
     # Permit `from {name} import *` in machine shellrc files
     "F403",

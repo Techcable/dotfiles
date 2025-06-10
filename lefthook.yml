@@ -4,10 +4,14 @@ skip_output:
   - summary
 pre-commit:
   commands:
-    # Format Python with black & isort
     black:
       tags: formatter, python
-      run: black --check .
+      glob: "*.{py,pyi}"
+      run: ruff format --force-exclude --check -- {staged_files}
     isort:
       tags: formatter, python
-      run: isort --check --profile black .
+      glob: "*.{py,pyi}"
+      run: ruff check --force-exclude --select 'I' --output-format 'concise' -- {staged_files}
+    typos:
+      tags: spellcheck
+      run: typos --force-exclude -- {staged_files}
