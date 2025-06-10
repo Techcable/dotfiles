@@ -63,9 +63,9 @@ def status(ctx: ShareCtx):
 
 @share.command()
 @click.pass_obj
-def detatch(ctx: ShareCtx):
+def detach(ctx: ShareCtx):
     """
-    Detatches a shared repo, downloading the needed files
+    Detaches a shared repo, downloading the needed files
     and preventing further sharing
     """
     alternates_file = ctx.alternates_file

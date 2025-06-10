@@ -122,6 +122,6 @@ class RequirementsList:
 
 # TODO: Why would I need this file?
 #
-# What resonable scinerio would I need a machine to parse REQUIRES.md?
+# What reasonable scinerio would I need a machine to parse REQUIRES.md?
 # Also why not just use lark parser?
 

@@ -38,7 +38,7 @@ if __debug__:
 from ._missing import MISSING, Missing
 
 
-# TODO: Move to seperate module
+# TODO: Move to separate module
 class PlatformPath(Enum):
     HOMEBREW_PREFIX = ("darwin", "HOMEBREW_PREFIX")
 

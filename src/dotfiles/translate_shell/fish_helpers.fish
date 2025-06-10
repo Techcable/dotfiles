@@ -21,7 +21,7 @@ function add_path_any
         set -a extra_flags "-p"
     end
     if test (count $argv) -lt 1
-        error "Insufficent arguments! Please specify path too add"
+        error "Insufficient arguments! Please specify path too add"
     else if test (count $argv) -gt 1
         error "Unexpected argument: $argv[2]"
     else

@@ -18,7 +18,7 @@ root = true
 #
 # In my project, these are similar to the settings I want by default.
 # Even in my own project, due to bad formatting of pre-existing code
-# I may need to relax some of these in certian situations...
+# I may need to relax some of these in certain situations...
 #
 # In particular I worry about `insert_final_newline`
 # and `trim_trailing_whitespace`.
@@ -45,7 +45,7 @@ spaces = 2
 
 # Lisp also has more indentation than usual,
 # so it should only use two spaces
-[*.{scm,janet,clj,el,lsip}]
+[*.{scm,janet,clj,el,lisp}]
 spaces = 2
 
 # As far as I can tell, Nix files usually use two spaces.

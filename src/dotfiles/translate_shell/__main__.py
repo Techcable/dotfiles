@@ -157,7 +157,7 @@ assert get_type_origin(SupportedColor) == Literal
 assert get_type_args(SupportedColor) == (*_ANSI_COLOR_NAMES, "reset")
 
 if (override_dotfiles_path := os.getenv("FORCE_OVERRIDE_DOTFILES_PATH")) is not None:
-    # Provide a mechanism to bypass usage of `__file__` because that ocassionally breaks
+    # Provide a mechanism to bypass usage of `__file__` because that occasionally breaks
     DOTFILES_PATH = Path(override_dotfiles_path)
     assert DOTFILES_PATH.is_dir(), f"Missing dir: {DOTFILES_PATH}"
 else:
@@ -271,10 +271,10 @@ class Mode(metaclass=ABCMeta):
         Tries to be consistent with click.style
         and fish set_style
 
-        Valid keyword arguments optio:
+        Valid keyword arguments option:
         bold - Sets bold color
         [...] - others
-        fg, foreground - Sets the foreground color (implied by deafault)
+        fg, foreground - Sets the foreground color (implied by default)
         bg, background - Sets the background color
         """
 
@@ -416,7 +416,7 @@ class Mode(metaclass=ABCMeta):
         return [res_funcs[level] for level in LogLevel]
 
     debug, info, todo, warning = _setup_log_levels()
-    del _setup_log_levels  # avoid namespace polution
+    del _setup_log_levels  # avoid namespace pollution
 
     @abstractmethod
     def _assign(self, name: str, value: ShellValue, *, scope: _Scope, export: bool):
@@ -649,7 +649,7 @@ class XonshMode(Mode):
         # a from `{f}` import *
         #
         # TODO: This is actually very hard because of namespacing
-        # We want seperate modules, but then what happens to results?
+        # We want separate modules, but then what happens to results?
         #
         # Need a better system...
         raise NotImplementedError
@@ -865,8 +865,8 @@ class FishMode(Mode):
             value = str(value)
         elif isinstance(value, list):
             assert value, "Empty lists are forbidden"
-            # lists are really fundemental in fish, all varaiables are arrays
-            # thus, we just have to space-seperate the quoted variables
+            # lists are really fundamental in fish, all variables are arrays
+            # thus, we just have to space-separate the quoted variables
             return " ".join(map(self._quote, value))
         else:
             raise TypeError(type(value))

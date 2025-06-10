@@ -224,7 +224,7 @@ end
 # This way we get homebrew python version instead of keg python version
 #
 # The default behavior is to have $PKG_CONFIG_PATH override the automatically
-# detected libraires (including homebrew libraries).
+# detected libraries (including homebrew libraries).
 extend_path --name='homebrew pkgconfig' --variable=PKG_CONFIG_PATH -- "/opt/homebrew/lib/pkgconfig"
 
 extend_path --name='senpai irc client binaries' "/opt/senpai/bin"
@@ -289,7 +289,7 @@ detect_keg "lua@5.3"
 # has some utilities that system LLVM does not have (like clang-format and )
 #
 # This is lower priority than system LLVM,
-# so system clang will be prefered over homebrew clang.
+# so system clang will be preferred over homebrew clang.
 # This only makes a difference for those
 # specific tools that are missing in the system installation.
 #

@@ -5,7 +5,7 @@ Things that should be done.
 Isolate the version of dotfiles that is being
 developed on from the version used at runtime.
 
-Seperating dev environment from production is obviously important.
+Separating dev environment from production is obviously important.
 
 I want to make the current git repo development, and runtime path to like `~/.dotfiles/src`.
 I plan for the the "rutime" dotfiles to be a shallow clone of a specific commit.
@@ -25,7 +25,7 @@ Use `~/git/dotfiles-dev.temp` for now.
 The `.temp` suffix isn't very helpful, but reminds us of the desire to improve.
 
 === Other Major Projects (current)
-* Start to seperate code files from config (_branch_: `refactor/seperate-code-config`)
+* Start to separate code files from config (_branch_: `refactor/seperate-code-config`)
 * Add a helper command `dotfiles` (_branch_: `tool/dotfiles-cli`)
   * Setup links with `link` subcommand
   * Push from dev repo -> runtime repo
@@ -38,7 +38,7 @@ Ideas for improving the dotfiels system.
   ** Re-enable tempfile naming (disabled in hack-commit `8d569a8bf`)
   ** Use template name (disabled)
 * Give warning when using `mamba` python (see deleted conda `changeps1` option)
-* Refactor code to seperate from config
+* Refactor code to separate from config
 * Enable `ruff` linter to automatically run
 * Warn on redundancy in `$PATH`. At least on mac, some paths are already present in `/etc/paths.d`
 * Move a bunch of stuff out of `__main__.py`

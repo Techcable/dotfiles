@@ -174,7 +174,7 @@ if should_use_sys
     exec stat $argv
 end
 
-# NOTE: Compat handled seperately above
+# NOTE: Compat handled separately above
 argparse --name="betterstat" "h/help" "colors" -- $argv
 or return
 

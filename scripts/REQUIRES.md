@@ -4,8 +4,8 @@ The dependencies for the scripts.
 These are libraries you can assume are always
 installed, without needing to use `pip-run`.
 
-With some exceptions (those that are seperately installed/managed by the system),
-these packages should be installed via `pip install --user` (into the user site-pacakges).
+With some exceptions (those that are separately installed/managed by the system),
+these packages should be installed via `pip install --user` (into the user site-packages).
 
 Even if you do use `pip-run`, these dependencies
 will already be installed and usable.

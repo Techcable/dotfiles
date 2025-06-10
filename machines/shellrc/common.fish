@@ -72,7 +72,7 @@ begin
     if command -q ov
         # NOTE: Use `ov-less`, to get less-compatible keybindings
         if command -q ov-less
-            # As of this writing, the ov-less command is not included in the AUR pacakge for `ov`.
+            # As of this writing, the ov-less command is not included in the AUR package for `ov`.
             # To work around this, we write a small wrapper function to emulate it.
             #
             # However, if we find an ov-less on a system with pacman,
@@ -91,7 +91,7 @@ begin
             if test -f "$ov_less_config"
                 # Use the config file to emulate ov-less (present on mac & nix package, not in Arch)
                 function ov-less --inherit-variable ov_less_config --wraps "ov" \
-                    --description "The ov pager, conigured with less keybindings"
+                    --description "The ov pager, configured with less keybindings"
                     command ov --config $ov_less_config $argv
                 end
                 set -gx PAGER "ov --config $ov_less_config"

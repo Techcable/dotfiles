@@ -4,7 +4,7 @@
 #
 # TODO: Get this working
 #
-# This was going to replace the seperate
+# This was going to replace the separate
 # dotfiles loading code in each shellfile.
 # It would load the bootstrap TOML config and
 # invoke the script in-process with `runpy`
@@ -115,7 +115,7 @@ class BootstrapConfig:
             with open(BOOTSTRAP_CONFIG_FILE, "rb") as bf:
                 rawdata = tomllib.load(bf)
         except FileNotFoundError:
-            fatal(f"Boostrap config not found: {configfile_name}")
+            fatal(f"Bootstrap config not found: {configfile_name}")
         except OSError as e:
             fatal(f"Failed to load bootstrap config: {configfile_name}")
 
