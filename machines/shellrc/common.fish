@@ -19,10 +19,11 @@ if not string match --quiet "server" $MACHINE_NAME
     set --global MACHINE_DESKTOP 1
 end
 
-# Detect platform (equivalent to python sys.platform)
+# Detect platform (Linux/MacOS)
 #
-# Faster than uname due to caching
-if string match --ignore-case --quiet -- "Darwin" $(uname)
+# Unfortunately `uname` is very slow (~29ms).
+# Match on `status buildinfo` which is vastly faster
+if status buildinfo | string match -q '*darwin'
     set --global MACHINE_PLATFORM "darwin"
 else
     # If not MacOS, assume linux

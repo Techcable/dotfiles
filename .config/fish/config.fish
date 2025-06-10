@@ -23,7 +23,9 @@ end
 # Setup homebrew
 #
 # This must come early because everything else depends on it
-if test (uname) = "Darwin"
+# Unfortunately `uname` is very slow (~29ms).
+# Match on `status buildinfo` which is vastly faster
+if status buildinfo | string match -q '*darwin'
     eval (/opt/homebrew/bin/brew shellenv)
 end
 
