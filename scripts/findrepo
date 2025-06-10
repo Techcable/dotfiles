@@ -13,10 +13,12 @@ def is_git_dir(git_dir: str, /) -> bool:
     # unless all of the following are present (even if empty): HEAD, objects, refs
     # Furthermore the `HEAD` file has to be valid (can not be empty or nonsense)
     #
+    # Attempt to minimize os.stat calls by only checking for HEAD file.
+    # This does not meaningfully improve performance on a warm file cache,
+    # but we have no responsibility for validating git repos.
+    #
     # See also: https://git-scm.com/docs/gitrepository-layout
-    return (
-        os.path.isfile(f"{git_dir}/HEAD") and os.path.isdir(f"{git_dir}/objects") and os.path.isdir(f"{git_dir}/refs")
-    )
+    return os.path.isfile(f"{git_dir}/HEAD")
 
 
 def is_hg_repo(root_dir: Path, /) -> bool:
