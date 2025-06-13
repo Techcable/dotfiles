@@ -1,4 +1,8 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
+# /// script
+# dependencies = ["click~=8.1"]
+# ///
+
 import os
 import shutil
 import sys
