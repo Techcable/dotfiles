@@ -1,0 +1,6 @@
+# TODO: I want to forbid building packages from sources, unless explicitly enabled.
+# Unfortunately, it is too difficult to grant exceptions to this with cli flags/env vars
+#
+# As a workaround I confine the restriction to uvx, using a thin wrapper.
+# There are other advantages to this wrapper, like warning on 'uvx run' which is probably an error
+no-build = false
