@@ -49,6 +49,7 @@ require('lspconfig').harper_ls.setup {
         }
     }
 }
+require('lspconfig').typos_lsp.setup {}
 vim.lsp.enable('harper_ls')
 -- restrict harper to prose files
 vim.lsp.config['harper_ls'].filetypes = { 'markdown', 'gitcommit', }

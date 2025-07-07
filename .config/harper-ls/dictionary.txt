@@ -6,7 +6,7 @@ pessimize
 relicense
 todo
 
-# technical abreviations
+# technical abbreviations
 GC
 
 # proper nouns (technical)
