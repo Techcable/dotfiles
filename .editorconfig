@@ -48,6 +48,10 @@ spaces = 2
 [*.{scm,janet,clj,el,lisp}]
 spaces = 2
 
+# appears 2 spaces is the convention in these files
+[*.vim]
+spaces = 2
+
 # As far as I can tell, Nix files usually use two spaces.
 [*.nix]
 spaces = 2
