@@ -1,0 +1,22 @@
+# technical terms
+builtins
+metaspace
+builtins
+pessimize
+relicense
+todo
+
+# technical abreviations
+GC
+
+# proper nouns (technical)
+javascript
+
+# ducklogic
+DuckLogic
+gir
+CAPI
+CPython
+PyPy
+nbody
+Pyston

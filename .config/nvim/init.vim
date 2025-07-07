@@ -38,13 +38,20 @@ call plug#end()
 
 " initalize language servers
 lua <<EOF
+-- harper-ls - grammar checking
 require('lspconfig').harper_ls.setup {
     settings = {
-        -- limit to files containing prose
-        filetypes = { "markdown", "gitcommit" }
+        ["harper-ls"] = {
+            -- consistent dictionary file across systems
+            userDictPath = "~/.config/harper-ls/dictionary.txt",
+            -- in markdown files we want these as warnings
+            diagnosticSeverity = "warning",
+        }
     }
 }
 vim.lsp.enable('harper_ls')
+-- restrict harper to prose files
+vim.lsp.config['harper_ls'].filetypes = { 'markdown', 'gitcommit', }
 EOF
 
 " setup Comment.vim default keybindings
