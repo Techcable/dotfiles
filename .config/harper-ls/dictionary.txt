@@ -5,12 +5,14 @@ builtins
 pessimize
 relicense
 todo
+mutex
 
 # technical abbreviations
 GC
 
 # proper nouns (technical)
 javascript
+nvim
 
 # ducklogic
 DuckLogic
