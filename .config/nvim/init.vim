@@ -14,6 +14,7 @@ call plug#begin('~/.vim/plugged')
 " Run :PlugStatus to check install status
 " Run :PlugUpdate to update plugins
 
+
 Plug 'bakpakin/janet.vim'
 Plug 'NoahTheDuke/vim-just'
 Plug 'dag/vim-fish'
@@ -23,6 +24,9 @@ Plug 'HiPhish/jinja.vim'
 " See `:help Comment-nvim` for details and keybindings
 Plug 'numToStr/Comment.nvim'
 
+" language server
+Plug 'neovim/nvim-lspconfig'
+
 " Asynchronous Lint Engine
 " TODO: This is too fancy for me right now
 " Plug 'dense-analysis/ale'
@@ -31,6 +35,17 @@ Plug 'numToStr/Comment.nvim'
 let g:ale_linters = {'python': ['black', 'ipython', 'mypy', 'ruff']}
 
 call plug#end()
+
+" initalize language servers
+lua <<EOF
+require('lspconfig').harper_ls.setup {
+    settings = {
+        -- limit to files containing prose
+        filetypes = { "markdown", "gitcommit" }
+    }
+}
+vim.lsp.enable('harper_ls')
+EOF
 
 " setup Comment.vim default keybindings
 "
