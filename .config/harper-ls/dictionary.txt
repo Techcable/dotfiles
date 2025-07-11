@@ -6,6 +6,8 @@ pessimize
 relicense
 todo
 mutex
+initializer
+initializers
 
 # technical abbreviations
 GC
