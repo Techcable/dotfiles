@@ -1,4 +1,4 @@
-# technical terms
+## technical terms ##
 builtins
 metaspace
 builtins
@@ -8,6 +8,8 @@ todo
 mutex
 initializer
 initializers
+# singular form already in dictionary
+discriminants
 
 # technical abbreviations
 GC
