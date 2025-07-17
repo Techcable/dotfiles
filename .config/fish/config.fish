@@ -157,6 +157,16 @@ if status is-interactive
 
     # Shorter name for 'math' builtin
     alias m math
+
+    # Have mv prompt to override in an interactive setting
+    # Can be overrideen with the -f flag
+    function mv --wraps=mv -d "A slightly safer mv command";
+        if status is-interactive
+            command mv -i $argv
+        else
+            command mv $argv
+        end
+    end
 end
 
 # Setup locale info for biff <https://github.com/BurntSushi/biff>
