@@ -17,6 +17,7 @@ GC
 # proper nouns (technical)
 javascript
 nvim
+WolframAlpha
 
 # ducklogic
 DuckLogic
