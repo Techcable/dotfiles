@@ -40,7 +40,8 @@
     difft = difftool --tool=difftastic
     kdiff = difftool --tool=kitty
 	diffs = diff --staged
-	unstage = git restore --staged
+    unstage = git restore --staged
+    s = !git-full-status
 [difftool]
 	prompt = false
     trustExitCode = true

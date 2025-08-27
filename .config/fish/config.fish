@@ -157,6 +157,9 @@ if status is-interactive
 
     # Shorter name for 'math' builtin
     alias m math
+    # Shorter name for 'git s', which is in turn an alias for `git-status-full`,
+    # which runs both `stg series & git status`
+    alias gits 'git s'
 
     # Have mv prompt to override in an interactive setting
     # Can be overrideen with the -f flag

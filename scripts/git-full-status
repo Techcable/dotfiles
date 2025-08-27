@@ -1,0 +1,8 @@
+#!/bin/sh
+# Prints stg series in addition to git status
+#
+# Does nothing if stdout is not a terminal or there are arguments
+if [[ -t 1 ]] && [[ $# -eq 0 ]]; then
+    stg series;
+fi
+git status "$@";
