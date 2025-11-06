@@ -1,3 +1,7 @@
+[alias]
+ntest = "nextest run"
+nt = "nextest run"
+
 # RFC #2798 -- Use sparse index, which is both faster and lighter
 #
 # Tracking issue: - https://github.com/rust-lang/cargo/issues/9069
