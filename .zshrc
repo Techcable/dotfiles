@@ -321,3 +321,8 @@ if [ -f "/Users/nicholas/lib/mambaforge/etc/profile.d/mamba.sh" ]; then
 fi
 # <<< conda initialize <<<
 
+
+# Added by LM Studio CLI (lms)
+export PATH="$PATH:/Users/nicholas/.lmstudio/bin"
+# End of LM Studio CLI section
+

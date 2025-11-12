@@ -185,3 +185,8 @@ if command -q bookmark-cd
     bookmark-cd init | source
     alias b=bcd
 end
+
+# Added by LM Studio CLI (lms)
+set -gx PATH $PATH /Users/nicholas/.lmstudio/bin
+# End of LM Studio CLI section
+
