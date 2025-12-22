@@ -1,0 +1,14 @@
+#:schema https://docs.jj-vcs.dev/latest/config-schema.json
+
+[ui]
+diff-editor = "meld-3"
+diff-formatter = ":git"
+show-cryptographic-signatures = false
+
+[user]
+name = "Techcable"
+email = "git@techcable.net"
+
+[signing]
+backend = "gpg"
+behavior = "own"
