@@ -4,6 +4,7 @@
 diff-editor = "meld-3"
 diff-formatter = ":git"
 show-cryptographic-signatures = false
+default-command = "log"
 
 [user]
 name = "Techcable"
