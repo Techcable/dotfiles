@@ -13,3 +13,8 @@ email = "git@techcable.net"
 [signing]
 backend = "gpg"
 behavior = "own"
+
+[fsmonitor]
+# This is not enabled globally because on macOS
+# it means each repo needs several seconds to startup
+# backend = "watchman"
