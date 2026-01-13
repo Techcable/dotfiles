@@ -5,6 +5,7 @@ diff-editor = "meld-3"
 diff-formatter = ":git"
 show-cryptographic-signatures = false
 default-command = "log"
+pager = "moor --quit-if-one-screen --no-linenumbers --terminal-fg"
 
 [user]
 name = "Techcable"
