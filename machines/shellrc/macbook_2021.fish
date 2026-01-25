@@ -18,8 +18,6 @@ function error
 end
 
 begin
-    set --local homebrew_java    set --local homebrew_java_home "$homebrew_java/Contents/Home"
-    set --local fallback_java_home "/Library/Java/JavaVirtualMachines/zulu-21.jdk/Contents/Home"
     function consider_jdk
         argparse --min-args=1 --max-args=1 'required-version=' -- $argv
         or return
@@ -50,8 +48,7 @@ begin
     # Detect the desired JDK implementation
     #
     # TODO: Use proper JDK version detection
-    # HACK: Pin to Java 21, because java.io.IO braeks fpinscala repo
-    for jdk in /Library/Java/JavaVirtualMachines/{temurin-21.jdk,homebrew-openjdk}
+    for jdk in /Library/Java/JavaVirtualMachines/homebrew-openjdk
         consider_jdk $jdk
         if test $status -eq 0
             break
