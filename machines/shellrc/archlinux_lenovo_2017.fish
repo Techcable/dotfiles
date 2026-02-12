@@ -15,9 +15,6 @@ fish_add_path "$HOME/.local/bin"
 # TODO: I really don't like hardcoding this
 fish_add_path "$HOME/.gem/ruby/2.5.0/bin"
 
-# TODO: Remove this and rely on ~/.cargo bin (See commit ee1052b64946896)
-fish_add_path "$HOME/.rustup/toolchains/nightly-x86_64-unknown-linux-gnu/bin"
-
 # On Arch, the boost package uses the `b2` command,
 # so backblaze is stuck with backblaze-b2
 #
