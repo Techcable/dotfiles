@@ -1,7 +1,7 @@
 #:schema https://docs.jj-vcs.dev/latest/config-schema.json
 
 [ui]
-diff-editor = "meld-3"
+diff-editor = ":builtin"
 diff-formatter = ":git"
 show-cryptographic-signatures = false
 default-command = "log"
