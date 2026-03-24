@@ -1,4 +1,4 @@
-default_toolchain = "stable"
+default_toolchain = "v4.28.0"
 telemetry = false
 version = "12"
 
