@@ -15,6 +15,9 @@ email = "git@techcable.net"
 backend = "gpg"
 behavior = "own"
 
+[aliases]
+stat = ["show", "--stat"]
+
 [fsmonitor]
 # This is not enabled globally because on macOS
 # it means each repo needs several seconds to startup
