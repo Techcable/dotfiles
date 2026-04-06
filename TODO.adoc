@@ -1,6 +1,14 @@
 = TODO
 Things that should be done.
 
+== Miscellaneous Config Problems
+
+=== Version Control
+* archlinux-lenovo-2021: The fact gpg constantly asks for a password plays very poorly with `jj` autocommits.
+
+
+= Refactoring
+
 == Current Focus
 Isolate the version of dotfiles that is being
 developed on from the version used at runtime.
