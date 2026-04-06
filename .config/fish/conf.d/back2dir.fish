@@ -25,6 +25,8 @@ function __back2dir_on_init --on-event fish_prompt
 end
 
 function __back2dir_on_chdir --on-variable PWD
-    # Update last_dir
-    set -U techcable_back2dir_last_dir $PWD
+    if status is-interactive
+        # Update last_dir
+        set -U techcable_back2dir_last_dir $PWD
+    end
 end
