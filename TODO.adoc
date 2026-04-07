@@ -2,10 +2,7 @@
 Things that should be done.
 
 == Miscellaneous Config Problems
-
-=== Version Control
-* archlinux-lenovo-2021: The fact gpg constantly asks for a password plays very poorly with `jj` autocommits.
-
+<nothing right now>
 
 = Refactoring
 
