@@ -15,6 +15,19 @@ email = "git@techcable.net"
 backend = "gpg"
 behavior = "own"
 
+[[--scope]]
+--when.hostname = ["archlinux-lenovo-2017"]
+
+# change signing behavior from on archtop because gpg requires frequent passphrase prompts
+# Using `keep` causes more prompts than `drop` would,
+# but makes it less likely to strip a signature added by another machine
+# This difference should only come up when doing forced pushes or transferring changes outside git
+[--scope.signing]
+behavior = "keep"
+
+[--scope.git]
+sign-on-push = true
+
 [aliases]
 stat = ["show", "--stat"]
 # Run `jj split` but with reverse preservation of change ids.
