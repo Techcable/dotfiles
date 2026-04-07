@@ -17,6 +17,14 @@ behavior = "own"
 
 [aliases]
 stat = ["show", "--stat"]
+# Run `jj split` but with reverse preservation of change ids.
+# In both cases, the selected changes are placed in the first commit.
+#
+# By default jj split on `xy` means the first commit with theselected changes has change id `xy`,
+# while the second commit is given a new change id.
+# This does the reverse, the selected changes have the new change id and are still placed first
+splitr = ["split", "-B", "@"]
+rsplit = ["splitr"]
 
 [fsmonitor]
 # This is not enabled globally because on macOS
