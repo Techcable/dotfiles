@@ -25,6 +25,10 @@ fix-spelling:
     # Fix obvious spelling issues
     typos --write-changes
 
+nix-rebuild:
+    nix flake update
+    home-manager switch --flake ".#$MACHINE_NAME"
+
 # Checks for formatting issues
 check-format: && spellcheck
     @# Invoking ruff directly instead of through uv tool run saves ~12ms per command,
