@@ -1,3 +1,6 @@
+[unstable]
+build-dir-new-layout = true
+
 [alias]
 ntest = "nextest run"
 nt = "nextest run"
