@@ -1,5 +1,8 @@
 { pkgs, machineName, system, ... }: {
   home.packages = with pkgs; [
+    ## Misc
+    pkgs.devenv
+
     ## LLMs / AI
 
     # needed for codex
