@@ -1,4 +1,11 @@
 { pkgs, machineName, system, ... }: {
+
+  programs.direnv = {
+    enable = true;
+    # makes nix usage faster https://github.com/nix-community/nix-direnv
+    nix-direnv.enable = true;
+  };
+
   home.packages = with pkgs; [
     ## Misc
     pkgs.devenv

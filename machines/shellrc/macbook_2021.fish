@@ -311,3 +311,6 @@ end
 
 # opam configuration
 source /Users/nicholas/.opam/opam-init/init.fish > /dev/null 2> /dev/null; or true
+
+# Setup direnv integration
+direnv hook fish | source
