@@ -4,5 +4,153 @@
   "theme": "dark",
   "enabledPlugins": {
     "rust-analyzer-lsp@claude-plugins-official": true
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jj util snapshot >/dev/null 2>&1 || true",
+            "statusMessage": "jj snapshot"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|NotebookEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jj util snapshot >/dev/null 2>&1 || true",
+            "statusMessage": "jj snapshot"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jj util snapshot >/dev/null 2>&1 || true",
+            "statusMessage": "jj snapshot"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jj util snapshot >/dev/null 2>&1 || true",
+            "statusMessage": "jj snapshot"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jj util snapshot >/dev/null 2>&1 || true",
+            "statusMessage": "jj snapshot"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jj util snapshot >/dev/null 2>&1 || true",
+            "statusMessage": "jj snapshot"
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "Write|Edit|NotebookEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jj util snapshot >/dev/null 2>&1 || true",
+            "statusMessage": "jj snapshot"
+          }
+        ]
+      }
+    ],
+    "FileChanged": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jj util snapshot >/dev/null 2>&1 || true",
+            "statusMessage": "jj snapshot"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jj util snapshot >/dev/null 2>&1 || true",
+            "statusMessage": "jj snapshot"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jj util snapshot >/dev/null 2>&1 || true",
+            "statusMessage": "jj snapshot"
+          }
+        ]
+      }
+    ],
+    "StopFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jj util snapshot >/dev/null 2>&1 || true",
+            "statusMessage": "jj snapshot"
+          }
+        ]
+      }
+    ],
+    "WorktreeCreate": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jj util snapshot >/dev/null 2>&1 || true",
+            "statusMessage": "jj snapshot"
+          }
+        ]
+      }
+    ],
+    "WorktreeRemove": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jj util snapshot >/dev/null 2>&1 || true",
+            "statusMessage": "jj snapshot"
+          }
+        ]
+      }
+    ]
   }
 }
