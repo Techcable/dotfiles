@@ -12,8 +12,27 @@
 # As far as I can tell fish has no equivalent to @events.on_post_init
 #
 function __back2dir_on_init --on-event fish_prompt
+    function _back2dir_is_ignored -a target
+        if test -z "$techcable_back2dir_ignored_dirs";
+            return 1; # ignored vars not set, so should never ignore
+        end
+        # path resolve removes trailing slash
+        set -l target $(path resolve $target)
+        for raw_ignored_dir in $techcable_back2dir_ignored_dirs
+            set -l ignored_dir $(path resolve $raw_ignored_dir)
+            # check for subdirectory match
+            set -l escaped_ignored_dir $(string escape --style=regex $ignored_dir)
+            if string match --quiet --regex -- '^'$escaped_ignored_dir'(/|$)' $target
+                # matches an ignored directory, return true
+                return 0;
+            end
+        end
+        # no match, do not ignore
+        return 1;
+    end
+
     if test "$PWD" = "$HOME" -a -n "$techcable_back2dir_last_dir"
-        if contains -- "$techcable_back2dir_last_dir" $techcable_back2dir_ignored_dirs
+        if _back2dir_is_ignored "$techcable_back2dir_last_dir"
             echo (set_color --bold)NOTE(set_color normal): Directory (set_color -u white)$techcable_back2dir_last_dir$(set_color normal) is marked as ignored by $(set_color --bold)back2dir$(set_color normal), starting in '$HOME' instead
         else if test -d $techcable_back2dir_last_dir
             cd $techcable_back2dir_last_dir
@@ -23,6 +42,8 @@ function __back2dir_on_init --on-event fish_prompt
             set -U techcable_back2dir_last_dir $HOME
         end
     end
+    # unload helper function
+    functions -e _back2dir_is_ignored
     # unload this function
     functions -e __back2dir_on_init
 end
