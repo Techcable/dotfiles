@@ -313,4 +313,8 @@ end
 source /Users/nicholas/.opam/opam-init/init.fish > /dev/null 2> /dev/null; or true
 
 # Setup direnv integration
+#
+# This is needs to be done manually since I installed direnv directly to the nix profile.
+# While the hook is automatically performed by the ~/.nix-profile/share/fish/vendor_conf.d/direnv.fish file,
+# this directory currently isn't auto-sourced by fish (and there is no clear path variable to add it too)
 direnv hook fish | source
