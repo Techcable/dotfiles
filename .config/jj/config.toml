@@ -11,6 +11,10 @@ pager = "moor --quit-if-one-screen --no-linenumbers --terminal-fg"
 name = "Techcable"
 email = "git@techcable.net"
 
+[git]
+# fetch all remotes by default
+fetch = "*"
+
 [signing]
 backend = "gpg"
 behavior = "own"
