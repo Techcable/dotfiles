@@ -1,0 +1,5 @@
+# do not ignore root-level dotfiles in the dotfiles repo,
+# except for those specific to the VCS
+!/.*
+/.git
+/.jj
