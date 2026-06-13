@@ -29,6 +29,16 @@
             "statusMessage": "jj snapshot"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME/.claude/hooks/remote-jj-snapshot.sh\"",
+            "statusMessage": "remote jj snapshot"
+          }
+        ]
       }
     ],
     "Stop": [
@@ -83,6 +93,16 @@
             "type": "command",
             "command": "jj util snapshot >/dev/null 2>&1 || true",
             "statusMessage": "jj snapshot"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME/.claude/hooks/remote-jj-snapshot.sh\"",
+            "statusMessage": "remote jj snapshot"
           }
         ]
       }
