@@ -10,3 +10,8 @@ preferences only.
 ## Working style
 
 -
+
+## Temporary files
+
+- Put scratch files and directories under `~/work/claude`, never in `/tmp` or
+  directly in `$HOME`.
