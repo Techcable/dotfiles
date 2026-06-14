@@ -2,6 +2,7 @@
   "effortLevel": "high",
   "fastMode": true,
   "theme": "dark",
+  "editorMode": "vim",
   "enabledPlugins": {
     "rust-analyzer-lsp@claude-plugins-official": true
   },
