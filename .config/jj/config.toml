@@ -19,6 +19,9 @@ fetch = "*"
 backend = "gpg"
 behavior = "own"
 
+[templates]
+git_push_bookmark = '"techcable/push-" ++ change_id.short()'
+
 [[--scope]]
 --when.hostname = ["archlinux-lenovo-2017"]
 
