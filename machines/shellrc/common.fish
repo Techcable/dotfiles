@@ -173,8 +173,8 @@ if command --query "bpytop"
     else
         warning "bpytop is installed, but not btop"
     end
-else
-    warning "bpytop is not installed"
+elif not command --query btop
+    warning "btop is not installed"
 end
 
 begin

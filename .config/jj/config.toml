@@ -47,6 +47,9 @@ splitr = ["split", "-B", "@"]
 rsplit = ["splitr"]
 
 [fsmonitor]
+
+[gg.ui]
+recent-workspaces = ["/Users/nicholas/git/lang.rust/gitpatcher"]
 # This is not enabled globally because on macOS
 # it means each repo needs several seconds to startup
 # backend = "watchman"
