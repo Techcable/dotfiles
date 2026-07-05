@@ -23,7 +23,7 @@ behavior = "own"
 git_push_bookmark = '"techcable/push-" ++ change_id.short()'
 
 [[--scope]]
---when.hostname = ["archlinux-lenovo-2017"]
+--when.hostnames = ["archlinux-lenovo-2017"]
 
 # change signing behavior from on archtop because gpg requires frequent passphrase prompts
 # Using `keep` causes more prompts than `drop` would,
