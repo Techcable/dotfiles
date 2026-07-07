@@ -173,5 +173,14 @@
         ]
       }
     ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(jj show *)",
+      "Bash(jj st)",
+      "Bash(jj log*)",
+      "Bash(jj diff *)",
+      "Bash(jj status*)"
+    ]
   }
 }
