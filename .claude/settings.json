@@ -180,7 +180,11 @@
       "Bash(jj st)",
       "Bash(jj log*)",
       "Bash(jj diff *)",
-      "Bash(jj status*)"
+      "Bash(jj status*)",
+      "Bash(cargo build *)",
+      "Bash(cargo check *)",
+      "Bash(cargo clippy *)",
+      "Bash(cargo test *)"
     ]
   }
 }
