@@ -40,3 +40,5 @@
 # In projects that I do own, I can use `git add --force`
 # to add any changes to the config that I want.
 .editorconfig
+
+**/.claude/settings.local.json
