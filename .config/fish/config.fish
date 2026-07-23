@@ -175,9 +175,9 @@ end
 # Setup zoxide
 zoxide init fish | source
 
-# Setup locale info for biff <https://github.com/BurntSushi/biff>
+# Setup locale info for bttf <https://github.com/BurntSushi/bttf>
 # Appears to be able to detect the timezone on its own
-set -gx BIFF_LOCALE en-US
+set -gx BTTF_LOCALE en-US
 
 
 # Do not initialize `conda` - takes ~172 ms
