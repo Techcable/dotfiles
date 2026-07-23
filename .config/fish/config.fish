@@ -172,6 +172,9 @@ if status is-interactive
     end
 end
 
+# Setup zoxide
+zoxide init fish | source
+
 # Setup locale info for biff <https://github.com/BurntSushi/biff>
 # Appears to be able to detect the timezone on its own
 set -gx BIFF_LOCALE en-US
