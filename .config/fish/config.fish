@@ -173,7 +173,11 @@ if status is-interactive
 end
 
 # Setup zoxide
-zoxide init fish | source
+begin
+    # prints path name before changing to it
+    set -lx _ZO_ECHO 1
+    zoxide init fish | source
+end
 
 # Setup locale info for bttf <https://github.com/BurntSushi/bttf>
 # Appears to be able to detect the timezone on its own
