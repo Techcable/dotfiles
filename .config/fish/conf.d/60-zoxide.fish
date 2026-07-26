@@ -16,3 +16,7 @@ function __zoxide_z_complete
         zoxide query --list --exclude (__zoxide_pwd) -- $keywords 2>/dev/null
     end
 end
+
+# Override the zoxide default completions, in order to add the --keep-order flag
+complete --command __zoxide_z --erase
+complete --command __zoxide_z --no-files --keep-order --arguments '$(__zoxide_z_complete)'
