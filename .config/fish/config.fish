@@ -165,3 +165,11 @@ end
 set -gx PATH $PATH /Users/nicholas/.lmstudio/bin
 # End of LM Studio CLI section
 
+# WARNING: mise activation must be the LAST thing to run — its PATH snapshot
+# must include the final, fully-built $PATH, or its hook-env prompt hook will
+# reorder any later additions (see notes/bugs/2026-07-26-67d0481acb2b-homebrew-before-cargo.md).
+# Do not add anything that modifies $PATH below this block.
+if command -q mise
+    mise activate fish | source
+end
+
