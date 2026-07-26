@@ -1,0 +1,16 @@
+# While I do prefer jj, it doesn't support eol in .gitattributes
+# This means it doesn't play well with cpython.
+prefer-jj = false
+
+[[mirrors.local]]
+remote-urls = [
+    "https://github.com/python/cpython.git",
+    "git@github.com:python/cpython.git",
+]
+local-path = "~/git/lang.py/cpython"
+# I don't needlessly waste space and time cloning the ~1GB cpython repo.
+# # On machines I develop DuckLogic on,
+# it is reasonable to require this repo to already be present.
+required = true
+# Direct reference is fine since we only fork from public cpython releases.
+reference = true
