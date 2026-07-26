@@ -13,7 +13,8 @@ function __zoxide_z_complete
     if test (builtin count $keywords) -eq 0
         complete --do-complete "'' "(builtin commandline --cut-at-cursor --current-token) | string match --regex -- '.*/$'
     else
-        zoxide query --list --exclude (__zoxide_pwd) -- $keywords 2>/dev/null
+        zoxide query --list --score --exclude (__zoxide_pwd) -- $keywords 2>/dev/null |
+            string replace --regex '^\s*([\d\.]+) (.*)$' '$2\t$1'
     end
 end
 
