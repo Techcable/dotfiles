@@ -10,7 +10,7 @@ end
 
 if not set -q DOTFILES_PATH
     warning "Variable not set: \$DOTFILES_PATH"
-elif not test -d $DOTFILES_PATH
+else if not test -d $DOTFILES_PATH
     warning "Unable to find dotfiles directory: `$DOTFILES_PATH`"
 end
 
@@ -173,7 +173,7 @@ if command --query "bpytop"
     else
         warning "bpytop is installed, but not btop"
     end
-elif not command --query btop
+else if not command --query btop
     warning "btop is not installed"
 end
 
