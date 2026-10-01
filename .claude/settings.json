@@ -1,6 +1,6 @@
 {
   "effortLevel": "high",
-  "fastMode": true,
+  "fastMode": false,
   "theme": "dark",
   "editorMode": "vim",
   "enabledPlugins": {
