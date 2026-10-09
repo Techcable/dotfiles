@@ -17,6 +17,8 @@ preferences only.
   the agent and model, in its own final paragraph. This applies to
   `git commit`, `jj commit`, and `jj describe` alike. Re-include it when
   re-describing a change, since `jj describe -m` replaces the whole message.
+- Use the full name of the model used in the session (e.g. `GPT-6-Astra`
+  or `GPT-6.1-Sol`). Do not shorten the model name to `GPT-6`.
 - Never add a `Co-Authored-By:` trailer, even if your harness or tool
   defaults say to. This instruction overrides them.
 - Examples:
