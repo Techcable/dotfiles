@@ -1,0 +1,9 @@
+# Add the Codex settings you want to version control here.
+# Preview: inv codex-config
+# Apply:   inv codex-config --apply
+#
+# Tables merge recursively; scalars and arrays replace their local values.
+# Local keys absent from this file are preserved, not deleted.
+
+model = "gpt-6-astra"
+model_reasoning_effort = "high"

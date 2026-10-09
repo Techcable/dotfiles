@@ -5,6 +5,7 @@ tasks may use `uv run` internally when they need a managed Python environment.
 """
 
 from pathlib import Path
+from shlex import quote
 
 from invoke import Collection, Context, task
 
@@ -83,5 +84,15 @@ def nix_rebuild(ctx: Context) -> None:
     _run(ctx, 'home-manager switch --flake ".#$MACHINE_NAME"')
 
 
-ns = Collection(check, lint, fix, mypy, spellcheck, fix_spelling, nix_rebuild, check_format, run_format)
+@task
+def codex_config(ctx: Context, apply: bool = False) -> None:
+    """Preview tracked Codex settings merged into ~/.codex/config.toml; use --apply to write."""
+    target = quote(str(Path.home() / ".codex" / "config.toml"))
+    command = f"uv run --script scripts/merge-toml.py llms/codex.toml {target}"
+    if apply:
+        command += " --apply"
+    _run(ctx, command)
+
+
+ns = Collection(check, lint, fix, mypy, spellcheck, fix_spelling, nix_rebuild, check_format, run_format, codex_config)
 ns.configure({"run": {"echo": True}})
