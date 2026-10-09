@@ -13,7 +13,7 @@ version = "0.1.0.dev0"
 [dependency-groups]
 mypy = ["mypy~=1.0", {include-group = "typing"}]
 typing = []
-dev = [{include-group = "mypy"}]
+dev = ["invoke>=2.2", {include-group = "mypy"}]
 
 [project.scripts]
 translate_shell = "dotfiles.translate_shell.__main__:main"
