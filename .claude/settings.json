@@ -3,6 +3,9 @@
   "fastMode": false,
   "theme": "dark",
   "editorMode": "vim",
+  "attribution": {
+    "commit": ""
+  },
   "enabledPlugins": {
     "rust-analyzer-lsp@claude-plugins-official": true
   },
