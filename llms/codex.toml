@@ -7,3 +7,8 @@
 
 model = "gpt-6-astra"
 model_reasoning_effort = "high"
+
+# According to ChatGPT, these settings get closer to claude auto mode
+sandbox_mode = "workspace-write"
+approval_policy = "on-request"
+approvals_reviewer = "auto_review"
