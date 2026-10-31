@@ -25,6 +25,11 @@
     # instead of globaly.
     fsmonitor = true
 
+[safe]
+    # Avoids some attacks on bare repositories
+    # This will be the default in git 3.0
+    bareRepository = explicit
+
 [tag]
     forceSignAnnotated = true
     gpgSign = true
