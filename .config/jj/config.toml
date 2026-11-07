@@ -45,6 +45,7 @@ stat = ["show", "--stat"]
 # This does the reverse, the selected changes have the new change id and are still placed first
 splitr = ["split", "-B", "@"]
 rsplit = ["splitr"]
+all = ["log", "-r", "::"]
 
 [fsmonitor]
 
