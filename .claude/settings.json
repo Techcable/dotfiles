@@ -21,6 +21,15 @@
             "statusMessage": "jj snapshot"
           }
         ]
+      },
+      {
+        "matcher": "^Bash$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/opt/homebrew/bin/atuin hook claude-code"
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -41,6 +50,15 @@
             "type": "command",
             "command": "\"$HOME/.claude/hooks/remote-jj-snapshot.sh\"",
             "statusMessage": "remote jj snapshot"
+          }
+        ]
+      },
+      {
+        "matcher": "^Bash$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/opt/homebrew/bin/atuin hook claude-code"
           }
         ]
       }
@@ -107,6 +125,15 @@
             "type": "command",
             "command": "\"$HOME/.claude/hooks/remote-jj-snapshot.sh\"",
             "statusMessage": "remote jj snapshot"
+          }
+        ]
+      },
+      {
+        "matcher": "^Bash$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/opt/homebrew/bin/atuin hook claude-code"
           }
         ]
       }

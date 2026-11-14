@@ -326,3 +326,5 @@ fi
 export PATH="$PATH:/Users/nicholas/.lmstudio/bin"
 # End of LM Studio CLI section
 
+
+eval "$(atuin init zsh)"

@@ -173,3 +173,7 @@ if command -q mise
     mise activate fish | source
 end
 
+
+if status is-interactive
+    atuin init fish | source
+end
