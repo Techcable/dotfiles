@@ -32,8 +32,9 @@ git_push_bookmark = '"techcable/push-" ++ change_id.short()'
 [--scope.signing]
 behavior = "keep"
 
-[--scope.git]
-sign-on-push = true
+[--scope.revsets]
+# Equivalent to git.sign-on-push = true
+revsets.git-sign-on-push = "~signed() & mine()"
 
 [aliases]
 stat = ["show", "--stat"]
