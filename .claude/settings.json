@@ -3,6 +3,7 @@
   "fastMode": false,
   "theme": "dark",
   "editorMode": "vim",
+  "model": "opus",
   "attribution": {
     "commit": ""
   },
