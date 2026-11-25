@@ -5,7 +5,7 @@
 # Tables merge recursively; scalars and arrays replace their local values.
 # Local keys absent from this file are preserved, not deleted.
 
-model = "gpt-6-astra"
+model = "gpt-6.2-astra"
 model_reasoning_effort = "high"
 
 # According to ChatGPT, these settings get closer to claude auto mode
