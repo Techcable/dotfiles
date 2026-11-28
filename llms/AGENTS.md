@@ -35,6 +35,31 @@ preferences only.
   jj commit -m "fish: Fix PATH ordering" -m "Assisted-by: Claude Opus 5.5"
   ```
 
+## GitHub issue attribution
+
+- Whenever you file a GitHub issue (via `gh issue create`, the API, or any
+  other tool), start the issue body with a GitHub alert saying that AI
+  drafted it. Name the agent and full model name, as in commit trailers.
+- Pick the wording by whether I reviewed the draft:
+  - **Not reviewed** (filed without me reading the final text):
+
+    ```markdown
+    > [!WARNING]
+    > This issue was drafted automatically by an AI agent (Claude Opus 5.5)
+    > and **has not been reviewed by a human**.
+    ```
+
+  - **Reviewed** (I read the final text and approved it before filing):
+
+    ```markdown
+    > [!NOTE]
+    > This issue was drafted by an AI agent (Claude Opus 5.5) and reviewed
+    > by a human before filing.
+    ```
+
+- If I edit or approve the text after you file it, switch to the reviewed
+  `[!NOTE]` version.
+
 ## Temporary files
 
 - Put scratch files and directories under `~/work/claude`, never in `/tmp` or
